@@ -1,0 +1,10 @@
+# Node.js dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Logs
+*.log
+
+# Build / cache folders
+frontend/build/
+frontend/.expo/
