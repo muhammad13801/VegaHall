@@ -1,0 +1,32 @@
+### Register User
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "first_name": "Muhammed",
+  "last_name": "AJ",
+  "gender": "Male",
+  "date_of_birth": "2000-01-01",
+  "email": "muhammad13801@gmail.com",
+  "password": "mynamei123s",
+  "phone_number": "+970569859979",
+  "role": "Customer",
+  "status": "Inactive"
+}
+
+### Verify Code
+POST http://localhost:3000/auth/verify
+Content-Type: application/json
+
+{
+  "email": "muhammad13801@gmail.com",
+  "code": "92104"
+}
+
+### Resend Code
+POST http://localhost:3000/auth/resend-code
+Content-Type: application/json
+
+{
+  "email": "muhammad13801@gmail.com"
+}
