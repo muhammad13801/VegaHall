@@ -1,50 +1,87 @@
 import { useState } from "react";
-import { NavigateAndReset, NavigateTo } from "../../reusable func/navigateTo";
 import { useRoute } from "@react-navigation/native";
-import CodeInput from "../../reusable func/codeInput";
-import { Alert } from "react-native";
-import { resendCode, verifyCode } from "../../Services/api";
 
-export default function PasswordCode() {
+import CodeInput from "../../reusable func/codeInput";
+import { NavigateTo } from "../../reusable func/navigateTo";
+import { verifyResetCode, resendCode } from "../../Services/authApi";
+import Toast from "react-native-toast-message";
+
+export default function EmailCode() {
   const [code, setCode] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [resendLoading, setResendLoading] = useState<boolean>(false);
+  const [canResend, setCanResend] = useState<boolean>(true);
+
   const route = useRoute<any>();
   const { email } = route.params;
 
+  const [error, setError] = useState<string>("");
+
+  // Handle code verification
   const handleVerifyCode = async () => {
-    if (code.length !== 5) {
-      Alert.alert("خطأ", "الرجاء إدخال الكود المكون من 5 أرقام");
-      return;
-    }
+    if (code !== undefined && (code.length < 5 || isNaN(Number(code))))
+      return setError("الرجاء ادخال الكود المكون من 5 ارقام");
+
+    setLoading(true);
 
     try {
-      // Verify email and create account in one call
-      // const result = await signupAPI.verifyEmail(email, code);
-      await verifyCode(email);
-      //await resendCode(email);
-      // Success - navigate to phone verification
-      NavigateAndReset("SetNewPassword");
-    } catch (err) {
-      Alert.alert("خطأ", "الكود غير صحيح أو منتهي الصلاحية " + err);
+      const response = await verifyResetCode(email, code);
+      // Success: navigate to login or next step
+      Toast.show({
+        type: "success",
+        text1: response.data,
+        visibilityTime: 3000,
+      });
+      NavigateTo("SetNewPassword", { email });
+    } catch (err: any) {
+      Toast.show({
+        type: "error",
+        text1: err.response?.data,
+        visibilityTime: 3000,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Handle resend code
   const handleResendCode = async () => {
+    if (!canResend) return;
+
+    setResendLoading(true);
+    setCanResend(false);
     try {
-      await resendCode(email);
-    } catch (err) {
-      Alert.alert("خطا " + err);
+      const response = await resendCode(email);
+      Toast.show({
+        type: "success",
+        text1: response.data,
+        visibilityTime: 3000,
+      });
+    } catch (err: any) {
+      Toast.show({
+        type: "error",
+        text1: err.response?.data,
+        visibilityTime: 3000,
+      });
+      setCanResend(true);
+    } finally {
+      setResendLoading(false);
     }
   };
 
   return (
     <CodeInput
-      title="تاكيد البريد الالكتروني"
-      subtitle="ادخل الكود المرسل الى بريد"
+      title="تأكيد البريد الإلكتروني"
+      subtitle="ادخل الكود المرسل إلى بريدك"
       valueToShow={email}
       handleAction={handleVerifyCode}
       handleActionResend={handleResendCode}
       codeValue={code}
       setCodeValue={setCode}
+      loading={loading}
+      resendLoading={resendLoading}
+      canResend={canResend}
+      errors={error}
     />
   );
 }

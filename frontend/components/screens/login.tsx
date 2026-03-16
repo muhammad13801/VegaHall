@@ -1,21 +1,57 @@
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { Input } from "../reusable func/input";
-import { NavigateTo } from "../reusable func/navigateTo";
+import { NavigateAndReset, NavigateTo } from "../reusable func/navigateTo";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PasswordInput from "../reusable func/passwordInput";
 import { styles } from "../styles";
 import KeyboardAwareScreen from "../reusable func/keyboardAwarScreen";
+import { AuthData, validateAuth } from "../Validations/validateAuth";
+import { handleErrorChange } from "../reusable func/handleErrorChange";
+import { login } from "../Services/authApi";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
 
 export default function Login() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [form, setForm] = useState<Partial<AuthData>>({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleLogin = () => {
-    if (password.length < 8) return setError("كلمة المرور قصيرة!");
-    NavigateTo("Customer");
-    setError("");
+  const change = handleErrorChange(setForm);
+
+  const handleLogin = async () => {
+    const validationErrors = validateAuth(form);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    setLoading(true);
+
+    try {
+      const res = await login(form.email!, form.password!);
+      const { sessionId, role } = res.data;
+      await AsyncStorage.setItem("sessionId", sessionId);
+
+      Toast.show({
+        type: "success",
+        text1: res.data.message,
+        visibilityTime: 3000,
+      });
+
+      if (role === "Customer") return NavigateAndReset("Customer");
+      else if (role === "HallOwner") return NavigateAndReset("HallOwner");
+      else if (role === "Admin") return NavigateAndReset("Admin");
+    } catch (err: any) {
+      return Toast.show({
+        type: "error",
+        text1: err.response?.data,
+        visibilityTime: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,20 +63,35 @@ export default function Login() {
         <View style={styles.card}>
           <Input
             placeholder="البريد الإلكتروني"
-            value={email}
-            onChangeText={setEmail}
+            value={form.email}
+            onChangeText={(text) => change("email", text)}
             keyboardType="email-address"
           />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
-          <PasswordInput password={password} setPassword={setPassword} />
-          {error.length > 0 && <Text style={styles.errorText}>{error}</Text>}
+          <PasswordInput
+            password={form.password!}
+            setPassword={(text) => change("password", text)}
+          />
+          {errors.password && (
+            <Text style={styles.errorText}>{errors.password}</Text>
+          )}
 
           <TouchableOpacity onPress={() => NavigateTo("ForgotPassword")}>
             <Text style={styles.forgotPassword}>نسيت كلمة المرور؟</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton} onPress={handleLogin}>
-            <Text style={styles.actionButtonText}>تسجيل الدخول</Text>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.actionButtonText}>تسجيل الدخول</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.signUpRow}>

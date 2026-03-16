@@ -3,13 +3,13 @@ POST http://localhost:3000/auth/register
 Content-Type: application/json
 
 {
-  "first_name": "Muhammed",
-  "last_name": "AJ",
+  "firstName": "Muhammed",
+  "lastName": "AJ",
   "gender": "Male",
-  "date_of_birth": "2000-01-01",
-  "email": "muhammad13801@gmail.com",
+  "dateOfBirth": "2000-01-01",
+  "email": "test101@example.com",
   "password": "mynamei123s",
-  "phone_number": "+970569859979",
+  "phoneNumber": "+970569059979",
   "role": "Customer",
   "status": "Inactive"
 }
@@ -19,8 +19,8 @@ POST http://localhost:3000/auth/verify
 Content-Type: application/json
 
 {
-  "email": "muhammad13801@gmail.com",
-  "code": "92104"
+  "email": "test101@example.com",
+  "code": "35585"
 }
 
 ### Resend Code
@@ -28,5 +28,5 @@ POST http://localhost:3000/auth/resend-code
 Content-Type: application/json
 
 {
-  "email": "muhammad13801@gmail.com"
+  "email": "test100@example.com"
 }

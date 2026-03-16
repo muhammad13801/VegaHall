@@ -9,7 +9,15 @@ import HallOwner from "./components/screens/hallOwnerscrs/hallOwner";
 import EmailCode from "./components/screens/signUpScrs/emailCode";
 import Customer from "./components/screens/CustomerScrs/customer";
 import Admin from "./components/screens/AdminScrs/admin";
+import AddHall from "./components/screens/hallOwnerscrs/addHall";
+import PaymentHall from "./components/screens/hallOwnerscrs/paymentHall";
 import { navigationRef } from "./components/reusable func/navigateTo";
+import { toastConfig } from "./components/reusable func/toastConfig";
+import Toast from "react-native-toast-message";
+import UpdatePassword from "./components/screens/hallOwnerscrs/profile/updatePass";
+import UpdateName from "./components/screens/hallOwnerscrs/profile/updateName";
+import UpdatePhone from "./components/screens/hallOwnerscrs/profile/updatePhone";
+import UpdateEmail from "./components/screens/hallOwnerscrs/profile/updateEmail";
 
 const Stack = createNativeStackNavigator();
 
@@ -26,7 +34,14 @@ export default function App() {
         <Stack.Screen name="EmailCode" component={EmailCode} />
         <Stack.Screen name="Customer" component={Customer} />
         <Stack.Screen name="Admin" component={Admin} />
+        <Stack.Screen name="AddHall" component={AddHall} />
+        <Stack.Screen name="PaymentHall" component={PaymentHall} />
+        <Stack.Screen name="UpdatePassword" component={UpdatePassword} />
+        <Stack.Screen name="UpdateName" component={UpdateName} />
+        <Stack.Screen name="UpdateEmail" component={UpdateEmail} />
+        <Stack.Screen name="UpdatePhone" component={UpdatePhone} />
       </Stack.Navigator>
+      <Toast config={toastConfig} topOffset={60} />
     </NavigationContainer>
   );
 }

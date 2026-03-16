@@ -1,268 +1,255 @@
-import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Input } from "../../reusable func/input";
 import React, { useState } from "react";
+import { Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { goBack, NavigateTo } from "../../reusable func/navigateTo";
-import { styles } from "../../styles";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+
+import { Input } from "../../reusable func/input";
 import PasswordInput from "../../reusable func/passwordInput";
 import KeyboardAwareScreen from "../../reusable func/keyboardAwarScreen";
 import BackButton from "../../reusable func/backButton";
-import { registerUser } from "../../Services/api";
+import { NavigateTo } from "../../reusable func/navigateTo";
+import { registerUser } from "../../Services/authApi";
+import { styles } from "../../styles";
+
+import { UserData, validateUser } from "../../Validations/validateUser";
+import { TextInputMask } from "react-native-masked-text";
+import { handleErrorChange } from "../../reusable func/handleErrorChange";
+import Toast from "react-native-toast-message";
 
 export default function SignUp() {
-  const [firstName, setFirstName] = useState<string>("");
-  const [lastName, setLastName] = useState<string>("");
-  const [gender, setGender] = useState<string>("");
-  const [userType, setUserType] = useState<string>("");
-  const [date, setDate] = useState(new Date(2000, 0, 1));
-  const [show, setShow] = useState<boolean>(false);
-  const [password, setPassword] = useState<string>("");
-  const [rePassword, setRePassword] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [form, setForm] = useState<UserData>({
+    firstName: "",
+    lastName: "",
+    gender: "",
+    userType: "",
+    date: new Date(2000, 0, 1),
+    email: "",
+    phoneNumber: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-  const [firstNameError, setFirstNameError] = useState<string>("");
-  const [lastNameError, setLastNameError] = useState<string>("");
-  const [genderError, setGenderError] = useState<string>("");
-  const [userTypeError, setUserTypeError] = useState<string>("");
-  const [phoneNumberError, setPhoneNumberError] = useState<string>("");
-  const [dateError, setDateError] = useState<string>("");
-  const [emailError, setEmailError] = useState<string>("");
-  const [passwordError, setPasswordError] = useState<string>("");
-  const [repasswordError, setRepasswordError] = useState<string>("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const onChange = (event: any, selectedDate?: Date) => {
-    setShow(Platform.OS === "ios");
-    if (selectedDate) setDate(selectedDate);
-  };
+  const change = handleErrorChange(setForm);
 
   const handleSignUp = async () => {
-    if (firstName.trim() === "") setFirstNameError("ادخل الاسم الاول");
-    else setFirstNameError("");
-
-    if (lastName.trim() === "") setLastNameError("ادخل اسم العائلة");
-    else setLastNameError("");
-
-    if (gender.trim() === "") setGenderError("الرجاء اختيار الجنس");
-    else setGenderError("");
-
-    if (userType.trim() === "") setUserTypeError("الرجاء اختيار نوع المستخدم");
-    else setUserTypeError("");
-
-    if (phoneNumber.trim() === "") setPhoneNumberError("ادخل رقم الهاتف");
-    else setPhoneNumberError("");
-
-    if (email.trim() === "") setEmailError("لا يمكن ترك الحقل فارغا!");
-    else setEmailError("");
-
-    if (password.trim() === "") setPasswordError("لا يمكن ترك الحقل فارغا!");
-    else setPasswordError("");
-
-    if (rePassword.trim() === "") setRepasswordError("لا يمكن ترك الحقل فارغا");
-    else if (password !== rePassword)
-      setRepasswordError("كلمة المرور غير متطابقة");
-    else setRepasswordError("");
+    const validationErrors = validateUser(form);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
 
     setLoading(true);
-    if (
-      firstNameError === "" &&
-      lastNameError === "" &&
-      genderError === "" &&
-      userTypeError === "" &&
-      phoneNumberError === "" &&
-      dateError === "" &&
-      emailError === "" &&
-      passwordError === "" &&
-      repasswordError === ""
-    ) {
-      try {
-        /* const emailCheck = await signupAPI.checkEmail(email);
-        if (emailCheck.exists)
-          return setEmailError("البريد الإلكتروني مستخدم بالفعل");*/
-        const userData = {
-          first_name: firstName,
-          last_name: lastName,
-          gender,
-          date_of_birth: date.toISOString(),
-          email,
-          phone_number: phoneNumber,
-          role: userType,
-          password,
-        };
 
-        await registerUser(userData);
-        console.log(userData);
-        NavigateTo("EmailCode", { email });
-      } catch (error: any) {
-        console.log("Error: " + error);
-        return Alert.alert("خطأ", "فشل في إرسال رمز التحقق" + error.message);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      const response = await registerUser({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        gender: form.gender,
+        dateOfBirth: form.date.toISOString(),
+        email: form.email,
+        phoneNumber: form.phoneNumber,
+        role: form.userType,
+        password: form.password,
+      });
+      Toast.show({
+        type: "success",
+        text1: response.data,
+        visibilityTime: 3000,
+      });
+      NavigateTo("EmailCode", { email: form.email });
+    } catch (err: any) {
+      Toast.show({
+        type: "error",
+        text1: err.response?.data,
+        visibilityTime: 3000,
+      });
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <BackButton />
-      <KeyboardAwareScreen scrollHeight={120}>
+      <KeyboardAwareScreen scrollHeight={50}>
         <Text style={styles.title}>انشاء حساب</Text>
+        <Text style={styles.subtitle}>أنشئ حسابك وابدأ رحلتك</Text>
 
         <View style={styles.card}>
           <View style={styles.info}>
-            <Text style={styles.cardText}>الاسم الاول</Text>
-            <Text style={[styles.cardText]}>اسم العائلة</Text>
-          </View>
-
-          <View style={styles.info}>
             <Input
-              style={{ width: 150 }}
-              value={firstName}
-              onChangeText={setFirstName}
+              style={{ flex: 1 }}
+              value={form.firstName}
+              onChangeText={(text) => change("firstName", text)}
+              placeholder="الاسم الاول"
             />
+
+            <View style={styles.gapBetween} />
+
             <Input
-              style={{ width: 150, marginRight: 12 }}
-              value={lastName}
-              onChangeText={setLastName}
+              style={{ flex: 1 }}
+              value={form.lastName}
+              onChangeText={(text) => change("lastName", text)}
+              placeholder="اسم العائلة"
             />
           </View>
+          {errors.firstName && (
+            <Text style={styles.errorText}>{errors.firstName}</Text>
+          )}
+          {errors.lastName && (
+            <Text style={styles.errorText}>{errors.lastName}</Text>
+          )}
 
+          {/* Gender + UserType */}
           <View style={styles.info}>
-            {firstNameError.length > 0 && (
-              <Text style={[styles.errorText, { width: 170 }]}>
-                {firstNameError}
-              </Text>
-            )}
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={form.gender}
+                onValueChange={(val) => change("gender", val)}
+                style={styles.options}
+                mode="dropdown"
+              >
+                <Picker.Item label="اختر الجنس" value="" />
+                <Picker.Item label="ذكر" value="Male" />
+                <Picker.Item label="انثى" value="Female" />
+              </Picker>
+            </View>
 
-            {lastNameError.length > 0 && (
-              <Text style={styles.errorText}>{lastNameError}</Text>
-            )}
+            <View style={styles.gapBetween} />
+
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={form.userType}
+                onValueChange={(val) => change("userType", val)}
+                style={styles.options}
+                mode="dropdown"
+              >
+                <Picker.Item label="نوع المستخدم" value="" />
+                <Picker.Item label="زبون" value="Customer" />
+                <Picker.Item label="مالك قاعة" value="HallOwner" />
+              </Picker>
+            </View>
           </View>
 
-          <View style={[styles.info, { marginTop: 12 }]}>
-            <Text style={styles.cardText}>الجنس</Text>
-            <Text style={styles.cardText}>نوع المستخدم</Text>
-          </View>
+          {errors.gender && (
+            <Text style={styles.errorText}>{errors.gender}</Text>
+          )}
+          {errors.userType && (
+            <Text style={styles.errorText}>{errors.userType}</Text>
+          )}
 
+          {/* Phone + Date */}
           <View style={styles.info}>
-            <Picker
-              style={styles.options}
-              selectedValue={gender}
-              onValueChange={setGender}
-            >
-              <Picker.Item label="" value="" />
-              <Picker.Item label="ذكر" value="Male" />
-              <Picker.Item label="انثى" value="Female" />
-            </Picker>
-
-            <Picker
-              style={[styles.options, { marginRight: 12 }]}
-              selectedValue={userType}
-              onValueChange={setUserType}
-            >
-              <Picker.Item label="" value="" />
-              <Picker.Item label="زبون" value="Customer" />
-              <Picker.Item label="صاحب صالة" value="HallOwner" />
-            </Picker>
-          </View>
-
-          <View style={styles.info}>
-            {genderError.length > 0 && (
-              <Text style={[styles.errorText, { width: 170 }]}>
-                {genderError}
-              </Text>
-            )}
-
-            {userTypeError.length > 0 && (
-              <Text style={styles.errorText}>{userTypeError}</Text>
-            )}
-          </View>
-
-          <View style={styles.info}>
-            <Text style={styles.cardText}>رقم الهاتف</Text>
-            <Text style={[styles.cardText]}>تاريح الميلاد</Text>
-          </View>
-
-          <View style={styles.info}>
-            <Input
-              style={{ width: 150, direction: "ltr" }}
-              placeholder="9705..."
+            <TextInputMask
+              type={"custom"}
+              options={{
+                mask: "+97C-5DD-DDD-DDD",
+                translation: {
+                  "9": (val: string) => (val === "9" ? val : "9"),
+                  "7": (val: string) => (val === "7" ? val : "7"),
+                  C: (val: string) => (/[02]/.test(val) ? val : null),
+                  D: (val: string) => (/[0-9]/.test(val) ? val : null),
+                },
+              }}
+              value={form.phoneNumber}
+              onChangeText={(text) => change("phoneNumber", text)}
               keyboardType="numeric"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              maxLength={12}
+              placeholder="+97X-XXX-XXX-XXX"
+              style={[styles.input, { flex: 1 }]}
             />
+
+            <View style={styles.gapBetween} />
+
             <TouchableOpacity
               style={[
                 styles.input,
                 {
-                  width: 150,
-                  marginRight: 12,
+                  flex: 1,
                   justifyContent: "center",
                   alignItems: "center",
                 },
               ]}
-              onPress={() => setShow(true)}
+              onPress={() => setShowDatePicker(true)}
             >
-              <Text style={{ fontSize: 15 }}>
-                {date.toLocaleDateString("EG")}
-              </Text>
-              {show && (
-                <DateTimePicker
-                  value={date}
-                  mode="date"
-                  display="calendar"
-                  maximumDate={new Date()}
-                  onChange={onChange}
-                />
-              )}
+              <Text>{form.date.toLocaleDateString("ar-EG")}</Text>
             </TouchableOpacity>
+
+            <DateTimePickerModal
+              style={styles.input}
+              isVisible={showDatePicker}
+              mode="date"
+              maximumDate={
+                new Date(
+                  new Date().getFullYear() - 13,
+                  new Date().getMonth(),
+                  new Date().getDay(),
+                )
+              }
+              onConfirm={(date) => {
+                change("date", date);
+                setShowDatePicker(false);
+              }}
+              onCancel={() => setShowDatePicker(false)}
+            />
           </View>
+          {errors.phoneNumber && (
+            <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+          )}
+          {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
 
-          <View style={styles.info}>
-            {phoneNumberError.length > 0 && (
-              <Text style={[styles.errorText, { width: 170 }]}>
-                {phoneNumberError}
-              </Text>
-            )}
-
-            {dateError.length > 0 && (
-              <Text style={styles.errorText}>{dateError}</Text>
-            )}
-          </View>
-
-          <Text style={styles.cardText}>البريد الالكتروني</Text>
+          {/* Email */}
           <Input
             placeholder="البريد الالكتروني"
             keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
+            value={form.email}
+            onChangeText={(text) => change("email", text)}
           />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
-          {emailError.length > 0 && (
-            <Text style={styles.errorText}>{emailError}</Text>
+          {/* Password */}
+          <PasswordInput
+            password={form.password}
+            setPassword={(text) => change("password", text)}
+          />
+          {errors.password && (
+            <Text style={styles.errorText}>{errors.password}</Text>
           )}
-
-          <Text style={styles.cardText}>كلمة المرور الجديدة</Text>
-          <PasswordInput password={password} setPassword={setPassword} />
-
-          {passwordError.length > 0 && (
-            <Text style={styles.errorText}>{passwordError}</Text>
-          )}
-
-          <Text style={styles.cardText}>تاكيد كلمة المرور</Text>
-          <PasswordInput password={rePassword} setPassword={setRePassword} />
-
-          {repasswordError.length > 0 && (
-            <Text style={styles.errorText}>{repasswordError}</Text>
-          )}
-
-          <TouchableOpacity style={styles.actionButton} onPress={handleSignUp}>
-            <Text style={styles.actionButtonText}>
-              {loading ? "جاري الارسال..." : "انشاء حساب"}
+          <View style={styles.passwordHintBox}>
+            <Text style={styles.passwordHintTitle}>
+              كلمة المرور يجب أن تحتوي على:
             </Text>
+            <Text style={styles.passwordHintText}>• 8 إلى 30 حرف</Text>
+            <Text style={styles.passwordHintText}>• رقم واحد على الأقل</Text>
+            <Text style={styles.passwordHintText}>• رمز واحد على الأقل</Text>
+            <Text style={styles.passwordHintText}>
+              • حرف كبير واحد على الأقل
+            </Text>
+          </View>
+
+          {/* Confirm Password */}
+          <PasswordInput
+            password={form.confirmPassword}
+            setPassword={(text) => change("confirmPassword", text)}
+            placeholder="تاكيد كلمة المرور"
+          />
+          {errors.confirmPassword && (
+            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+          )}
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleSignUp}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.actionButtonText}>انشاء حساب</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAwareScreen>

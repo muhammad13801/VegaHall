@@ -15,7 +15,9 @@ export default function KeyboardAwareScreen({
         flexGrow: 1,
         justifyContent: "center",
         alignItems: "center",
+        paddingBottom: 20,
       }}
+      showsVerticalScrollIndicator={false}
       enableOnAndroid={true}
       extraScrollHeight={scrollHeight}
       keyboardOpeningTime={0}

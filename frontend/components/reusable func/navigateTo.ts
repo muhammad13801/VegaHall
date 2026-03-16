@@ -10,11 +10,14 @@ export function goBack() {
   if (navigationRef.isReady() && navigationRef.canGoBack())
     navigationRef.goBack();
 }
-export function NavigateAndReset(screenName: string) {
+export function NavigateAndReset(
+  screenName: string,
+  params?: Record<string, any>,
+) {
   if (navigationRef.isReady()) {
     navigationRef.reset({
       index: 0,
-      routes: [{ name: screenName as never }],
+      routes: [{ name: screenName as never, params: params as never }],
     });
   }
 }

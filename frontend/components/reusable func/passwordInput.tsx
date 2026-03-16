@@ -1,31 +1,42 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Input } from "./input";
 import { styles } from "../styles";
 
 type Props = {
   password: string;
   setPassword: (value: string) => void;
+  placeholder?: string;
 };
 
-export default function PasswordInput({ password, setPassword }: Props) {
+export default function PasswordInput({
+  password,
+  setPassword,
+  placeholder = "كلمة المرور",
+}: Props) {
   const [showPassword, setShowPassword] = useState<boolean>(true);
 
   return (
     <View style={styles.passwordContainer}>
       <Input
-        placeholder="كلمة المرور"
+        placeholder={placeholder}
         placeholderTextColor={"#898989"}
         value={password}
         onChangeText={setPassword}
         secureTextEntry={showPassword}
         textAlign="right"
+        maxLength={30}
       />
       <TouchableOpacity
         style={styles.showPasswordButton}
         onPress={() => setShowPassword(!showPassword)}
       >
-        <Text>{showPassword ? "Show" : "Hide"}</Text>
+        <Ionicons
+          name={showPassword ? "eye-off-outline" : "eye-outline"}
+          size={22}
+          color="#6C4AB6"
+        />
       </TouchableOpacity>
     </View>
   );
