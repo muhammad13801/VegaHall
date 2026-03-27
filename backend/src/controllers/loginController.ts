@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import sql from "../db";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 import { UserTable } from "../services/authService";
 
@@ -10,7 +10,8 @@ export const comparePassword = async (password: string, hash: string) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const email = req.body.email.trim().toLowerCase();
+    const password = req.body.password.trim();
 
     const [userData] = await sql<
       UserTable[]
@@ -35,6 +36,7 @@ export const login = async (req: Request, res: Response) => {
       message: "✔️ تم تسجبل الدخول بنجاح",
     });
   } catch (err) {
+    console.error(err);
     return res.status(500).send("❌ خطا في الخادم");
   }
 };

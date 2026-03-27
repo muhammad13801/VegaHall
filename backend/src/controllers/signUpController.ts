@@ -1,12 +1,11 @@
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import sql from "../db";
 import { sendVerificationCode } from "../utils/email";
 import {
   checkPending,
-  emailExists,
+  checkUserAvailability,
   generateCode,
-  phoneExists,
   processVerification,
 } from "../services/authService";
 import { handleVerificationError } from "../utils/handleVerificationError";
@@ -27,16 +26,29 @@ export const register = async (req: Request, res: Response) => {
 
     const email = req.body.email.trim().toLowerCase();
 
-    if (await emailExists(email))
+    // Use consolidated existence check for better performance
+    const availability = await checkUserAvailability(email, phoneNumber);
+
+    if (availability.emailTaken)
       return res.status(400).send("❌ البريد الإلكتروني موجود بالفعل");
 
-    if (await phoneExists(phoneNumber))
+    if (availability.phoneTaken)
       return res.status(400).send("❌ رقم الهاتف موجود بالفعل");
 
-    const existingPending = await checkPending({ email });
-    if (existingPending.status === "valid") return resendCode(req, res);
-
-    await sql`DELETE FROM pending_users WHERE expires_at < NOW()`;
+    // Check if there is a valid pending registration
+    if (availability.pending) {
+      if (
+        new Date(Date.now()) < availability.pending.expires_at &&
+        availability.pending.attempts_left > 0
+      ) {
+        await sql`
+          UPDATE pending_users
+          SET first_name = ${firstName}, last_name = ${lastName}, gender = ${gender},
+          role = ${role}, phone_number = ${phoneNumber}, date_of_birth =  ${dateOfBirth}
+          WHERE email = ${email}`;
+        return res.send("✔️ تم إرسال رمز التحقق إلى بريدك الإلكتروني.");
+      } else await sql`DELETE FROM pending_users WHERE email = ${email}`;
+    }
 
     const hashed = await bcrypt.hash(password, 10);
     const code = generateCode();
@@ -55,7 +67,7 @@ export const register = async (req: Request, res: Response) => {
         ${hashed},
         ${phoneNumber},
         ${role},
-        ${"Active"},
+        'Active',
         ${code},
         5,
         ${new Date(Date.now() + 10 * 60 * 1000)}

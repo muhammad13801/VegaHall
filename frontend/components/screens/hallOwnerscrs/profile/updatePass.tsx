@@ -5,13 +5,14 @@ import BackButton from "../../../reusable func/backButton";
 import KeyboardAwareScreen from "../../../reusable func/keyboardAwarScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { handleErrorChange } from "../../../reusable func/handleErrorChange";
+
 import { NavigateTo } from "../../../reusable func/navigateTo";
 import Toast from "react-native-toast-message";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { changePasswordApi } from "../../../Services/authApi";
 import { AuthData, validateAuth } from "../../../Validations/validateAuth";
 import PasswordInput from "../../../reusable func/passwordInput";
+import { useHandleChange } from "../../../reusable func/useHandleChange";
+import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
+import { changePasswordApi } from "../../../Services/userApi";
 
 export default function UpdatePassword() {
   const [form, setForm] = useState<Partial<AuthData>>({
@@ -21,7 +22,7 @@ export default function UpdatePassword() {
   const [oldPassword, setOldPassword] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
-  const change = handleErrorChange(setForm);
+  const change = useHandleChange(setForm);
 
   const handlePasswordChange = async () => {
     const validationErrors = validateAuth(form);
@@ -38,15 +39,10 @@ export default function UpdatePassword() {
 
     setLoading(true);
     try {
-      const sessionId = await AsyncStorage.getItem("sessionId");
-
-      await changePasswordApi(
-        {
-          oldPassword,
-          password: form.password,
-        },
-        sessionId!,
-      );
+      await changePasswordApi({
+        oldPassword,
+        password: form.password,
+      });
 
       Toast.show({ type: "success", text1: "✅ تم تغيير كلمة المرور بنجاح" });
       setTimeout(() => {
@@ -69,7 +65,10 @@ export default function UpdatePassword() {
   };
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
+
       <BackButton />
+
       <KeyboardAwareScreen>
         <Ionicons
           name="lock-closed-outline"

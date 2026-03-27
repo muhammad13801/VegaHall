@@ -3,7 +3,6 @@ import { Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-
 import { Input } from "../../reusable func/input";
 import PasswordInput from "../../reusable func/passwordInput";
 import KeyboardAwareScreen from "../../reusable func/keyboardAwarScreen";
@@ -11,11 +10,11 @@ import BackButton from "../../reusable func/backButton";
 import { NavigateTo } from "../../reusable func/navigateTo";
 import { registerUser } from "../../Services/authApi";
 import { styles } from "../../styles";
-
 import { UserData, validateUser } from "../../Validations/validateUser";
 import { TextInputMask } from "react-native-masked-text";
-import { handleErrorChange } from "../../reusable func/handleErrorChange";
 import Toast from "react-native-toast-message";
+import { useHandleChange } from "../../reusable func/useHandleChange";
+import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 
 export default function SignUp() {
   const [form, setForm] = useState<UserData>({
@@ -34,7 +33,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const change = handleErrorChange(setForm);
+  const change = useHandleChange(setForm);
 
   const handleSignUp = async () => {
     const validationErrors = validateUser(form);
@@ -73,6 +72,7 @@ export default function SignUp() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
       <BackButton />
       <KeyboardAwareScreen scrollHeight={50}>
         <Text style={styles.title}>انشاء حساب</Text>
@@ -80,66 +80,73 @@ export default function SignUp() {
 
         <View style={styles.card}>
           <View style={styles.info}>
-            <Input
-              style={{ flex: 1 }}
-              value={form.firstName}
-              onChangeText={(text) => change("firstName", text)}
-              placeholder="الاسم الاول"
-            />
+            <View style={{ flex: 1 }}>
+              <Input
+                value={form.firstName}
+                onChangeText={(text) => change("firstName", text)}
+                placeholder="الاسم الاول"
+              />
+              {errors.firstName && (
+                <Text style={styles.errorText}>{errors.firstName}</Text>
+              )}
+            </View>
 
             <View style={styles.gapBetween} />
 
-            <Input
-              style={{ flex: 1 }}
-              value={form.lastName}
-              onChangeText={(text) => change("lastName", text)}
-              placeholder="اسم العائلة"
-            />
+            <View style={{ flex: 1 }}>
+              <Input
+                value={form.lastName}
+                onChangeText={(text) => change("lastName", text)}
+                placeholder="اسم العائلة"
+              />
+              {errors.lastName && (
+                <Text style={styles.errorText}>{errors.lastName}</Text>
+              )}
+            </View>
           </View>
-          {errors.firstName && (
-            <Text style={styles.errorText}>{errors.firstName}</Text>
-          )}
-          {errors.lastName && (
-            <Text style={styles.errorText}>{errors.lastName}</Text>
-          )}
 
           {/* Gender + UserType */}
           <View style={styles.info}>
             <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={form.gender}
-                onValueChange={(val) => change("gender", val)}
-                style={styles.options}
-                mode="dropdown"
-              >
-                <Picker.Item label="اختر الجنس" value="" />
-                <Picker.Item label="ذكر" value="Male" />
-                <Picker.Item label="انثى" value="Female" />
-              </Picker>
+              <View style={{ flex: 1 }}>
+                <Picker
+                  selectedValue={form.gender}
+                  onValueChange={(val) => change("gender", val)}
+                  style={styles.options}
+                  mode="dropdown"
+                >
+                  <Picker.Item label="اختر الجنس" value="" />
+                  <Picker.Item label="ذكر" value="Male" />
+                  <Picker.Item label="انثى" value="Female" />
+                </Picker>
+
+                {errors.gender && (
+                  <Text style={styles.errorText}>{errors.gender}</Text>
+                )}
+              </View>
             </View>
 
             <View style={styles.gapBetween} />
 
             <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={form.userType}
-                onValueChange={(val) => change("userType", val)}
-                style={styles.options}
-                mode="dropdown"
-              >
-                <Picker.Item label="نوع المستخدم" value="" />
-                <Picker.Item label="زبون" value="Customer" />
-                <Picker.Item label="مالك قاعة" value="HallOwner" />
-              </Picker>
+              <View style={{ flex: 1 }}>
+                <Picker
+                  selectedValue={form.userType}
+                  onValueChange={(val) => change("userType", val)}
+                  style={styles.options}
+                  mode="dropdown"
+                >
+                  <Picker.Item label="نوع المستخدم" value="" />
+                  <Picker.Item label="زبون" value="Customer" />
+                  <Picker.Item label="مالك قاعة" value="HallOwner" />
+                </Picker>
+
+                {errors.userType && (
+                  <Text style={styles.errorText}>{errors.userType}</Text>
+                )}
+              </View>
             </View>
           </View>
-
-          {errors.gender && (
-            <Text style={styles.errorText}>{errors.gender}</Text>
-          )}
-          {errors.userType && (
-            <Text style={styles.errorText}>{errors.userType}</Text>
-          )}
 
           {/* Phone + Date */}
           <View style={styles.info}>
@@ -158,7 +165,7 @@ export default function SignUp() {
               onChangeText={(text) => change("phoneNumber", text)}
               keyboardType="numeric"
               placeholder="+97X-XXX-XXX-XXX"
-              style={[styles.input, { flex: 1 }]}
+              style={[styles.input, { flex: 1, direction: "ltr" }]}
             />
 
             <View style={styles.gapBetween} />

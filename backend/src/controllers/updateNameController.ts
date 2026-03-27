@@ -22,6 +22,7 @@ export const updateName = async (req: AuthRequest, res: Response) => {
     await sql`UPDATE users SET first_name = ${first_name}, last_name = ${last_name} WHERE id = ${userId}`;
     res.send("✅ تم تحديث الاسم بنجاح");
   } catch (err) {
+    console.error(err);
     res.status(500).send("❌ خطأ في الخادم");
   }
 };

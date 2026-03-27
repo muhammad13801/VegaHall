@@ -11,7 +11,10 @@ export const validateAuth = (
 ): { [key: string]: string } => {
   const errors: { [key: string]: string } = {};
 
-  if (data.email !== undefined && !emailRegex.test(data.email))
+  if (
+    data.email !== undefined &&
+    !emailRegex.test(data.email.trim().toLowerCase())
+  )
     errors.email = "البريد الإلكتروني غير صالح";
 
   if (data.password !== undefined && !passwordRegex.test(data.password))

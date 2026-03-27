@@ -7,9 +7,10 @@ import {
   NavigateTo,
 } from "../../../reusable func/navigateTo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getProfileApi, logoutApi } from "../../../Services/authApi";
 import Toast from "react-native-toast-message";
 import { useEffect, useState } from "react";
+import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
+import { getProfileApi, logoutApi } from "../../../Services/userApi";
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
@@ -20,9 +21,7 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
-      const sessionId = await AsyncStorage.getItem("sessionId");
-
-      const response = await getProfileApi(sessionId!);
+      const response = await getProfileApi();
       setUser(response.data);
     } catch (err: any) {
       Toast.show({
@@ -43,7 +42,7 @@ export default function Profile() {
           try {
             const sessionId = await AsyncStorage.getItem("sessionId");
             if (sessionId) {
-              const response = await logoutApi(sessionId);
+              const response = await logoutApi();
               await AsyncStorage.removeItem("sessionId");
               Toast.show({ type: "success", text1: response?.data });
             }
@@ -88,6 +87,8 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
+
       <View style={styles.card}>
         <View style={styles.profileHeader}>
           <View style={styles.profileAvatarContainer}>
@@ -159,7 +160,7 @@ export default function Profile() {
             <Text
               style={[
                 styles.actionButtonText,
-                { color: "#6C4AB6", width: "30%" },
+                { color: "#6C4AB6", width: "40%" },
               ]}
             >
               تغيير كلمة المرور

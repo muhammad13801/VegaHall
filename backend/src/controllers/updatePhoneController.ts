@@ -21,6 +21,7 @@ export const updatePhone = async (req: AuthRequest, res: Response) => {
     await sql`UPDATE users SET phone_number = ${phone} WHERE id = ${userId}`;
     res.send("✅ تم تحديث رقم الهاتف بنجاح");
   } catch (err) {
+    console.error(err);
     res.status(500).send("خطأ في الخادم");
   }
 };

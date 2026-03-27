@@ -3,15 +3,14 @@ import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import BackButton from "../../../reusable func/backButton";
 import KeyboardAwareScreen from "../../../reusable func/keyboardAwarScreen";
 import { Ionicons } from "@expo/vector-icons";
-import { Input } from "../../../reusable func/input";
 import { styles } from "../../../styles";
 import { useState } from "react";
 import { phoneRegex } from "../../../reusable func/regex";
 import Toast from "react-native-toast-message";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { updatePhoneApi } from "../../../Services/authApi";
 import { NavigateAndReset } from "../../../reusable func/navigateTo";
 import { TextInputMask } from "react-native-masked-text";
+import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
+import { updatePhoneApi } from "../../../Services/userApi";
 
 export default function UpdatePhone() {
   const [phone, setPhone] = useState<string>("");
@@ -25,8 +24,7 @@ export default function UpdatePhone() {
     setLoading(true);
 
     try {
-      const sessionId = await AsyncStorage.getItem("sessionId");
-      const response = await updatePhoneApi(sessionId!, { phone });
+      const response = await updatePhoneApi({ phone });
       Toast.show({ type: "success", text1: response.data });
       NavigateAndReset("HallOwner", {
         screen: "Profile",
@@ -40,7 +38,10 @@ export default function UpdatePhone() {
   };
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
+
       <BackButton />
+
       <KeyboardAwareScreen>
         <Text style={styles.title}>تعديل رقم الهاتف</Text>
         <View style={styles.card}>

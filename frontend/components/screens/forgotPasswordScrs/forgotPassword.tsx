@@ -1,10 +1,4 @@
-import {
-  Text,
-  TouchableOpacity,
-  View,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "../../reusable func/input";
 import { useState } from "react";
@@ -14,16 +8,17 @@ import { styles } from "../../styles";
 import BackButton from "../../reusable func/backButton";
 import KeyboardAwareScreen from "../../reusable func/keyboardAwarScreen";
 import { AuthData, validateAuth } from "../../Validations/validateAuth";
-import { handleErrorChange } from "../../reusable func/handleErrorChange";
 import { sendResetCode } from "../../Services/authApi";
 import Toast from "react-native-toast-message";
+import BackgroundDecoration from "../../reusable func/backgroundDecoration";
+import { useHandleChange } from "../../reusable func/useHandleChange";
 
 export default function ForgotPassword() {
   const [form, setForm] = useState<Partial<AuthData>>({ email: "" });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
 
-  const change = handleErrorChange(setForm);
+  const change = useHandleChange(setForm);
 
   const handleForgotPassword = async () => {
     const validationErrors = validateAuth(form);
@@ -52,7 +47,10 @@ export default function ForgotPassword() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
+
       <BackButton />
+
       <KeyboardAwareScreen>
         <Ionicons
           name="lock-closed-outline"

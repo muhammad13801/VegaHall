@@ -1,6 +1,6 @@
 import { Response } from "express";
 import sql from "../db";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { AuthRequest } from "../middleware/sessionMiddleware";
 import { UserTable } from "../services/authService";
 import { comparePassword } from "./loginController";
@@ -26,7 +26,8 @@ export const updatePassword = async (req: AuthRequest, res: Response) => {
     await sql`UPDATE users SET password = ${hashedNewPassword} WHERE id = ${userId}`;
 
     return res.status(200).send("✅ تم تغيير كلمة المرور بنجاح");
-  } catch (error) {
+  } catch (err) {
+    console.error(err);
     return res.status(500).send("❌ خطا في الخادم");
   }
 };

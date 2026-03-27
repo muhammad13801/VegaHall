@@ -7,10 +7,11 @@ import PasswordInput from "../reusable func/passwordInput";
 import { styles } from "../styles";
 import KeyboardAwareScreen from "../reusable func/keyboardAwarScreen";
 import { AuthData, validateAuth } from "../Validations/validateAuth";
-import { handleErrorChange } from "../reusable func/handleErrorChange";
 import { login } from "../Services/authApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
+import { useHandleChange } from "../reusable func/useHandleChange";
+import BackgroundDecoration from "../reusable func/backgroundDecoration";
 
 export default function Login() {
   const [form, setForm] = useState<Partial<AuthData>>({
@@ -20,7 +21,7 @@ export default function Login() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState<boolean>(false);
 
-  const change = handleErrorChange(setForm);
+  const change = useHandleChange(setForm);
 
   const handleLogin = async () => {
     const validationErrors = validateAuth(form);
@@ -46,7 +47,8 @@ export default function Login() {
     } catch (err: any) {
       return Toast.show({
         type: "error",
-        text1: err.response?.data,
+        text1:
+          err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
         visibilityTime: 3000,
       });
     } finally {
@@ -56,6 +58,7 @@ export default function Login() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
       <KeyboardAwareScreen>
         <Text style={styles.title}>Vega Hall</Text>
         <Text style={styles.subtitle}>احجز مناسبتك بكل سهولة</Text>

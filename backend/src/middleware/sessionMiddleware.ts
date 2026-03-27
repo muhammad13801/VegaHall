@@ -27,7 +27,7 @@ export const sessionAuthenticate = async (
 
   // check 10 mins inactivity
   if (session.is_expired) {
-    await sql`DELETE FROM sessions WHERE id = ${sessionId}`;
+    await sql`DELETE FROM sessions WHERE last_activity < NOW() - INTERVAL '10 minutes'`;
     if (req.originalUrl.includes("/logout")) {
       return next();
     }
