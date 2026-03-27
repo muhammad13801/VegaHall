@@ -6,12 +6,12 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Input } from "../../../reusable func/input";
 import { useRoute } from "@react-navigation/native";
 import { useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
 import { NavigateAndReset } from "../../../reusable func/navigateTo";
-import { updateNameApi } from "../../../Services/authApi";
 import { UserData, validateName } from "../../../Validations/validateUser";
-import { handleErrorChange } from "../../../reusable func/handleErrorChange";
+import { useHandleChange } from "../../../reusable func/useHandleChange";
+import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
+import { updateNameApi } from "../../../Services/userApi";
 
 export default function UpdateName() {
   const route = useRoute<any>();
@@ -22,7 +22,7 @@ export default function UpdateName() {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const change = handleErrorChange(setForm);
+  const change = useHandleChange(setForm);
   const [loading, setLoading] = useState(false);
 
   const handleUpdateName = async () => {
@@ -32,8 +32,7 @@ export default function UpdateName() {
 
     try {
       setLoading(true);
-      const sessionId = await AsyncStorage.getItem("sessionId");
-      const response = await updateNameApi(sessionId!, {
+      const response = await updateNameApi({
         first_name: form.firstName,
         last_name: form.lastName,
       });
@@ -59,7 +58,10 @@ export default function UpdateName() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
+
       <BackButton />
+
       <KeyboardAwareScreen>
         <Text style={styles.title}>تعديل الاسم</Text>
         <View style={styles.card}>

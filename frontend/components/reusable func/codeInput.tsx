@@ -5,6 +5,7 @@ import { styles } from "../styles";
 import { Input } from "./input";
 import KeyboardAwareScreen from "./keyboardAwarScreen";
 import React, { useState, useEffect } from "react";
+import BackgroundDecoration from "./backgroundDecoration";
 
 interface CodeInputProps {
   title: string;
@@ -61,6 +62,7 @@ export default function CodeInput({
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
       <BackButton />
       <KeyboardAwareScreen>
         <Text style={styles.title}>{title}</Text>

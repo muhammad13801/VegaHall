@@ -7,10 +7,12 @@ import { styles } from "../../styles";
 import BackButton from "../../reusable func/backButton";
 import KeyboardAwareScreen from "../../reusable func/keyboardAwarScreen";
 import { AuthData, validateAuth } from "../../Validations/validateAuth";
-import { handleErrorChange } from "../../reusable func/handleErrorChange";
+
 import { useRoute } from "@react-navigation/native";
 import { updateNewPassword } from "../../Services/authApi";
 import Toast from "react-native-toast-message";
+import { useHandleChange } from "../../reusable func/useHandleChange";
+import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 
 export default function SetNewPassword() {
   const [form, setForm] = useState<Partial<AuthData>>({
@@ -22,7 +24,7 @@ export default function SetNewPassword() {
   const route = useRoute<any>();
   const { email } = route.params;
 
-  const change = handleErrorChange(setForm);
+  const change = useHandleChange(setForm);
 
   const handleNewPassword = async () => {
     const validationErrors = validateAuth(form);
@@ -52,6 +54,8 @@ export default function SetNewPassword() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
+
       <BackButton />
 
       <KeyboardAwareScreen>

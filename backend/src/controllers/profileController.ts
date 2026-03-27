@@ -17,7 +17,8 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     if (!user) return res.status(404).send("❌ المستخدم غير موجود");
 
     res.json(user);
-  } catch (error) {
+  } catch (err) {
+    console.error(err);
     res.status(500).send("❌ خطأ في الخادم");
   }
 };

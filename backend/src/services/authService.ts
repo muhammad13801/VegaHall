@@ -1,6 +1,5 @@
 import sql from "../db";
 
-/* ================= TYPES ================= */
 export interface UserTable {
   id: number;
   first_name: string;
@@ -47,6 +46,22 @@ export const phoneExists = async (phoneNumber: string): Promise<boolean> => {
   const result =
     await sql`SELECT phone_number FROM users WHERE phone_number = ${phoneNumber}`;
   return result.length > 0;
+};
+
+export const checkUserAvailability = async (
+  email: string,
+  phoneNumber: string,
+) => {
+  const [userRecords, pendingRecords] = await Promise.all([
+    sql`SELECT email, phone_number FROM users WHERE email = ${email} OR phone_number = ${phoneNumber}`,
+    sql`SELECT * FROM pending_users WHERE email = ${email}`,
+  ]);
+
+  const emailTaken = userRecords.some((r) => r.email === email);
+  const phoneTaken = userRecords.some((r) => r.phone_number === phoneNumber);
+  const pending = pendingRecords[0] as PendingUser | undefined;
+
+  return { emailTaken, phoneTaken, pending };
 };
 
 /* ================= CHECK PENDING ================= */

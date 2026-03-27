@@ -83,6 +83,7 @@ export const updateEmail = async (req: AuthRequest, res: Response) => {
     await sql`DELETE FROM pending_users WHERE email = ${email}`;
     res.send("✅ تم تحديث البريد الإلكتروني بنجاح");
   } catch (err) {
+    console.error(err);
     res.status(500).send("❌ خطأ في الخادم");
   }
 };

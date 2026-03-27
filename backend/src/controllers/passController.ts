@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import sql from "../db";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { sendVerificationCode } from "../utils/email";
 import {
   emailExists,

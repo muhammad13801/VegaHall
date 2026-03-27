@@ -5,13 +5,13 @@ import BackButton from "../../../reusable func/backButton";
 import KeyboardAwareScreen from "../../../reusable func/keyboardAwarScreen";
 import { Input } from "../../../reusable func/input";
 import { useState } from "react";
-import { handleErrorChange } from "../../../reusable func/handleErrorChange";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { checkEmailApi, updateEmailApi } from "../../../Services/authApi";
 import Toast from "react-native-toast-message";
 import { NavigateAndReset } from "../../../reusable func/navigateTo";
 import { AuthData, validateAuth } from "../../../Validations/validateAuth";
 import { Ionicons } from "@expo/vector-icons";
+import { useHandleChange } from "../../../reusable func/useHandleChange";
+import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
+import { checkEmailApi, updateEmailApi } from "../../../Services/userApi";
 
 export default function UpdateEmail() {
   const [form, setForm] = useState<Partial<AuthData>>({ email: "" });
@@ -20,7 +20,7 @@ export default function UpdateEmail() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<boolean>(false);
 
-  const change = handleErrorChange(setForm);
+  const change = useHandleChange(setForm);
 
   const handleEmailCheck = async () => {
     const validationErrors = validateAuth(form);
@@ -30,8 +30,7 @@ export default function UpdateEmail() {
     setLoading(true);
 
     try {
-      const sessionId = await AsyncStorage.getItem("sessionId");
-      const response = await checkEmailApi(sessionId!, { email: form.email });
+      const response = await checkEmailApi({ email: form.email });
       Toast.show({ type: "success", text1: response.data });
       setResult(true);
     } catch (err: any) {
@@ -50,8 +49,7 @@ export default function UpdateEmail() {
     setLoading(true);
 
     try {
-      const sessionId = await AsyncStorage.getItem("sessionId");
-      const response = await updateEmailApi(sessionId!, {
+      const response = await updateEmailApi({
         email: form.email,
       });
       Toast.show({ type: "success", text1: response.data });
@@ -68,7 +66,10 @@ export default function UpdateEmail() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
+
       <BackButton />
+
       <KeyboardAwareScreen>
         <Text style={styles.title}>تعديل البريد الإلكتروني</Text>
         <View style={styles.card}>

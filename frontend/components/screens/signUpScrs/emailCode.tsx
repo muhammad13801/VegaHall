@@ -56,9 +56,6 @@ export default function EmailCode() {
         text1: response.data,
         visibilityTime: 3000,
       });
-
-      // Optional: cooldown for 60 seconds before next resend
-      setTimeout(() => setCanResend(true), 60000);
     } catch (err: any) {
       Toast.show({
         type: "error",
