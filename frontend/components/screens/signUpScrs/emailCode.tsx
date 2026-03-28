@@ -59,7 +59,8 @@ export default function EmailCode() {
     } catch (err: any) {
       Toast.show({
         type: "error",
-        text1: err.response?.data,
+        text1:
+          err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
         visibilityTime: 3000,
       });
       setCanResend(true);

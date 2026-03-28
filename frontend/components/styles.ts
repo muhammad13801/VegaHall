@@ -3,6 +3,7 @@ import { Dimensions, StyleSheet } from "react-native";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const styles = StyleSheet.create({
+  // Muhammad Styles
   gradient: {
     ...StyleSheet.absoluteFillObject,
   },
@@ -441,15 +442,32 @@ export const styles = StyleSheet.create({
     marginBottom: 15,
   },
   mb10: {
-    //might delete it
     marginBottom: 10,
   },
   mb20: {
-    //might delete it
     marginBottom: 20,
   },
   secondarySection: {
     marginTop: 20,
     marginBottom: 10,
   },
+
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F3EAFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sectionIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: "#F3EAFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // Muhammad Styles
 });

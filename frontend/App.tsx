@@ -19,12 +19,17 @@ import UpdatePhone from "./components/screens/hallOwnerscrs/profile/updatePhone"
 import UpdateEmail from "./components/screens/hallOwnerscrs/profile/updateEmail";
 import AddHall from "./components/screens/hallOwnerscrs/addHall/addHall";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import ManageHall from "./components/screens/hallOwnerscrs/manageHall";
+import HallDetail from "./components/screens/hallOwnerscrs/halldetails";
+import HallComments from "./components/screens/hallOwnerscrs/hallComments";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <StripeProvider publishableKey={process.env.STRIPE_PUBLISHABLE_KEY!}>
+    <StripeProvider
+      publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+    >
       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Login" component={Login} />
@@ -37,6 +42,9 @@ export default function App() {
           <Stack.Screen name="Customer" component={Customer} />
           <Stack.Screen name="Admin" component={Admin} />
           <Stack.Screen name="AddHall" component={AddHall} />
+          <Stack.Screen name="ManageHall" component={ManageHall} />
+          <Stack.Screen name="HallDetail" component={HallDetail} />
+          <Stack.Screen name="HallComments" component={HallComments} />
           <Stack.Screen name="PaymentHall" component={PaymentHall} />
           <Stack.Screen name="UpdatePassword" component={UpdatePassword} />
           <Stack.Screen name="UpdateName" component={UpdateName} />

@@ -61,7 +61,7 @@ export default function Home() {
           renderItem={({ item }) => (
             <HallCard
               item={item}
-              onPress={(id) => console.log("Manage hall", id)}
+              onPress={(id) => NavigateTo("HallDetail", { hallId: id })}
             />
           )}
           showsVerticalScrollIndicator={false}
