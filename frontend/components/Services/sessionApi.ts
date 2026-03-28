@@ -4,7 +4,7 @@ import { NavigateAndReset } from "../reusable func/navigateTo";
 import Toast from "react-native-toast-message";
 
 const api = axios.create({
-  baseURL: "http://192.168.88.8:3000",
+  baseURL: process.env.EXPO_PUBLIC_LOCAL_IP!,
 });
 
 // REQUEST INTERCEPTOR: attach sessionId

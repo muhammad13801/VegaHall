@@ -8,36 +8,28 @@ import BackButton from "../../reusable func/backButton";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import KeyboardAwareScreen from "../../reusable func/keyboardAwarScreen";
 import { NavigateAndReset } from "../../reusable func/navigateTo";
-import {
-  addHallApi,
-  payHallApi,
-  confirmPaymentApi,
-} from "../../Services/hallApi";
+import { payHallApi, confirmPaymentApi } from "../../Services/hallApi";
 import { styles } from "../../styles";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { uploadToSupabase } from "../../Services/uploadMedia";
 
 export default function PaymentHall() {
   const route = useRoute<any>();
   const hallForm = route.params?.form;
   const [loading, setLoading] = useState(false);
 
-  // 1. Initialize Stripe Hook
+  // Initialize Stripe Hook
   const { initPaymentSheet, presentPaymentSheet } = usePaymentSheet();
 
   const handlePay = async () => {
     setLoading(true);
-
     try {
       if (!hallForm) throw new Error("بيانات الصالة مفقودة");
 
-      // 1. Create the hall first, get back hallId
-      const addResponse = await addHallApi(hallForm);
-      const hallId = addResponse.data.hallId;
+      // Get PaymentIntent from backend
+      const { data } = await payHallApi();
 
-      // 2. Ask backend for a Stripe PaymentIntent + ephemeralKey
-      const { data } = await payHallApi({ hallId });
-
-      // 3. Initialize the Payment Sheet with all required params
+      // Init Stripe sheet
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: data.paymentIntent,
         customerEphemeralKeySecret: data.ephemeralKey,
@@ -45,35 +37,51 @@ export default function PaymentHall() {
         merchantDisplayName: "VegaHall",
         allowsDelayedPaymentMethods: false,
       });
-
       if (initError) throw new Error(initError.message);
 
-      // 4. Present the Stripe Payment Sheet UI
+      // Present payment sheet
       const { error: presentError } = await presentPaymentSheet();
-
       if (presentError) {
+        // User cancelled or card failed
         Toast.show({
           type: "error",
           text1: "فشل الدفع",
           text2: presentError.message,
         });
-      } else {
-        // 5. Confirm to backend → activates the hall
-        const intentId = data.paymentIntent.split("_secret_")[0]; // extract paymentIntentId
-        await confirmPaymentApi({ hallId, paymentIntentId: intentId });
-
-        Toast.show({
-          type: "success",
-          text1: "تم الدفع وتفعيل الصالة بنجاح ✔️",
-        });
-        NavigateAndReset("HallOwner", {
-          screen: "Home",
-          params: { refresh: true },
-        });
+        return;
       }
+
+      // Payment succeeded
+      const uploadImagesUrls = await Promise.all(
+        hallForm.images.map((img: string) => uploadToSupabase(img, "images")),
+      );
+      const uploadVideosUrls = hallForm.videos?.length
+        ? await Promise.all(
+            hallForm.videos.map((v: string) => uploadToSupabase(v, "videos")),
+          )
+        : [];
+
+      // Send everything to backend
+      const intentId = data.paymentIntent.split("_secret_")[0];
+      const response = await confirmPaymentApi({
+        paymentIntentId: intentId,
+        ...hallForm,
+        images: uploadImagesUrls,
+        videos: uploadVideosUrls,
+      });
+
+      Toast.show({ type: "success", text1: response.data });
+      NavigateAndReset("HallOwner", {
+        screen: "Home",
+        params: { refresh: true },
+      });
     } catch (err: any) {
       console.error(err);
-      Toast.show({ type: "error", text1: err.message });
+      Toast.show({
+        type: "error",
+        text1:
+          err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
+      });
     } finally {
       setLoading(false);
     }

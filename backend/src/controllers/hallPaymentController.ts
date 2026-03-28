@@ -8,47 +8,30 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 // POST /halls/charge
-// Called by frontend after addHall succeeds.
-// Returns a Stripe paymentIntent client secret for the Payment Sheet.
 export const charge = async (req: AuthRequest, res: Response) => {
   try {
-    const { hallId } = req.body;
     const userId = req.userId;
-
     if (!userId) return res.status(401).send("❌ مستخدم غير مصرح");
-    if (!hallId) return res.status(400).send("❌ معرف الصالة مطلوب");
 
-    // Fixed listing fee: $50
-    const AMOUNT_CENTS = 5000;
-
-    // Create a Stripe Customer (or reuse if you store it)
     const customer = await stripe.customers.create();
 
-    // Create an ephemeral key so the Payment Sheet can manage the customer
     const ephemeralKey = await stripe.ephemeralKeys.create(
       { customer: customer.id },
-      { apiVersion: "2024-06-20" },
+      { apiVersion: "2026-02-25.clover" },
     );
 
-    // Create the PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: AMOUNT_CENTS,
+      amount: 5000,
       currency: "usd",
       customer: customer.id,
       automatic_payment_methods: { enabled: true },
+      metadata: { userId: String(userId) },
     });
-
-    // Record the pending payment in the DB
-    await sql`
-      INSERT INTO hallPayment (hall_id, owner_id, amount, status, payment_intent_id)
-      VALUES (${hallId}, ${userId}, 50, 'Pending', ${paymentIntent.id})
-    `;
 
     return res.status(200).json({
       paymentIntent: paymentIntent.client_secret,
       ephemeralKey: ephemeralKey.secret,
       customer: customer.id,
-      hallId,
     });
   } catch (err: any) {
     console.error(err);
@@ -58,32 +41,116 @@ export const charge = async (req: AuthRequest, res: Response) => {
 };
 
 // POST /halls/confirm-payment
-// Called by the frontend after Payment Sheet confirms successfully.
-// Activates the hall and marks payment as Success.
 export const confirmPayment = async (req: AuthRequest, res: Response) => {
   try {
-    const { hallId, paymentIntentId } = req.body;
     const userId = req.userId;
+    const {
+      paymentIntentId,
+      name,
+      capacity,
+      price,
+      city,
+      address,
+      location,
+      description,
+      images,
+      videos,
+      services,
+      mealOptions,
+      secondaryContacts,
+    } = req.body;
 
     if (!userId) return res.status(401).send("❌ مستخدم غير مصرح");
-    if (!hallId || !paymentIntentId)
-      return res.status(400).send("❌ بيانات ناقصة");
+    if (!paymentIntentId) return res.status(400).send("❌ بيانات ناقصة");
 
-    // Verify the payment with Stripe
+    // 1. Verify with Stripe BEFORE opening DB transaction
     const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    if (intent.status !== "succeeded") {
+    if (intent.status !== "succeeded")
       return res.status(400).send("❌ لم يتم تأكيد الدفع");
-    }
 
-    // Activate the hall and update payment record
-    await Promise.all([
-      sql`UPDATE halls SET status = 'Active' WHERE id = ${hallId}`,
-      sql`UPDATE hallPayment SET status = 'Success' WHERE payment_intent_id = ${paymentIntentId}`,
-    ]);
+    // 2. Everything atomically in one transaction
+    await sql.begin(async (tx: any) => {
+      // Check this paymentIntent hasn't already been used
+      const [existingPayment] = await tx`
+        SELECT id FROM hallPayment
+        WHERE payment_intent_id = ${paymentIntentId}
+        FOR UPDATE
+      `;
+      if (existingPayment) throw new Error("ALREADY_CONFIRMED");
 
-    return res.status(200).json({ message: "✔️ تم تفعيل الصالة بنجاح" });
+      // Insert the hall as Active
+      const [newHall] = await tx`
+        INSERT INTO halls (hall_name, location, city, address, capacity,
+                           description, price, status, owner_id)
+        VALUES (${name}, ${location}, ${city}, ${address}, ${capacity},
+                ${description}, ${price}, 'Active', ${userId})
+        RETURNING id
+      `;
+      const hallId = newHall.id;
+
+      if (mealOptions?.length) {
+        await Promise.all(
+          mealOptions.map(
+            (m: any) =>
+              tx`INSERT INTO meal_options (hall_id, name, price_per_person)
+               VALUES (${hallId}, ${m.type}, ${m.pricePerPerson})`,
+          ),
+        );
+      }
+
+      if (images?.length) {
+        await Promise.all(
+          images.map(
+            (url: string) =>
+              tx`INSERT INTO media (hall_id, type, url)
+               VALUES (${hallId}, 'image', ${url})`,
+          ),
+        );
+      }
+
+      if (videos?.length) {
+        await Promise.all(
+          videos.map(
+            (url: string) =>
+              tx`INSERT INTO media (hall_id, type, url)
+               VALUES (${hallId}, 'video', ${url})`,
+          ),
+        );
+      }
+
+      if (services?.length) {
+        await Promise.all(
+          services.map(
+            (s: any) =>
+              tx`INSERT INTO hall_services (hall_id, name, status, price)
+               VALUES (${hallId}, ${s.name}, 'active', ${s.price || 0})`,
+          ),
+        );
+      }
+
+      if (secondaryContacts?.length) {
+        await Promise.all(
+          secondaryContacts.map(
+            (c: any) =>
+              tx`INSERT INTO secondary_contacts (hall_id, first_name, last_name, phone_number)
+               VALUES (${hallId}, ${c.firstName}, ${c.lastName}, ${c.phone})`,
+          ),
+        );
+      }
+
+      // Record the payment as Success
+      await tx`
+        INSERT INTO hallPayment (hall_id, owner_id, amount, status, payment_intent_id)
+        VALUES (${hallId}, ${userId}, 50, 'Success', ${paymentIntentId})
+      `;
+    });
+
+    return res.status(200).send("✔️ تم تفعيل واضافة الصالة بنجاح");
   } catch (err: any) {
     console.error(err);
+    if (err.message === "ALREADY_CONFIRMED")
+      return res.status(409).send("❌ تم تأكيد هذا الدفع مسبقاً");
+    if (err.raw?.message) return res.status(400).send(`❌ ${err.raw.message}`);
     return res.status(500).send("❌ خطأ في الخادم");
   }
 };
