@@ -29,7 +29,7 @@ export const getFavorites = async (req: AuthRequest, res: Response) => {
       FROM favorite_halls f
       JOIN halls h ON f.hall_id = h.id
       LEFT JOIN ratings r ON r.hall_id = h.id
-      WHERE f.user_id = ${userId}
+      WHERE f.customer_id = ${userId}
       GROUP BY 
         h.id, 
         h.hall_name, 

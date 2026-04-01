@@ -26,7 +26,7 @@ interface HallCardProps {
   onToggleFavorite?: (id: number) => void;
 }
 
-export const HallCard = memo(({ item, onPress }: HallCardProps) => {
+export const HallCard = memo(({ item, onPress, isCustomer, isFav, onToggleFavorite }: HallCardProps) => {
   const isActive = item.status === "Active";
 
   const media = useMemo(
@@ -160,22 +160,22 @@ export const HallCard = memo(({ item, onPress }: HallCardProps) => {
 
           {/* Customer Favorite Button */}
           {isCustomer && onToggleFavorite && (
-              <TouchableOpacity
-                style={{
-                  position: "absolute",
-                  top: 10,
-                  right: 10,
-                  backgroundColor: "rgba(255,255,255,0.8)",
-                  borderRadius: 20,
-                  width: 32,
-                  height: 32,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onPress={() => onToggleFavorite(item.id)}
-              >
-                  <Ionicons name={isFav ? "heart" : "heart-outline"} size={20} color={isFav ? "#E74C3C" : "#999"} />
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                backgroundColor: "rgba(255,255,255,0.8)",
+                borderRadius: 20,
+                width: 32,
+                height: 32,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              onPress={() => onToggleFavorite(item.id)}
+            >
+              <Ionicons name={isFav ? "heart" : "heart-outline"} size={20} color={isFav ? "#E74C3C" : "#999"} />
+            </TouchableOpacity>
           )}
         </View>
       ) : (
@@ -293,16 +293,18 @@ export const HallCard = memo(({ item, onPress }: HallCardProps) => {
           </TouchableOpacity>
         </View>
 
-        {/* Manage button */}
-        <TouchableOpacity
-          style={[styles.secondaryActionButton, { marginTop: 5, height: 40 }]}
-          onPress={handleManagePress}
-        >
-          <Text style={[styles.signUpText, { fontSize: 14 }]}>
-            إدارة الصالة
-          </Text>
-        </TouchableOpacity>
-      </View>
+        {/* Manage button — owner only */}
+        {!isCustomer && (
+          <TouchableOpacity
+            style={[styles.secondaryActionButton, { marginTop: 5, height: 40 }]}
+            onPress={handleManagePress}
+          >
+            <Text style={[styles.signUpText, { fontSize: 14 }]}>
+              إدارة الصالة
+            </Text>
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
     </View>
   );
 });
