@@ -6,6 +6,7 @@ import { getProfile } from "../controllers/profileController";
 import { checkEmail, updateEmail } from "../controllers/updateEmailController";
 import { updateName } from "../controllers/updateNameController";
 import { updatePhone } from "../controllers/updatePhoneController";
+
 const router = Router();
 
 // protected route (authorized access only)

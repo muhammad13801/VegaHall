@@ -21,6 +21,9 @@ const CARD_WIDTH = SCREEN_WIDTH * 0.9;
 interface HallCardProps {
   item: any;
   onPress?: (id: number) => void;
+  isCustomer?: boolean;
+  isFav?: boolean;
+  onToggleFavorite?: (id: number) => void;
 }
 
 export const HallCard = memo(({ item, onPress }: HallCardProps) => {
@@ -154,6 +157,26 @@ export const HallCard = memo(({ item, onPress }: HallCardProps) => {
               {activeIndex + 1} / {media.length}
             </Text>
           </View>
+
+          {/* Customer Favorite Button */}
+          {isCustomer && onToggleFavorite && (
+              <TouchableOpacity
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  backgroundColor: "rgba(255,255,255,0.8)",
+                  borderRadius: 20,
+                  width: 32,
+                  height: 32,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                onPress={() => onToggleFavorite(item.id)}
+              >
+                  <Ionicons name={isFav ? "heart" : "heart-outline"} size={20} color={isFav ? "#E74C3C" : "#999"} />
+              </TouchableOpacity>
+          )}
         </View>
       ) : (
         <View
@@ -169,27 +192,33 @@ export const HallCard = memo(({ item, onPress }: HallCardProps) => {
         </View>
       )}
 
-      <View style={{ padding: 15 }}>
+      <TouchableOpacity
+        activeOpacity={isCustomer ? 0.9 : 1}
+        onPress={() => isCustomer && onPress?.(item.id)}
+        style={{ padding: 15 }}
+      >
         {/* Name + Status */}
         <View style={[styles.info, { marginBottom: 10 }]}>
-          <Text style={[styles.title, { fontSize: 22 }]}>{item.name}</Text>
-          <TouchableOpacity
-            style={[
-              styles.items,
-              { backgroundColor: isActive ? "#E8F5E9" : "#FFF3E0" },
-            ]}
-            onPress={handleStatusPress}
-            disabled={isActive}
-          >
-            <Text
+          <Text style={[styles.title, { fontSize: 22 }]}>{item.hall_name || item.name}</Text>
+          {!isCustomer && (
+            <TouchableOpacity
               style={[
-                styles.itemText,
-                { color: isActive ? "#2E7D32" : "#EF6C00" },
+                styles.items,
+                { backgroundColor: isActive ? "#E8F5E9" : "#FFF3E0" },
               ]}
+              onPress={handleStatusPress}
+              disabled={isActive}
             >
-              {isActive ? "نشط" : "غير نشط ✦ اضغط للتفعيل"}
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.itemText,
+                  { color: isActive ? "#2E7D32" : "#EF6C00" },
+                ]}
+              >
+                {isActive ? "نشط" : "غير نشط ✦ اضغط للتفعيل"}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Location */}
@@ -201,7 +230,7 @@ export const HallCard = memo(({ item, onPress }: HallCardProps) => {
         >
           <Ionicons name="location-outline" size={16} color="#6C4AB6" />
           <Text style={[styles.subtitle, { marginBottom: 0, fontSize: 13 }]}>
-            {item.city} - {item.address}
+            {item.city} {item.address ? `- ${item.address}` : ""}
           </Text>
         </View>
 
@@ -212,7 +241,7 @@ export const HallCard = memo(({ item, onPress }: HallCardProps) => {
             <Text style={styles.profileLabel}>{item.capacity} شخص</Text>
           </View>
           <Text style={{ fontSize: 16, fontWeight: "bold", color: "#4CAF50" }}>
-            ₪{item.price}
+            ₪{item.price?.toLocaleString()}
           </Text>
         </View>
 
