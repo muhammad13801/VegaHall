@@ -451,23 +451,5 @@ export const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F3EAFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  sectionIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: "#F3EAFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   // Muhammad Styles
 });
