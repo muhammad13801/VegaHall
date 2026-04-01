@@ -7,7 +7,12 @@ import PasswordCode from "./components/screens/forgotPasswordScrs/passwordCode";
 import SetNewPassword from "./components/screens/forgotPasswordScrs/setNewPassword";
 import HallOwner from "./components/screens/hallOwnerscrs/hallOwner";
 import EmailCode from "./components/screens/signUpScrs/emailCode";
-import Customer from "./components/screens/CustomerScrs/customer";
+import CustomerNavigator from "./components/screens/CustomerScrs/customerNavigator";
+import HallsResult from "./components/screens/CustomerScrs/hallsResult";
+import HallDetails from "./components/screens/CustomerScrs/hallDetails";
+import BookingRequest from "./components/screens/CustomerScrs/bookingRequest";
+import RateHall from "./components/screens/CustomerScrs/rateHall";
+import Payment from "./components/screens/CustomerScrs/payment";
 import Admin from "./components/screens/AdminScrs/admin";
 import PaymentHall from "./components/screens/hallOwnerscrs/paymentHall";
 import { navigationRef } from "./components/reusable func/navigateTo";
@@ -17,8 +22,8 @@ import UpdatePassword from "./components/screens/hallOwnerscrs/profile/updatePas
 import UpdateName from "./components/screens/hallOwnerscrs/profile/updateName";
 import UpdatePhone from "./components/screens/hallOwnerscrs/profile/updatePhone";
 import UpdateEmail from "./components/screens/hallOwnerscrs/profile/updateEmail";
-import AddHall from "./components/screens/hallOwnerscrs/addHall/addHall";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import AddHall from "./components/screens/hallOwnerscrs/addHall/addHall";
 import ManageHall from "./components/screens/hallOwnerscrs/manageHall";
 import HallDetail from "./components/screens/hallOwnerscrs/halldetails";
 import HallComments from "./components/screens/hallOwnerscrs/hallComments";
@@ -39,7 +44,12 @@ export default function App() {
           <Stack.Screen name="SetNewPassword" component={SetNewPassword} />
           <Stack.Screen name="HallOwner" component={HallOwner} />
           <Stack.Screen name="EmailCode" component={EmailCode} />
-          <Stack.Screen name="Customer" component={Customer} />
+          <Stack.Screen name="Customer" component={CustomerNavigator} />
+          <Stack.Screen name="HallsResult" component={HallsResult} />
+          <Stack.Screen name="HallDetails" component={HallDetails} />
+          <Stack.Screen name="BookingRequest" component={BookingRequest} />
+          <Stack.Screen name="RateHall" component={RateHall} />
+          <Stack.Screen name="Payment" component={Payment} />
           <Stack.Screen name="Admin" component={Admin} />
           <Stack.Screen name="AddHall" component={AddHall} />
           <Stack.Screen name="ManageHall" component={ManageHall} />

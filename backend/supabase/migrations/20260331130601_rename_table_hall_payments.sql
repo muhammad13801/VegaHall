@@ -1,0 +1,1 @@
+ALTER TABLE hallPayment RENAME TO hall_payments;

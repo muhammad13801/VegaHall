@@ -17,6 +17,7 @@ export interface Contact {
 }
 
 export interface HallData {
+  id?: number;
   name: string;
   capacity: number;
   price: number;

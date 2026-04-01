@@ -27,27 +27,6 @@ export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
       />
       {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
-      {/* Hall Description */}
-      <View style={styles.row}>
-        <Ionicons
-          name="document-text-outline"
-          size={18}
-          color={"#6C4AB6"}
-          style={styles.screenIcon}
-        />
-        <Text style={styles.label}>وصف الصالة</Text>
-      </View>
-      <Input
-        placeholder="اكتب وصفاً مفصلاً لصالتك (الخدمات، السعة، المميزات...)"
-        value={form.description}
-        onChangeText={(text) => change("description", text)}
-        multiline
-        style={styles.multilineInput}
-      />
-      {errors.description && (
-        <Text style={styles.errorText}>{errors.description}</Text>
-      )}
-
       {/* capacity and price */}
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
@@ -81,7 +60,7 @@ export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
               color={"#6C4AB6"}
               style={styles.screenIcon}
             />
-            <Text style={styles.label}>السعر</Text>
+            <Text style={styles.label}>سعر الصالة</Text>
           </View>
           <Input
             placeholder="مثال: 1000"
@@ -92,6 +71,27 @@ export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
           {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
         </View>
       </View>
+
+      {/* Hall Description */}
+      <View style={styles.row}>
+        <Ionicons
+          name="document-text-outline"
+          size={18}
+          color={"#6C4AB6"}
+          style={styles.screenIcon}
+        />
+        <Text style={styles.label}>وصف الصالة</Text>
+      </View>
+      <Input
+        placeholder="اكتب وصفاً مفصلاً لصالتك (الخدمات، السعة، المميزات...)"
+        value={form.description}
+        onChangeText={(text) => change("description", text)}
+        multiline
+        style={styles.multilineInput}
+      />
+      {errors.description && (
+        <Text style={styles.errorText}>{errors.description}</Text>
+      )}
     </View>
   );
 }
