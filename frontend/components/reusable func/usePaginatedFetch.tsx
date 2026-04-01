@@ -60,6 +60,7 @@ export const usePaginatedFetch = ({
 
   return {
     items,
+    setItems,
     loading,
     loadingMore,
     refreshing,

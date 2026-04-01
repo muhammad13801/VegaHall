@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo, memo } from "react";
 import {
   View,
   Text,
@@ -16,32 +16,32 @@ import { NavigateTo } from "../../reusable func/navigateTo";
 import { VideoCard } from "../../reusable func/videoCard";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CARD_WIDTH = SCREEN_WIDTH * 0.9;
 
 interface HallCardProps {
   item: any;
   onPress?: (id: number) => void;
 }
 
-export const HallCard = ({ item, onPress }: HallCardProps) => {
+export const HallCard = memo(({ item, onPress }: HallCardProps) => {
   const isActive = item.status === "Active";
 
-  const images: string[] = item.images || [];
-  const videos: string[] = item.videos || [];
-  const media = [
-    ...images.map((uri) => ({ type: "image", uri })),
-    ...videos.map((uri) => ({ type: "video", uri })),
-  ];
+  const media = useMemo(
+    () => [
+      ...(item.images || []).map((uri: string) => ({ type: "image", uri })),
+      ...(item.videos || []).map((uri: string) => ({ type: "video", uri })),
+    ],
+    [item.images, item.videos],
+  );
 
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(
-      e.nativeEvent.contentOffset.x / (SCREEN_WIDTH * 0.9),
-    );
+  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
     setActiveIndex(index);
-  };
+  }, []);
 
-  const handleStatusPress = () => {
+  const handleStatusPress = useCallback(() => {
     if (!isActive) {
       NavigateTo("PaymentHall", {
         form: item,
@@ -49,7 +49,37 @@ export const HallCard = ({ item, onPress }: HallCardProps) => {
         isReactivation: true,
       });
     }
-  };
+  }, [isActive, item]);
+
+  const handleCommentsPress = useCallback(() => {
+    NavigateTo("HallComments", { hallId: item.id });
+  }, [item.id]);
+
+  const handleManagePress = useCallback(() => {
+    onPress?.(item.id);
+  }, [onPress, item.id]);
+
+  const renderMediaItem = useCallback(
+    ({ item: mediaItem }: { item: { type: string; uri: string } }) =>
+      mediaItem.type === "image" ? (
+        <View style={{ width: CARD_WIDTH, aspectRatio: 16 / 9 }}>
+          <ImageBackground
+            source={{ uri: mediaItem.uri }}
+            style={{ position: "absolute", width: "100%", height: "100%" }}
+            resizeMode="cover"
+            blurRadius={15}
+          />
+          <Image
+            source={{ uri: mediaItem.uri }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="contain"
+          />
+        </View>
+      ) : (
+        <VideoCard uri={mediaItem.uri} width={CARD_WIDTH} />
+      ),
+    [],
+  );
 
   return (
     <View
@@ -69,31 +99,7 @@ export const HallCard = ({ item, onPress }: HallCardProps) => {
             showsHorizontalScrollIndicator={false}
             onScroll={onScroll}
             scrollEventThrottle={16}
-            renderItem={({ item: mediaItem }) =>
-              mediaItem.type === "image" ? (
-                <View
-                  style={{ width: SCREEN_WIDTH * 0.9, aspectRatio: 16 / 9 }}
-                >
-                  <ImageBackground
-                    source={{ uri: mediaItem.uri }}
-                    style={{
-                      position: "absolute",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                    resizeMode="cover"
-                    blurRadius={15}
-                  />
-                  <Image
-                    source={{ uri: mediaItem.uri }}
-                    style={{ width: "100%", height: "100%" }}
-                    resizeMode="contain"
-                  />
-                </View>
-              ) : (
-                <VideoCard uri={mediaItem.uri} width={SCREEN_WIDTH * 0.9} />
-              )
-            }
+            renderItem={renderMediaItem}
           />
 
           {/* Dots */}
@@ -213,15 +219,28 @@ export const HallCard = ({ item, onPress }: HallCardProps) => {
         {/* Rating + Comments */}
         <View style={[styles.info, { marginBottom: 12 }]}>
           <View style={[styles.row, { alignItems: "center", gap: 4 }]}>
-            <Ionicons name="star" size={16} color="#FFC107" />
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Ionicons
+                key={star}
+                name={
+                  star <= Math.round(item.avg_rating || 0)
+                    ? "star"
+                    : "star-outline"
+                }
+                size={18}
+                color="#FFC107"
+              />
+            ))}
             <Text style={[styles.profileValue, { color: "#333" }]}>
-              {item.avg_rating ? Number(item.avg_rating).toFixed(1) : "لا يوجد"}
+              {item.avg_rating
+                ? Number(item.avg_rating).toFixed(1)
+                : "لا يوجد تقييم"}
             </Text>
           </View>
 
           <TouchableOpacity
             style={[styles.items, { backgroundColor: "#F3EAFF" }]}
-            onPress={() => NavigateTo("HallComments", { hallId: item.id })}
+            onPress={handleCommentsPress}
           >
             <Ionicons name="chatbubble-outline" size={16} color="#6C4AB6" />
             <Text style={styles.itemText}>التعليقات</Text>
@@ -248,7 +267,7 @@ export const HallCard = ({ item, onPress }: HallCardProps) => {
         {/* Manage button */}
         <TouchableOpacity
           style={[styles.secondaryActionButton, { marginTop: 5, height: 40 }]}
-          onPress={() => onPress?.(item.id)}
+          onPress={handleManagePress}
         >
           <Text style={[styles.signUpText, { fontSize: 14 }]}>
             إدارة الصالة
@@ -257,4 +276,4 @@ export const HallCard = ({ item, onPress }: HallCardProps) => {
       </View>
     </View>
   );
-};
+});

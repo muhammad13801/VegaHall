@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth";
 import userRoutes from "./routes/userRoutes";
 import hallRoutes from "./routes/hallRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
+import notificationRoutes from "./routes/notificationRoutes";
 
 const app = express();
 app.use(cors());
@@ -21,6 +22,7 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/halls", hallRoutes);
 app.use("/upload", uploadRoutes);
+app.use("/notifications", notificationRoutes);
 
 const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "../../../reusable func/input";
@@ -10,60 +10,61 @@ export default function ServicesPicker({
   setForm,
   errors,
 }: HallFormProps) {
-  const addService = (serviceName: string) => {
+  const addService = useCallback((serviceName: string) => {
     setForm((prev) => {
-      const exists = prev.services?.some((s) => s.name === serviceName);
-      if (exists) return prev;
+      if (prev.services?.some((s) => s.name === serviceName)) return prev;
       return {
         ...prev,
         services: [...(prev.services || []), { name: serviceName, price: 0 }],
       };
     });
-  };
+  }, []);
 
-  const removeService = (serviceName: string) => {
+  const removeService = useCallback((serviceName: string) => {
     setForm((prev) => ({
       ...prev,
       services: prev.services?.filter((s) => s.name !== serviceName),
       mealOptions: serviceName === "وجبات عشاء" ? [] : prev.mealOptions,
     }));
-  };
+  }, []);
 
-  const addMealOption = (type: string) => {
+  const addMealOption = useCallback((type: string) => {
     setForm((prev) => {
-      const exists = prev.mealOptions?.some((m) => m.type === type);
-      if (exists) return prev;
+      if (prev.mealOptions?.some((m) => m.type === type)) return prev;
       return {
         ...prev,
         mealOptions: [...(prev.mealOptions || []), { type, pricePerPerson: 0 }],
       };
     });
-  };
+  }, []);
 
-  const removeMealOption = (type: string) => {
+  const removeMealOption = useCallback((type: string) => {
     setForm((prev) => ({
       ...prev,
       mealOptions: prev.mealOptions?.filter((m) => m.type !== type),
     }));
-  };
+  }, []);
 
-  const updateMealPrice = (type: string, price: string) => {
+  const updateMealPrice = useCallback((type: string, price: string) => {
     setForm((prev) => ({
       ...prev,
       mealOptions: prev.mealOptions?.map((m) =>
         m.type === type ? { ...m, pricePerPerson: parseFloat(price) || 0 } : m,
       ),
     }));
-  };
+  }, []);
 
-  const updateServicePrice = (serviceName: string, price: string) => {
-    setForm((prev) => ({
-      ...prev,
-      services: prev.services?.map((s) =>
-        s.name === serviceName ? { ...s, price: parseFloat(price) || 0 } : s,
-      ),
-    }));
-  };
+  const updateServicePrice = useCallback(
+    (serviceName: string, price: string) => {
+      setForm((prev) => ({
+        ...prev,
+        services: prev.services?.map((s) =>
+          s.name === serviceName ? { ...s, price: parseFloat(price) || 0 } : s,
+        ),
+      }));
+    },
+    [],
+  );
 
   return (
     <View>
@@ -79,11 +80,11 @@ export default function ServicesPicker({
       <View
         style={[styles.row, { flexWrap: "wrap", gap: 8, marginBottom: 15 }]}
       >
-        {SERVICES.map((service, index) => {
+        {SERVICES.map((service) => {
           const isSelected = form.services?.some((s) => s.name === service);
           return (
             <TouchableOpacity
-              key={index}
+              key={service}
               style={[
                 styles.serviceChip,
                 {
@@ -112,8 +113,8 @@ export default function ServicesPicker({
       {/* Selected Services List */}
       {form.services && form.services.length > 0 && (
         <View style={{ marginTop: 10 }}>
-          {form.services.map((service, index) => (
-            <View key={index} style={styles.serviceItemCard}>
+          {form.services.map((service) => (
+            <View key={service.name} style={styles.serviceItemCard}>
               <View
                 style={[
                   styles.row,

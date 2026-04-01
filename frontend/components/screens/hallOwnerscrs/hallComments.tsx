@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,68 @@ import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import { getHallCommentsApi } from "../../Services/hallApi";
 import { useRefresh } from "../../reusable func/refreshContext";
 import Toast from "react-native-toast-message";
+
+const StarRating = memo(({ rating }: { rating: number }) => (
+  <View style={[styles.row, { gap: 2 }]}>
+    {[1, 2, 3, 4, 5].map((star) => (
+      <Ionicons
+        key={star}
+        name={star <= rating ? "star" : "star-outline"}
+        size={14}
+        color="#FFC107"
+      />
+    ))}
+  </View>
+));
+
+const CommentCard = memo(({ item }: { item: any }) => (
+  <View style={[styles.card, { marginBottom: 12, gap: 8 }]}>
+    <View style={[styles.info, { alignItems: "center" }]}>
+      <View style={[styles.row, { alignItems: "center", gap: 8 }]}>
+        <View
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            backgroundColor: "#F3EAFF",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="person" size={20} color="#6C4AB6" />
+        </View>
+        <View>
+          <Text style={styles.profileValue}>
+            {item.first_name} {item.last_name}
+          </Text>
+          <Text style={styles.profileLabel}>
+            {new Date(item.created_at).toLocaleDateString("ar-EG", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </Text>
+        </View>
+      </View>
+      <StarRating rating={item.rating} />
+    </View>
+    <Text style={{ fontSize: 14, color: "#555", lineHeight: 22 }}>
+      {item.comment}
+    </Text>
+  </View>
+));
+
+const EmptyComponent = (
+  <View
+    style={{ justifyContent: "center", alignItems: "center", marginTop: "70%" }}
+  >
+    <Ionicons name="chatbubble-outline" size={80} color="#DDD" />
+    <Text style={styles.subtitle}>لا توجد تعليقات على هذه الصالة بعد</Text>
+  </View>
+);
+
+const renderItem = ({ item }: { item: any }) => <CommentCard item={item} />;
+const keyExtractor = (item: any) => item.id.toString();
 
 export default function HallComments() {
   const route = useRoute<any>();
@@ -42,7 +104,6 @@ export default function HallComments() {
     [hallId],
   );
 
-  //refresh when the key changes only
   useEffect(() => {
     setLoading(true);
     fetchComments();
@@ -52,19 +113,6 @@ export default function HallComments() {
     setRefreshing(true);
     fetchComments(true);
   }, [fetchComments]);
-
-  const renderStars = (rating: number) => (
-    <View style={[styles.row, { gap: 2 }]}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Ionicons
-          key={star}
-          name={star <= rating ? "star" : "star-outline"}
-          size={14}
-          color="#FFC107"
-        />
-      ))}
-    </View>
-  );
 
   if (loading) {
     return (
@@ -89,7 +137,8 @@ export default function HallComments() {
 
       <FlatList
         data={comments}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
         style={{ width: "90%", alignSelf: "center" }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -99,56 +148,7 @@ export default function HallComments() {
             colors={["#6C4AB6"]}
           />
         }
-        ListEmptyComponent={
-          <View
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-              marginTop: "70%",
-            }}
-          >
-            <Ionicons name="chatbubble-outline" size={80} color="#DDD" />
-            <Text style={styles.subtitle}>
-              لا توجد تعليقات على هذه الصالة بعد
-            </Text>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <View style={[styles.card, { marginBottom: 12, gap: 8 }]}>
-            <View style={[styles.info, { alignItems: "center" }]}>
-              <View style={[styles.row, { alignItems: "center", gap: 8 }]}>
-                <View
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    backgroundColor: "#F3EAFF",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Ionicons name="person" size={20} color="#6C4AB6" />
-                </View>
-                <View>
-                  <Text style={styles.profileValue}>
-                    {item.first_name} {item.last_name}
-                  </Text>
-                  <Text style={styles.profileLabel}>
-                    {new Date(item.created_at).toLocaleDateString("ar-EG", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </Text>
-                </View>
-              </View>
-              {renderStars(item.rating)}
-            </View>
-            <Text style={{ fontSize: 14, color: "#555", lineHeight: 22 }}>
-              {item.comment}
-            </Text>
-          </View>
-        )}
+        ListEmptyComponent={EmptyComponent}
       />
     </SafeAreaView>
   );

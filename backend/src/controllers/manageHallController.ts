@@ -50,9 +50,12 @@ export const getHall = async (req: AuthRequest, res: Response) => {
     if (!id) return res.status(400).send("❌ معرف غير صالح");
 
     const [hall] = await sql<Hall[]>`
-      SELECT id, hall_name, city, address, location, description, capacity, price, status
-      FROM halls
-      WHERE id = ${id} AND owner_id = ${req.userId!}
+      SELECT 
+        h.id, h.hall_name, h.city, h.address, h.location, h.description, h.capacity, h.price, h.status,
+        u.phone_number, u.first_name, u.last_name,
+        (SELECT AVG(rating) FROM ratings WHERE hall_id = h.id) as avg_rating
+      FROM halls h join users u on h.owner_id = u.id
+      WHERE h.id = ${id} AND h.owner_id = ${req.userId!}
     `;
     if (!hall) return res.status(404).send("❌ الصالة غير موجودة");
 
@@ -179,7 +182,7 @@ cron.schedule("0 0 * * *", async () => {
       SET status = 'Inactive'
       WHERE id IN (
         SELECT hall_id
-        FROM hallPayment
+        FROM hall_payments
         GROUP BY hall_id
         HAVING MAX(created_at) < NOW() - INTERVAL '1 year'
       )

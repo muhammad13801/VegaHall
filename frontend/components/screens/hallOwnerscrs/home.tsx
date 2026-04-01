@@ -75,7 +75,7 @@ export default function Home() {
             />
           }
           ListEmptyComponent={
-            <View style={{ alignItems: "center", marginTop: 50 }}>
+            <View style={{ alignItems: "center", marginTop: "70%" }}>
               <Ionicons name="business-outline" size={80} color="#DDD" />
               <Text style={styles.subtitle}>لا توجد صالات مضافة حالياً</Text>
             </View>

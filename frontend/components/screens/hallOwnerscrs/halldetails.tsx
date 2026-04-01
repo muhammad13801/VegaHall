@@ -287,7 +287,7 @@ export default function HallDetail() {
               ))}
               <Text style={[styles.profileLabel, { marginRight: 4 }]}>
                 {hall.avg_rating
-                  ? `${Number(hall.avg_rating).toFixed(1)} / 5`
+                  ? Number(hall.avg_rating).toFixed(1)
                   : "لا يوجد تقييم بعد"}
               </Text>
             </View>
@@ -372,48 +372,83 @@ export default function HallDetail() {
           )}
 
           {/* Secondary Contacts */}
-          {hall.secondaryContacts && hall.secondaryContacts.length > 0 && (
-            <SectionCard title="جهات الاتصال" icon="call-outline">
-              {hall.secondaryContacts.map((c: any, i: number) => (
+          <SectionCard title="جهات الاتصال" icon="call-outline">
+            {/* Owner (main contact) */}
+            {hall.phone_number && (
+              <View
+                style={[
+                  styles.row,
+                  {
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: hall.secondaryContacts?.length ? 12 : 0,
+                    paddingBottom: hall.secondaryContacts?.length ? 12 : 0,
+                    borderBottomWidth: hall.secondaryContacts?.length ? 1 : 0,
+                    borderBottomColor: "#EEE",
+                  },
+                ]}
+              >
                 <View
-                  key={i}
                   style={[
-                    styles.row,
+                    styles.profileInfoIcon,
                     {
-                      alignItems: "center",
-                      gap: 12,
-                      marginBottom:
-                        i < hall.secondaryContacts.length - 1 ? 12 : 0,
-                      paddingBottom:
-                        i < hall.secondaryContacts.length - 1 ? 12 : 0,
-                      borderBottomWidth:
-                        i < hall.secondaryContacts.length - 1 ? 1 : 0,
-                      borderBottomColor: "#EEE",
+                      borderRadius: 20,
+                      backgroundColor: "#F3EAFF",
+                      height: 40,
                     },
                   ]}
                 >
-                  <View
-                    style={{
-                      width: 40,
-                      height: 40,
+                  <Ionicons name="person" size={20} color="#6C4AB6" />
+                </View>
+                <View>
+                  <Text style={styles.profileValue}>
+                    {hall.first_name} {hall.last_name}
+                  </Text>
+                  <Text style={styles.profileLabel}>{hall.phone_number}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Secondary contacts */}
+            {hall.secondaryContacts?.map((c: any, i: number) => (
+              <View
+                key={i}
+                style={[
+                  styles.row,
+                  {
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom:
+                      i < hall.secondaryContacts.length - 1 ? 12 : 0,
+                    paddingBottom:
+                      i < hall.secondaryContacts.length - 1 ? 12 : 0,
+                    borderBottomWidth:
+                      i < hall.secondaryContacts.length - 1 ? 1 : 0,
+                    borderBottomColor: "#EEE",
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.profileInfoIcon,
+                    {
                       borderRadius: 20,
                       backgroundColor: "#F3EAFF",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="person" size={20} color="#6C4AB6" />
-                  </View>
-                  <View>
-                    <Text style={styles.profileValue}>
-                      {c.first_name} {c.last_name}
-                    </Text>
-                    <Text style={styles.profileLabel}>{c.phone_number}</Text>
-                  </View>
+                      height: 40,
+                    },
+                  ]}
+                >
+                  <Ionicons name="person" size={20} color="#6C4AB6" />
                 </View>
-              ))}
-            </SectionCard>
-          )}
+                <View>
+                  <Text style={styles.profileValue}>
+                    {c.first_name} {c.last_name}
+                  </Text>
+                  <Text style={styles.profileLabel}>{c.phone_number}</Text>
+                </View>
+              </View>
+            ))}
+          </SectionCard>
 
           {/* Action Buttons */}
           <TouchableOpacity

@@ -1,7 +1,7 @@
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import BackButton from "../../../reusable func/backButton";
 import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
 import KeyboardAwareScreen from "../../../reusable func/keyboardAwarScreen";
@@ -32,13 +32,13 @@ export default function AddHall() {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     const validationErrors = ValidateHall(form);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
     NavigateTo("PaymentHall", { form });
-  };
+  }, [form]);
 
   return (
     <SafeAreaView style={styles.container}>

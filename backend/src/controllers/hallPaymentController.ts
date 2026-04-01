@@ -72,7 +72,7 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
     await sql.begin(async (tx: any) => {
       // Check this paymentIntent hasn't already been used
       const [existingPayment] = await tx`
-        SELECT id FROM hallPayment
+        SELECT id FROM hall_payments
         WHERE payment_intent_id = ${paymentIntentId}
         FOR UPDATE
       `;
@@ -140,7 +140,7 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
 
       // Record the payment as Success
       await tx`
-        INSERT INTO hallPayment (hall_id, owner_id, amount, status, payment_intent_id)
+        INSERT INTO hall_payments (hall_id, owner_id, amount, status, payment_intent_id)
         VALUES (${hallId}, ${userId}, 50, 'Success', ${paymentIntentId})
       `;
     });
