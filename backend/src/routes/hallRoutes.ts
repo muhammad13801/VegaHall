@@ -2,11 +2,7 @@ import { Router } from "express";
 import { sessionAuthenticate } from "../middleware/sessionMiddleware";
 import { charge, confirmPayment } from "../controllers/hallPaymentController";
 import { ownerHalls } from "../controllers/ownerHallsController";
-import {
-  getHall,
-  updateHall,
-  deleteHall,
-} from "../controllers/manageHallController";
+import { getHall, updateHall } from "../controllers/manageHallController";
 import { getHallComments } from "../controllers/hallCommentsController";
 import {
   getOwnerBookings,
@@ -15,6 +11,8 @@ import {
   respondReschedule,
   cancelBooking,
 } from "../controllers/manageBookingsController";
+import { getServices } from "../controllers/getServicesController";
+import { getMealTypes } from "../controllers/getMealTypesController";
 
 const router = Router();
 
@@ -50,10 +48,15 @@ router.patch("/bookings/:id/reject", sessionAuthenticate, rejectBooking);
 // Customer cancels booking → owner decides whether to refund
 router.patch("/bookings/:id/cancel", sessionAuthenticate, cancelBooking);
 
+// Get services
+router.get("/services", sessionAuthenticate, getServices);
+
+// Get meal types
+router.get("/meal-types", sessionAuthenticate, getMealTypes);
+
 // Manage hall routes (dynamic :id — comes AFTER static routes)
 router.get("/:id", sessionAuthenticate, getHall);
 router.put("/:id", sessionAuthenticate, updateHall);
-router.delete("/:id", sessionAuthenticate, deleteHall);
 
 // Get hall comments
 router.get("/:id/comments", sessionAuthenticate, getHallComments);

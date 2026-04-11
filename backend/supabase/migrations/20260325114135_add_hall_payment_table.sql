@@ -1,9 +1,0 @@
-CREATE TABLE hallPayment (
-  id SERIAL PRIMARY KEY,
-  hall_id INT NOT NULL REFERENCES halls(id) ON DELETE CASCADE,
-  owner_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  amount INT NOT NULL,
-  status VARCHAR(10) NOT NULL DEFAULT 'pending',
-  payment_intent_id VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
-);

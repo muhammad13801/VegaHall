@@ -117,8 +117,8 @@ export default function SignUp() {
                   mode="dropdown"
                 >
                   <Picker.Item label="اختر الجنس" value="" />
-                  <Picker.Item label="ذكر" value="Male" />
-                  <Picker.Item label="انثى" value="Female" />
+                  <Picker.Item label="ذكر" value="male" />
+                  <Picker.Item label="انثى" value="female" />
                 </Picker>
 
                 {errors.gender && (
@@ -138,8 +138,8 @@ export default function SignUp() {
                   mode="dropdown"
                 >
                   <Picker.Item label="نوع المستخدم" value="" />
-                  <Picker.Item label="زبون" value="Customer" />
-                  <Picker.Item label="مالك قاعة" value="HallOwner" />
+                  <Picker.Item label="زبون" value="customer" />
+                  <Picker.Item label="مالك قاعة" value="owner" />
                 </Picker>
 
                 {errors.userType && (

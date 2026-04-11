@@ -41,9 +41,9 @@ export default function Login() {
         visibilityTime: 3000,
       });
 
-      if (role === "Customer") return NavigateAndReset("Customer");
-      else if (role === "HallOwner") return NavigateAndReset("HallOwner");
-      else if (role === "Admin") return NavigateAndReset("Admin");
+      if (role === "customer") return NavigateAndReset("Customer");
+      else if (role === "owner") return NavigateAndReset("HallOwner");
+      else if (role === "admin") return NavigateAndReset("Admin");
     } catch (err: any) {
       return Toast.show({
         type: "error",

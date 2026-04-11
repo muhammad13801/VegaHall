@@ -8,7 +8,7 @@ export interface Hall {
   city: string;
   address: string;
   capacity: number;
-  price: number;
+  base_price: number;
   status: string;
   images: string[];
   videos: string[];
@@ -25,25 +25,25 @@ export const ownerHalls = async (req: AuthRequest, res: Response) => {
   const offset = (page - 1) * limit;
 
   try {
-    const owner = await sql<Hall[]>`
-      SELECT 
-        h.id, 
-        h.hall_name as name, 
-        h.city, 
-        h.address, 
-        h.capacity, 
-        h.price, 
+    const halls = await sql<Hall[]>`
+      SELECT
+        h.id,
+        h.hall_name AS name,
+        h.city,
+        h.address,
+        h.capacity,
+        h.base_price,
         h.status,
         COALESCE(
           (SELECT json_agg(url) FROM media WHERE hall_id = h.id AND type = 'image'),
           '[]'::json
-        ) as images,
+        ) AS images,
         COALESCE(
           (SELECT json_agg(url) FROM media WHERE hall_id = h.id AND type = 'video'),
           '[]'::json
-        ) as videos,
-        ROUND(AVG(r.rating), 1) as avg_rating,
-        COUNT(r.id) FILTER (WHERE r.comment IS NOT NULL AND r.comment != '') as comment_count
+        ) AS videos,
+        ROUND(AVG(r.rating), 1) AS avg_rating,
+        COUNT(r.id) FILTER (WHERE r.comment IS NOT NULL AND r.comment != '') AS comment_count
       FROM halls h
       LEFT JOIN ratings r ON r.hall_id = h.id
       WHERE h.owner_id = ${userId}
@@ -52,7 +52,7 @@ export const ownerHalls = async (req: AuthRequest, res: Response) => {
       LIMIT ${limit} OFFSET ${offset}
     `;
 
-    res.json(owner);
+    res.json(halls);
   } catch (err) {
     console.error(err);
     res.status(500).send("❌ خطأ في الخادم");

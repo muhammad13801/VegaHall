@@ -1,2 +1,0 @@
-ALTER TABLE payments
-ADD COLUMN payment_intent_id VARCHAR(255);

@@ -26,8 +26,8 @@ interface HallCardProps {
   onToggleFavorite?: (id: number) => void;
 }
 
-export const HallCard = memo(({ item, onPress, isCustomer, isFav, onToggleFavorite }: HallCardProps) => {
-  const isActive = item.status === "Active";
+export const HallCard = memo(({ item, onPress }: HallCardProps) => {
+  const isActive = item.status === "active";
 
   const media = useMemo(
     () => [
@@ -174,7 +174,11 @@ export const HallCard = memo(({ item, onPress, isCustomer, isFav, onToggleFavori
               }}
               onPress={() => onToggleFavorite(item.id)}
             >
-              <Ionicons name={isFav ? "heart" : "heart-outline"} size={20} color={isFav ? "#E74C3C" : "#999"} />
+              <Ionicons
+                name={isFav ? "heart" : "heart-outline"}
+                size={20}
+                color={isFav ? "#E74C3C" : "#999"}
+              />
             </TouchableOpacity>
           )}
         </View>
@@ -199,7 +203,9 @@ export const HallCard = memo(({ item, onPress, isCustomer, isFav, onToggleFavori
       >
         {/* Name + Status */}
         <View style={[styles.info, { marginBottom: 10 }]}>
-          <Text style={[styles.title, { fontSize: 22 }]}>{item.hall_name || item.name}</Text>
+          <Text style={[styles.title, { fontSize: 22 }]}>
+            {item.hall_name || item.name}
+          </Text>
           {!isCustomer && (
             <TouchableOpacity
               style={[
@@ -241,7 +247,7 @@ export const HallCard = memo(({ item, onPress, isCustomer, isFav, onToggleFavori
             <Text style={styles.profileLabel}>{item.capacity} شخص</Text>
           </View>
           <Text style={{ fontSize: 16, fontWeight: "bold", color: "#4CAF50" }}>
-            ₪{item.price?.toLocaleString()}
+            ₪{item.base_price}
           </Text>
         </View>
 

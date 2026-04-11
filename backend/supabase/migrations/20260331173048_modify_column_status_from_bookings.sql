@@ -1,1 +1,0 @@
-ALTER TABLE bookings ALTER COLUMN status TYPE varchar(20);

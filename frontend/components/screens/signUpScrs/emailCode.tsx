@@ -45,12 +45,11 @@ export default function EmailCode() {
 
   // Handle resend code
   const handleResendCode = async () => {
-    if (!canResend) return;
-
     setResendLoading(true);
-    setCanResend(false); // prevent spamming
+
     try {
       const response = await resendCode(email);
+
       Toast.show({
         type: "success",
         text1: response.data,
@@ -59,11 +58,11 @@ export default function EmailCode() {
     } catch (err: any) {
       Toast.show({
         type: "error",
-        text1:
-          err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
+        text1: err.response?.data,
         visibilityTime: 3000,
       });
-      setCanResend(true);
+
+      throw err;
     } finally {
       setResendLoading(false);
     }
@@ -80,7 +79,6 @@ export default function EmailCode() {
       setCodeValue={setCode}
       loading={loading}
       resendLoading={resendLoading}
-      canResend={canResend}
       errors={error}
     />
   );

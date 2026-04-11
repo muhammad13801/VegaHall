@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Input } from "../../../reusable func/input";
 import { styles } from "../../../styles";
 import { useHandleChange } from "../../../reusable func/useHandleChange";
-import { HallFormProps } from "./constants";
+import { HallFormProps } from "../../../Validations/validateHall";
 
 export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
   const change = useHandleChange(setForm);

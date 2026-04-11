@@ -26,35 +26,40 @@ export const register = async (req: Request, res: Response) => {
 
     const email = req.body.email.trim().toLowerCase();
 
-    // Use consolidated existence check for better performance
     const availability = await checkUserAvailability(email, phoneNumber);
 
-    if (availability.emailTaken)
-      return res.status(400).send("❌ البريد الإلكتروني موجود بالفعل");
+    if (availability.emailTaken) {
+      // Email exists but is still pending — update their info and resend
+      if (availability.pending) {
+        if (
+          new Date(Date.now()) < availability.pending.expires_at &&
+          availability.pending.attempts_left > 0
+        ) {
+          await sql`
+            UPDATE users
+            SET first_name = ${firstName}, last_name = ${lastName},
+                gender = ${gender}, role = ${role},
+                phone_number = ${phoneNumber}, date_of_birth = ${dateOfBirth}
+            WHERE email = ${email} AND status = 'pending'
+          `;
+          return res.send("✔️ تم إرسال رمز التحقق إلى بريدك الإلكتروني.");
+        } else {
+          // Expired pending user — delete and allow re-registration
+          await sql`DELETE FROM users WHERE email = ${email} AND status = 'pending'`;
+        }
+      } else {
+        return res.status(400).send("❌ البريد الإلكتروني موجود بالفعل");
+      }
+    }
 
     if (availability.phoneTaken)
       return res.status(400).send("❌ رقم الهاتف موجود بالفعل");
-
-    // Check if there is a valid pending registration
-    if (availability.pending) {
-      if (
-        new Date(Date.now()) < availability.pending.expires_at &&
-        availability.pending.attempts_left > 0
-      ) {
-        await sql`
-          UPDATE pending_users
-          SET first_name = ${firstName}, last_name = ${lastName}, gender = ${gender},
-          role = ${role}, phone_number = ${phoneNumber}, date_of_birth =  ${dateOfBirth}
-          WHERE email = ${email}`;
-        return res.send("✔️ تم إرسال رمز التحقق إلى بريدك الإلكتروني.");
-      } else await sql`DELETE FROM pending_users WHERE email = ${email}`;
-    }
 
     const hashed = await bcrypt.hash(password, 10);
     const code = generateCode();
 
     await sql`
-      INSERT INTO pending_users
+      INSERT INTO users
       (first_name, last_name, gender, date_of_birth,
        email, password, phone_number, role, status,
        code, attempts_left, expires_at)
@@ -67,7 +72,7 @@ export const register = async (req: Request, res: Response) => {
         ${hashed},
         ${phoneNumber},
         ${role},
-        'Active',
+        'pending',
         ${code},
         5,
         ${new Date(Date.now() + 10 * 60 * 1000)}
@@ -90,7 +95,7 @@ export const verifyRegister = async (req: Request, res: Response) => {
     const email = req.body.email.trim().toLowerCase();
     const { code } = req.body;
 
-    const result = await processVerification(email, code, "insert");
+    const result = await processVerification(email, code, "activate");
 
     if (result.status !== "success")
       return handleVerificationError(res, result);
@@ -111,12 +116,12 @@ export const resendCode = async (req: Request, res: Response) => {
     const result = await checkPending({ email });
 
     if (result.status !== "valid")
-      return res.status(400).send("❌ لا يوجد طلب صالح لهذا البريد.");
+      return res.status(400).send("❌ لا يوجد طلب صالح لهذا البريد");
 
     const newCode = generateCode();
 
     await sql`
-      UPDATE pending_users
+      UPDATE users
       SET code = ${newCode},
           expires_at = ${new Date(Date.now() + 10 * 60 * 1000)},
           attempts_left = 5

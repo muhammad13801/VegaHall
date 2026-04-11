@@ -4,7 +4,6 @@ import sql from "../db";
 import { insertNotification } from "./notificationsController";
 import { HallService } from "./manageHallController";
 
-// Booking interface matching the new schema
 interface Booking {
   id: number;
   hall_id: number;
@@ -15,7 +14,6 @@ interface Booking {
   services: HallService[] | null;
   status: string;
   proposed_date: string | null;
-  created_at: string;
   amount?: number;
   payment_intent_id?: string;
   owner_id?: number;
@@ -38,10 +36,8 @@ export const getOwnerBookings = async (req: AuthRequest, res: Response) => {
         u.last_name  AS customer_last_name,
         b.booking_date,
         b.guests_number,
-        b.services,
         b.status,
         b.proposed_date,
-        b.created_at,
         p.payment_intent_id,
         p.amount
       FROM bookings b
@@ -49,7 +45,7 @@ export const getOwnerBookings = async (req: AuthRequest, res: Response) => {
       JOIN users u ON u.id = b.customer_id
       LEFT JOIN customer_payments p ON p.booking_id = b.id
       WHERE h.owner_id = ${req.userId!}
-      ORDER BY b.created_at DESC, b.id DESC
+      ORDER BY b.id DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
@@ -77,12 +73,12 @@ export const proposeReschedule = async (req: AuthRequest, res: Response) => {
       WHERE b.id = ${id} AND h.owner_id = ${req.userId!}
     `;
     if (!booking) return res.status(403).send("❌ غير مصرح");
-    if (booking.status !== "Confirmed")
+    if (booking.status !== "confirmed")
       return res.status(400).send("❌ لا يمكن تعديل موعد حجز ليس في حالة مؤكد");
 
     await sql`
       UPDATE bookings
-      SET status = 'RescheduleRequested', proposed_date = ${proposed_date}
+      SET status = 'rescheduled', proposed_date = ${proposed_date}
       WHERE id = ${id}
     `;
 
@@ -110,7 +106,7 @@ export const proposeReschedule = async (req: AuthRequest, res: Response) => {
 export const respondReschedule = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { accept } = req.body; // boolean
+    const { accept } = req.body;
     if (!id) return res.status(400).send("❌ معرف غير صالح");
 
     const [booking] = await sql<Booking[]>`
@@ -121,13 +117,15 @@ export const respondReschedule = async (req: AuthRequest, res: Response) => {
       WHERE b.id = ${id} AND b.customer_id = ${req.userId!}
     `;
     if (!booking) return res.status(403).send("❌ غير مصرح");
-    if (booking.status !== "RescheduleRequested")
+    if (booking.status !== "rescheduled")
       return res.status(400).send("❌ لا يوجد طلب تعديل موعد نشط لهذا الحجز");
 
     if (accept) {
       await sql`
         UPDATE bookings
-        SET booking_date = ${booking.proposed_date}, proposed_date = NULL, status = 'Confirmed'
+        SET booking_date = ${booking.proposed_date},
+            proposed_date = NULL,
+            status = 'confirmed'
         WHERE id = ${id}
       `;
       await insertNotification(
@@ -139,7 +137,7 @@ export const respondReschedule = async (req: AuthRequest, res: Response) => {
     } else {
       await sql`
         UPDATE bookings
-        SET status = 'Confirmed', proposed_date = NULL
+        SET status = 'confirmed', proposed_date = NULL
         WHERE id = ${id}
       `;
       await insertNotification(
@@ -172,11 +170,13 @@ export const rejectBooking = async (req: AuthRequest, res: Response) => {
     `;
     if (!booking) return res.status(403).send("❌ غير مصرح");
 
-    await sql`UPDATE bookings SET status = 'Rejected' WHERE id = ${id}`;
+    await sql`UPDATE bookings SET status = 'cancelled' WHERE id = ${id}`;
 
-    // Update payment status if exists
     if (booking.payment_intent_id) {
-      await sql`UPDATE customer_payments SET status = 'Refunded' WHERE booking_id = ${id}`;
+      await sql`
+        UPDATE customer_payments SET status = 'failed', type = 'refund'
+        WHERE booking_id = ${id}
+      `;
       // TODO: Call stripe.refunds.create({ payment_intent: booking.payment_intent_id })
     }
 
@@ -209,7 +209,7 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
     `;
     if (!booking) return res.status(403).send("❌ غير مصرح");
 
-    await sql`UPDATE bookings SET status = 'Cancelled' WHERE id = ${id}`;
+    await sql`UPDATE bookings SET status = 'cancelled' WHERE id = ${id}`;
 
     await insertNotification(
       booking.owner_id!,

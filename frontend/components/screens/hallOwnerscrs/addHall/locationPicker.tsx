@@ -11,34 +11,29 @@ import MapView, { Marker, MapPressEvent } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "../../../reusable func/input";
 import { styles } from "../../../styles";
-import { HallFormProps, PALESTINE_CITIES } from "./constants";
 import * as Location from "expo-location";
 import { useHandleChange } from "../../../reusable func/useHandleChange";
-
-const parseLocation = (loc: string) => {
-  const parts = loc?.split(",").map(Number);
-  if (parts?.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]))
-    return { latitude: parts[0], longitude: parts[1] };
-  return null;
-};
+import {
+  HallFormProps,
+  PALESTINE_CITIES,
+} from "../../../Validations/validateHall";
 
 export default function LocationPicker({
   form,
   setForm,
   errors,
 }: HallFormProps) {
-  const [cityPickerVisible, setCityPickerVisible] = useState(false);
-  const [mapVisible, setMapVisible] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [cityPickerVisible, setCityPickerVisible] = useState<boolean>(false);
+  const [mapVisible, setMapVisible] = useState<boolean>(false);
+  const [locationLoading, setLocationLoading] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const change = useHandleChange(setForm);
   const mapRef = useRef<MapView>(null);
 
   const [region, setRegion] = useState({
-    latitude: parseLocation(form.location)?.latitude ?? 32.2211,
-    longitude: parseLocation(form.location)?.longitude ?? 35.2544,
+    latitude: form.latitude ?? 32.2211,
+    longitude: form.longitude ?? 35.2544,
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });
@@ -46,7 +41,11 @@ export default function LocationPicker({
   const [markerCoords, setMarkerCoords] = useState<{
     latitude: number;
     longitude: number;
-  } | null>(parseLocation(form.location));
+  } | null>(
+    form.latitude !== undefined && form.longitude !== undefined
+      ? { latitude: form.latitude, longitude: form.longitude }
+      : null,
+  );
 
   const handleMapPress = useCallback((e: MapPressEvent) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
@@ -55,7 +54,6 @@ export default function LocationPicker({
 
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
-    setSearchLoading(true);
     try {
       const results = await Location.geocodeAsync(searchQuery);
       if (results.length > 0) {
@@ -72,8 +70,6 @@ export default function LocationPicker({
       }
     } catch (e) {
       console.error("Search error:", e);
-    } finally {
-      setSearchLoading(false);
     }
   }, [searchQuery]);
 
@@ -106,11 +102,12 @@ export default function LocationPicker({
     if (markerCoords) {
       setForm((prev) => ({
         ...prev,
-        location: `${markerCoords.latitude}, ${markerCoords.longitude}`,
+        latitude: markerCoords.latitude,
+        longitude: markerCoords.longitude,
       }));
     }
     setMapVisible(false);
-  }, [markerCoords]);
+  }, [markerCoords, setForm]);
 
   const renderCityItem = useCallback(
     ({ item }: { item: string }) => (
@@ -124,10 +121,11 @@ export default function LocationPicker({
         <Text style={styles.cityText}>{item}</Text>
       </TouchableOpacity>
     ),
-    [],
+    [change],
   );
 
-  const locationLabel = form.location || null;
+  const hasLocation =
+    form.latitude !== undefined && form.longitude !== undefined;
 
   return (
     <View>
@@ -149,7 +147,7 @@ export default function LocationPicker({
             <Text style={styles.modalTitle}>اختر المدينة</Text>
             <FlatList
               data={PALESTINE_CITIES}
-              keyExtractor={(item) => item}
+              keyExtractor={(item: string) => item}
               renderItem={renderCityItem}
               keyboardShouldPersistTaps="handled"
             />
@@ -166,7 +164,6 @@ export default function LocationPicker({
       {/* Map Picker Modal */}
       <Modal visible={mapVisible} animationType="slide">
         <View style={{ flex: 1 }}>
-          {/* Map */}
           <MapView
             ref={mapRef}
             style={{ flex: 1 }}
@@ -219,40 +216,39 @@ export default function LocationPicker({
           </TouchableOpacity>
 
           {/* Bottom bar */}
-          <View>
-            <View
-              style={{
-                flexDirection: "row",
-                gap: 5,
-                padding: 10,
-                position: "absolute",
-                bottom: 0,
-              }}
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 5,
+              padding: 10,
+              position: "absolute",
+              bottom: 0,
+              width: "100%",
+            }}
+          >
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                {
+                  flex: 1,
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: "#6C4AB6",
+                },
+              ]}
+              onPress={() => setMapVisible(false)}
             >
-              <TouchableOpacity
-                style={[
-                  styles.actionButton,
-                  {
-                    flex: 1,
-                    backgroundColor: "#fff",
-                    borderWidth: 1,
-                    borderColor: "#6C4AB6",
-                  },
-                ]}
-                onPress={() => setMapVisible(false)}
-              >
-                <Text style={[styles.actionButtonText, { color: "#6C4AB6" }]}>
-                  إلغاء
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, { flex: 1 }]}
-                onPress={handleConfirm}
-                disabled={!markerCoords}
-              >
-                <Text style={styles.actionButtonText}>تأكيد الموقع</Text>
-              </TouchableOpacity>
-            </View>
+              <Text style={[styles.actionButtonText, { color: "#6C4AB6" }]}>
+                إلغاء
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, { flex: 1 }]}
+              onPress={handleConfirm}
+              disabled={!markerCoords}
+            >
+              <Text style={styles.actionButtonText}>تأكيد الموقع</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -287,7 +283,7 @@ export default function LocationPicker({
           <Input
             placeholder="الشارع..."
             value={form.address}
-            onChangeText={(text) => change("address", text)}
+            onChangeText={(text: string) => change("address", text)}
           />
           {errors.address && (
             <Text style={styles.errorText}>{errors.address}</Text>
@@ -303,14 +299,17 @@ export default function LocationPicker({
         >
           <Ionicons name="map" size={20} color="#6C4AB6" />
           <Text style={[styles.actionButtonText, { color: "#6C4AB6" }]}>
-            {form.location
+            {hasLocation
               ? "تعديل الموقع على الخريطة"
               : "تحديد الموقع على الخريطة"}
           </Text>
         </TouchableOpacity>
 
-        {locationLabel && (
-          <Text style={styles.locationText}>📍 {locationLabel}</Text>
+        {hasLocation && (
+          <Text style={styles.locationText}>
+            📍 {Number(form.latitude)?.toFixed(5)},{" "}
+            {Number(form.longitude)?.toFixed(5)}
+          </Text>
         )}
         {errors.location && (
           <Text style={[styles.errorText, { textAlign: "center" }]}>

@@ -17,7 +17,7 @@ export default function UpdateEmail() {
   const [form, setForm] = useState<Partial<AuthData>>({ email: "" });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [code, setCode] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<boolean>(false);
 
   const change = useHandleChange(setForm);
@@ -51,6 +51,7 @@ export default function UpdateEmail() {
     try {
       const response = await updateEmailApi({
         email: form.email,
+        code,
       });
       Toast.show({ type: "success", text1: response.data });
       NavigateAndReset("HallOwner", {

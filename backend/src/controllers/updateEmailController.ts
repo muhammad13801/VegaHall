@@ -1,5 +1,4 @@
 import { Response } from "express";
-
 import { AuthRequest } from "../middleware/sessionMiddleware";
 import sql from "../db";
 import {
@@ -13,44 +12,28 @@ import { handleVerificationError } from "../utils/handleVerificationError";
 
 export const checkEmail = async (req: AuthRequest, res: Response) => {
   try {
-    const { email } = req.body;
+    const email = req.body.email.trim().toLowerCase();
     const userId = req.userId;
-    console.log(email, userId);
+
     if (!userId) return res.status(401).send("❌ مستخدم غير مصرح");
 
     if (await emailExists(email))
       return res.status(409).send("❌ البريد الإلكتروني موجود");
 
     const [userData] = await sql<UserTable[]>`
-                SELECT *
-                FROM users
-                WHERE id = ${userId}
-            `;
+      SELECT * FROM users WHERE id = ${userId}
+    `;
     if (!userData) return res.status(404).send("❌ المستخدم غير موجود");
 
     const code = generateCode();
 
-    // Store in pending_users to use processVerification later
-    await sql`DELETE FROM pending_users WHERE email = ${email} OR expires_at < NOW()`;
+    // Store the new email + code temporarily on the user row itself
     await sql`
-      INSERT INTO pending_users
-      (first_name, last_name, gender, date_of_birth,
-       email, password, phone_number, role, status,
-       code, attempts_left, expires_at)
-      VALUES (
-        ${userData.first_name},
-        ${userData.last_name},
-        ${userData.gender},
-        ${userData.date_of_birth},
-        ${email},
-        ${userData.password},
-        ${userData.phone_number},
-        ${userData.role},
-        ${userData.status},
-        ${code},
-        5,
-        ${new Date(Date.now() + 10 * 60 * 1000)}
-      )
+      UPDATE users
+      SET code = ${code},
+          attempts_left = 5,
+          expires_at = ${new Date(Date.now() + 10 * 60 * 1000)}
+      WHERE id = ${userId}
     `;
 
     await sendVerificationCode(
@@ -75,12 +58,52 @@ export const updateEmail = async (req: AuthRequest, res: Response) => {
 
     if (!userId) return res.status(401).send("❌ مستخدم غير مصرح");
 
-    const result = await processVerification(email, code, "verifyOnly");
-    if (result.status !== "success")
-      return handleVerificationError(res, result);
+    // Verify the code directly against the user's own row
+    const [userData] = await sql<UserTable[]>`
+      SELECT * FROM users WHERE id = ${userId}
+    `;
 
-    await sql`UPDATE users SET email = ${email} WHERE id = ${userId}`;
-    await sql`DELETE FROM pending_users WHERE email = ${email}`;
+    if (!userData) return res.status(404).send("❌ المستخدم غير موجود");
+
+    if (!userData.code || !userData.expires_at || !userData.attempts_left)
+      return res.status(400).send("❌ لا يوجد طلب تحقق نشط");
+
+    if (new Date() > userData.expires_at) {
+      await sql`
+        UPDATE users SET code = null, attempts_left = null, expires_at = null
+        WHERE id = ${userId}
+      `;
+      return res.status(400).send("❌ انتهت صلاحية الرمز");
+    }
+
+    if (userData.attempts_left < 1) {
+      await sql`
+        UPDATE users SET code = null, attempts_left = null, expires_at = null
+        WHERE id = ${userId}
+      `;
+      return res.status(400).send("❌ لقد استنفدت جميع المحاولات");
+    }
+
+    if (userData.code !== code) {
+      await sql`
+        UPDATE users SET attempts_left = attempts_left - 1 WHERE id = ${userId}
+      `;
+      return res
+        .status(400)
+        .send(
+          `❌ الرمز غير صحيح، المحاولات المتبقية: ${userData.attempts_left - 1}`,
+        );
+    }
+
+    await sql`
+      UPDATE users
+      SET email = ${email},
+          code = null,
+          attempts_left = null,
+          expires_at = null
+      WHERE id = ${userId}
+    `;
+
     res.send("✅ تم تحديث البريد الإلكتروني بنجاح");
   } catch (err) {
     console.error(err);
