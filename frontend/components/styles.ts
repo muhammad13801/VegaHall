@@ -150,7 +150,7 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     height: 50,
     width: "100%",
-    fontSize: 15,
+    fontSize: 14,
     marginBottom: 13,
     backgroundColor: "#FAFAFA",
     textAlignVertical: "center",

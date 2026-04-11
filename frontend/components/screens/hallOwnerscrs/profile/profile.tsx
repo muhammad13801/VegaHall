@@ -79,9 +79,9 @@ export default function Profile() {
 
   const fullName = user ? `${user.first_name} ${user.last_name}` : "---";
   const roleLabel =
-    user?.role === "HallOwner"
+    user?.role === "owner"
       ? "مالك قاعة"
-      : user?.role === "Customer"
+      : user?.role === "customer"
         ? "زبون"
         : "مدير النظام";
 

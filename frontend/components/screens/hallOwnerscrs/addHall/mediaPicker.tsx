@@ -10,7 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { styles } from "../../../styles";
-import { HallFormProps } from "./constants";
+import { HallFormProps } from "../../../Validations/validateHall";
 
 const ImageItem = memo(
   ({

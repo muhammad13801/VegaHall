@@ -1,1 +1,0 @@
-ALTER TABLE cutomer_payments RENAME TO customer_payments;

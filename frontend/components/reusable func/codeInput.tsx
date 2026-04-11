@@ -14,10 +14,9 @@ interface CodeInputProps {
   valueToShow?: string;
   setCodeValue?: (text: string) => void;
   handleAction: () => void;
-  handleActionResend: () => void;
+  handleActionResend: () => Promise<void> | void;
   resendLoading: boolean;
   loading?: boolean;
-  canResend?: boolean; // optional cooldown flag
   errors?: string;
 }
 
@@ -31,19 +30,17 @@ export default function CodeInput({
   handleActionResend,
   loading,
   resendLoading,
-  canResend = true,
   errors,
 }: CodeInputProps) {
   const [timer, setTimer] = useState(0);
-  const [internalCanResend, setInternalCanResend] = useState(canResend);
+  const [canResend, setCanResend] = useState(true);
 
-  // countdown effect
+  // countdown logic
   useEffect(() => {
-    setInternalCanResend(canResend);
-  }, [canResend]);
-
-  useEffect(() => {
-    if (timer === 0) return setInternalCanResend(true);
+    if (timer === 0) {
+      setCanResend(true);
+      return;
+    }
 
     const interval = setInterval(() => {
       setTimer((prev) => prev - 1);
@@ -52,12 +49,18 @@ export default function CodeInput({
     return () => clearInterval(interval);
   }, [timer]);
 
-  const handleResendPress = () => {
-    if (!internalCanResend) return;
+  const handleResendPress = async () => {
+    if (!canResend || resendLoading) return;
 
-    handleActionResend();
-    setTimer(60); // start 60s countdown
-    setInternalCanResend(false); // disable button while counting down
+    setCanResend(false);
+    setTimer(60); // start countdown immediately
+
+    try {
+      await handleActionResend();
+    } catch {
+      setTimer(0);
+      setCanResend(true);
+    }
   };
 
   return (
@@ -80,23 +83,19 @@ export default function CodeInput({
             keyboardType="numeric"
             maxLength={5}
           />
+
           {errors && <Text style={styles.errorText}>{errors}</Text>}
 
           <TouchableOpacity
             onPress={handleResendPress}
-            disabled={resendLoading || !internalCanResend}
+            disabled={!canResend || resendLoading}
             style={{ marginVertical: 10 }}
           >
             {resendLoading ? (
               <ActivityIndicator color="#6C4AB6" />
             ) : (
-              <Text
-                style={[
-                  styles.resendCode,
-                  !internalCanResend && { opacity: 0.5 },
-                ]}
-              >
-                {internalCanResend
+              <Text style={[styles.resendCode, !canResend && { opacity: 0.5 }]}>
+                {canResend
                   ? "إعادة إرسال كود جديد"
                   : `يمكن إعادة الإرسال بعد ${timer} ثانية`}
               </Text>

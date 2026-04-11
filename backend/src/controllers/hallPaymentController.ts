@@ -51,7 +51,8 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
       price,
       city,
       address,
-      location,
+      latitude,
+      longitude,
       description,
       images,
       videos,
@@ -78,23 +79,32 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
       `;
       if (existingPayment) throw new Error("ALREADY_CONFIRMED");
 
-      // Insert the hall as Active
+      // Insert the hall — matches schema columns exactly
       const [newHall] = await tx`
-        INSERT INTO halls (hall_name, location, city, address, capacity,
-                           description, price, status, owner_id)
-        VALUES (${name}, ${location}, ${city}, ${address}, ${capacity},
-                ${description}, ${price}, 'Active', ${userId})
+        INSERT INTO halls
+          (hall_name, owner_id, capacity, city, address,
+           latitude, longitude, description, base_price, status)
+        VALUES
+          (${name}, ${userId}, ${capacity}, ${city}, ${address},
+           ${latitude ?? null}, ${longitude ?? null}, ${description},
+           ${price}, 'active')
         RETURNING id
       `;
       const hallId = newHall.id;
 
+      // meal_options: look up meal_type_id by name
       if (mealOptions?.length) {
         await Promise.all(
-          mealOptions.map(
-            (m: any) =>
-              tx`INSERT INTO meal_options (hall_id, name, price_per_person)
-               VALUES (${hallId}, ${m.type}, ${m.pricePerPerson})`,
-          ),
+          mealOptions.map(async (m: any) => {
+            const [mt] = await tx`
+              SELECT id FROM meal_types WHERE name = ${m.type ?? m.name}
+            `;
+            if (!mt) throw new Error(`MEAL_NOT_FOUND:${m.type ?? m.name}`);
+            return tx`
+              INSERT INTO meal_options (hall_id, meal_type_id, price_per_person)
+              VALUES (${hallId}, ${mt.id}, ${m.pricePerPerson ?? m.price_per_person})
+            `;
+          }),
         );
       }
 
@@ -102,8 +112,7 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
         await Promise.all(
           images.map(
             (url: string) =>
-              tx`INSERT INTO media (hall_id, type, url)
-               VALUES (${hallId}, 'image', ${url})`,
+              tx`INSERT INTO media (hall_id, type, url) VALUES (${hallId}, 'image', ${url})`,
           ),
         );
       }
@@ -112,19 +121,24 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
         await Promise.all(
           videos.map(
             (url: string) =>
-              tx`INSERT INTO media (hall_id, type, url)
-               VALUES (${hallId}, 'video', ${url})`,
+              tx`INSERT INTO media (hall_id, type, url) VALUES (${hallId}, 'video', ${url})`,
           ),
         );
       }
 
+      // hall_services: look up service_id by name
       if (services?.length) {
         await Promise.all(
-          services.map(
-            (s: any) =>
-              tx`INSERT INTO hall_services (hall_id, name, status, price)
-               VALUES (${hallId}, ${s.name}, 'active', ${s.price || 0})`,
-          ),
+          services.map(async (s: any) => {
+            const [svc] = await tx`
+              SELECT id FROM services WHERE name = ${s.name}
+            `;
+            if (!svc) throw new Error(`SERVICE_NOT_FOUND:${s.name}`);
+            return tx`
+              INSERT INTO hall_services (hall_id, service_id, price)
+              VALUES (${hallId}, ${svc.id}, ${s.price ?? 0})
+            `;
+          }),
         );
       }
 
@@ -132,20 +146,22 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
         await Promise.all(
           secondaryContacts.map(
             (c: any) =>
-              tx`INSERT INTO secondary_contacts (hall_id, first_name, last_name, phone_number)
-               VALUES (${hallId}, ${c.firstName}, ${c.lastName}, ${c.phone})`,
+              tx`
+                INSERT INTO secondary_contacts (hall_id, first_name, last_name, phone_number)
+                VALUES (${hallId}, ${c.firstName}, ${c.lastName}, ${c.phone})
+              `,
           ),
         );
       }
 
-      // Record the payment as Success
+      // Record the payment — status is lowercase per schema check constraint
       await tx`
         INSERT INTO hall_payments (hall_id, owner_id, amount, status, payment_intent_id)
-        VALUES (${hallId}, ${userId}, 50, 'Success', ${paymentIntentId})
+        VALUES (${hallId}, ${userId}, 50, 'success', ${paymentIntentId})
       `;
     });
 
-    return res.status(200).send("✔️ تم تفعيل واضافة الصالة بنجاح");
+    return res.status(200).send("✔️ تم تفعيل وإضافة الصالة بنجاح");
   } catch (err: any) {
     console.error(err);
     if (err.message === "ALREADY_CONFIRMED")

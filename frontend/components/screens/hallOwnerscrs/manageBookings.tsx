@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react"; // ✅ CHANGED: added useMemo
 import {
   View,
   Text,
@@ -41,10 +41,9 @@ interface Booking {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  Confirmed: { label: "مؤكد", color: "#22C55E" },
-  Pending: { label: "قيد الانتظار", color: "#F59E0B" },
-  Rejected: { label: "مرفوض", color: "#EF4444" },
-  RescheduleRequested: { label: "تعديل مقترح", color: "#6C4AB6" },
+  confirmed:   { label: "مؤكد",          color: "#22C55E" },
+  rescheduled: { label: "تعديل مقترح",  color: "#6C4AB6" },
+  cancelled:   { label: "ملغي",           color: "#EF4444" },
 };
 
 const formatDate = (d: string) =>
@@ -72,6 +71,26 @@ export default function ManageBookings() {
   const [proposedDate, setProposedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // ✅ ADDED: derive booked dates from existing bookings list (Confirmed or Pending only)
+  const bookedDates = useMemo(() => {
+    return (bookings as Booking[])
+      .filter((b) => b.status === "confirmed")
+      .map((b) => new Date(b.booking_date));
+  }, [bookings]);
+
+  // ✅ ADDED: check if a chosen date is already taken
+  const isDateBooked = useCallback(
+    (date: Date) => {
+      return bookedDates.some(
+        (booked) =>
+          booked.getFullYear() === date.getFullYear() &&
+          booked.getMonth() === date.getMonth() &&
+          booked.getDate() === date.getDate(),
+      );
+    },
+    [bookedDates],
+  );
+
   const updateStatus = useCallback(
     (id: number, status: string, extra = {}) =>
       setItems((prev) =>
@@ -82,7 +101,6 @@ export default function ManageBookings() {
     [setItems],
   );
 
-  // Reject → refund amount back to customer
   const handleReject = useCallback(
     (id: number) => {
       Alert.alert(
@@ -97,7 +115,7 @@ export default function ManageBookings() {
               setActionLoading(id);
               try {
                 await rejectBookingApi(id);
-                updateStatus(id, "Rejected");
+                updateStatus(id, "cancelled");
                 Toast.show({
                   type: "success",
                   text1: "تم رفض الحجز وإعادة المبلغ للعميل",
@@ -115,7 +133,6 @@ export default function ManageBookings() {
     [updateStatus],
   );
 
-  // Propose new date → status becomes Pending until customer accepts
   const handleReschedule = useCallback(async () => {
     if (!selectedId) return;
     setActionLoading(selectedId);
@@ -123,7 +140,7 @@ export default function ManageBookings() {
     try {
       const dateStr = proposedDate.toISOString().split("T")[0];
       await proposeRescheduleApi(selectedId, dateStr);
-      updateStatus(selectedId, "Pending", { proposed_date: dateStr });
+      updateStatus(selectedId, "rescheduled", { proposed_date: dateStr });
       Toast.show({ type: "success", text1: "تم إرسال الموعد الجديد للعميل" });
     } catch {
       Toast.show({ type: "error", text1: "فشل إرسال طلب الموعد" });
@@ -163,13 +180,11 @@ export default function ManageBookings() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
 
-      {/* Header */}
       <View style={[styles.info, { width: "90%", marginVertical: 12 }]}>
         <Text style={styles.title}>إدارة الحجوزات</Text>
         <Ionicons name="calendar-outline" size={26} color="#6C4AB6" />
       </View>
 
-      {/* Bookings List */}
       <FlatList
         data={bookings as Booking[]}
         keyExtractor={(b) => b.id.toString()}
@@ -211,13 +226,12 @@ export default function ManageBookings() {
             label: item.status,
             color: "#888",
           };
-          const isConfirmed = item.status === "Confirmed";
-          const isPending = item.status === "Pending";
+          const isConfirmed = item.status === "confirmed";
+          const isPending = item.status === "rescheduled";
           const isActioning = actionLoading === item.id;
 
           return (
             <View style={[styles.card, { marginBottom: 14 }]}>
-              {/* Hall name + status */}
               <View style={[styles.info, { marginBottom: 12 }]}>
                 <Text style={[styles.profileValue, { fontSize: 16 }]}>
                   {item.hall_name}
@@ -227,7 +241,6 @@ export default function ManageBookings() {
                 </Text>
               </View>
 
-              {/* Customer */}
               <View
                 style={[
                   styles.row,
@@ -240,7 +253,6 @@ export default function ManageBookings() {
                 </Text>
               </View>
 
-              {/* Date + guests */}
               <View style={[styles.row, { gap: 16, marginBottom: 10 }]}>
                 <View style={[styles.row, { alignItems: "center", gap: 6 }]}>
                   <Ionicons name="calendar-outline" size={14} color="#888" />
@@ -256,7 +268,6 @@ export default function ManageBookings() {
                 </View>
               </View>
 
-              {/* Proposed date — shown when status is Pending (awaiting customer response) */}
               {isPending && item.proposed_date && (
                 <View
                   style={[
@@ -280,7 +291,6 @@ export default function ManageBookings() {
                 </View>
               )}
 
-              {/* Selected Services Section */}
               {((Array.isArray(item.services) &&
                 (item.services as any[]).length > 0) ||
                 (typeof item.services === "string" &&
@@ -329,7 +339,6 @@ export default function ManageBookings() {
                 </View>
               )}
 
-              {/* Cost + actions */}
               <View
                 style={[
                   styles.borderTopSection,
@@ -352,7 +361,6 @@ export default function ManageBookings() {
                   />
                 ) : (
                   <>
-                    {/* Confirmed: owner can propose new date or reject (refund) */}
                     {isConfirmed && (
                       <View style={[styles.row, { gap: 8 }]}>
                         <TouchableOpacity
@@ -394,7 +402,6 @@ export default function ManageBookings() {
                       </View>
                     )}
 
-                    {/* Pending: waiting for customer to accept proposed date — owner can only reject */}
                     {isPending && (
                       <TouchableOpacity
                         style={[
@@ -478,12 +485,20 @@ export default function ManageBookings() {
         </View>
       </Modal>
 
+      {/* ✅ CHANGED: added isDateBooked check in onConfirm */}
       <DateTimePickerModal
         isVisible={showDatePicker}
         mode="date"
         minimumDate={new Date()}
         date={proposedDate}
         onConfirm={(date) => {
+          if (isDateBooked(date)) {
+            Alert.alert(
+              "التاريخ محجوز",
+              "هذا التاريخ محجوز بالفعل، يرجى اختيار تاريخ آخر",
+            );
+            return;
+          }
           setProposedDate(date);
           setShowDatePicker(false);
         }}

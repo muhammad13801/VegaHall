@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { TextInputMask } from "react-native-masked-text";
 import { Input } from "../../../reusable func/input";
 import { styles } from "../../../styles";
-import { HallFormProps } from "./constants";
+import { HallFormProps } from "../../../Validations/validateHall";
 
 const PHONE_OPTIONS = {
   mask: "+97C-5DD-DDD-DDD",

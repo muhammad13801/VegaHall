@@ -29,3 +29,13 @@ export const proposeRescheduleApi = (id: number, proposed_date: string) =>
 
 export const rejectBookingApi = (id: number) =>
   api.patch(`/halls/bookings/${id}/reject`);
+
+export const requestServiceApi = (name: string) =>
+  api.post("/halls/request-service", { name });
+
+export const requestMealApi = (name: string) =>
+  api.post("/halls/request-meal", { name });
+
+export const getServicesApi = () => api.get(`/halls/services`);
+
+export const getMealTypesApi = () => api.get(`/halls/meal-types`);

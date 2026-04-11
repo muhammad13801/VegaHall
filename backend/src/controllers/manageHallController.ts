@@ -9,11 +9,13 @@ export interface Media {
 }
 
 export interface HallService {
+  service_id: number;
   name: string;
   price: number;
 }
 
 export interface MealOption {
+  meal_type_id: number;
   name: string;
   price_per_person: number;
 }
@@ -29,10 +31,11 @@ export interface Hall {
   hall_name: string;
   city: string;
   address: string;
-  location: string;
+  latitude: number | null;
+  longitude: number | null;
   description: string;
   capacity: number;
-  price: number;
+  base_price: number;
   status: string;
 }
 
@@ -50,27 +53,40 @@ export const getHall = async (req: AuthRequest, res: Response) => {
     if (!id) return res.status(400).send("❌ معرف غير صالح");
 
     const [hall] = await sql<Hall[]>`
-      SELECT 
-        h.id, h.hall_name, h.city, h.address, h.location, h.description, h.capacity, h.price, h.status,
+      SELECT
+        h.id, h.hall_name, h.city, h.address, h.latitude, h.longitude,
+        h.description, h.capacity, h.base_price, h.status,
         u.phone_number, u.first_name, u.last_name,
-        (SELECT AVG(rating) FROM ratings WHERE hall_id = h.id) as avg_rating
-      FROM halls h join users u on h.owner_id = u.id
+        (SELECT AVG(rating) FROM ratings WHERE hall_id = h.id) AS avg_rating
+      FROM halls h
+      JOIN users u ON h.owner_id = u.id
       WHERE h.id = ${id} AND h.owner_id = ${req.userId!}
     `;
     if (!hall) return res.status(404).send("❌ الصالة غير موجودة");
 
-    const media = await sql<
-      Media[]
-    >`SELECT type, url FROM media WHERE hall_id = ${id}`;
-    const services = await sql<
-      HallService[]
-    >`SELECT name, price FROM hall_services WHERE hall_id = ${id}`;
-    const mealOptions = await sql<
-      MealOption[]
-    >`SELECT name, price_per_person FROM meal_options WHERE hall_id = ${id}`;
-    const contacts = await sql<
-      SecondaryContact[]
-    >`SELECT first_name, last_name, phone_number FROM secondary_contacts WHERE hall_id = ${id}`;
+    const media = await sql<Media[]>`
+      SELECT type, url FROM media WHERE hall_id = ${id}
+    `;
+
+    const services = await sql<HallService[]>`
+      SELECT hs.service_id, s.name, hs.price
+      FROM hall_services hs
+      JOIN services s ON s.id = hs.service_id
+      WHERE hs.hall_id = ${id}
+    `;
+
+    const mealOptions = await sql<MealOption[]>`
+      SELECT mo.meal_type_id, mt.name, mo.price_per_person
+      FROM meal_options mo
+      JOIN meal_types mt ON mt.id = mo.meal_type_id
+      WHERE mo.hall_id = ${id}
+    `;
+
+    const contacts = await sql<SecondaryContact[]>`
+      SELECT first_name, last_name, phone_number
+      FROM secondary_contacts
+      WHERE hall_id = ${id}
+    `;
 
     const result: HallFull = {
       ...hall,
@@ -84,7 +100,7 @@ export const getHall = async (req: AuthRequest, res: Response) => {
     res.json(result);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "حدث خطأ" });
+    res.status(500).send("❌ خطأ في الخادم");
   }
 };
 
@@ -97,7 +113,8 @@ export const updateHall = async (req: AuthRequest, res: Response) => {
       name,
       city,
       address,
-      location,
+      latitude,
+      longitude,
       capacity,
       price,
       description,
@@ -108,23 +125,25 @@ export const updateHall = async (req: AuthRequest, res: Response) => {
       secondaryContacts,
     } = req.body;
 
-    const [hall] = await sql<
-      Hall[]
-    >`SELECT id FROM halls WHERE id = ${id} AND owner_id = ${req.userId!}`;
-    if (!hall) return res.status(403).json({ message: "غير مصرح" });
+    const [hall] = await sql<Hall[]>`
+      SELECT id FROM halls WHERE id = ${id} AND owner_id = ${req.userId!}
+    `;
+    if (!hall) return res.status(403).send("❌ غير مصرح");
 
     await sql`
       UPDATE halls SET
-        hall_name = ${name},
-        city = ${city},
-        address = ${address},
-        location = ${location},
-        capacity = ${capacity},
-        price = ${price},
-        description = ${description}
+        hall_name    = ${name},
+        city         = ${city},
+        address      = ${address},
+        latitude     = ${latitude ?? null},
+        longitude    = ${longitude ?? null},
+        capacity     = ${capacity},
+        base_price   = ${price},
+        description  = ${description}
       WHERE id = ${id}
     `;
 
+    // Media
     await sql`DELETE FROM media WHERE hall_id = ${id}`;
     for (const url of images || []) {
       await sql`INSERT INTO media (hall_id, type, url) VALUES (${id}, 'image', ${url})`;
@@ -133,40 +152,39 @@ export const updateHall = async (req: AuthRequest, res: Response) => {
       await sql`INSERT INTO media (hall_id, type, url) VALUES (${id}, 'video', ${url})`;
     }
 
+    // hall_services — look up service_id by name
     await sql`DELETE FROM hall_services WHERE hall_id = ${id}`;
     for (const s of services || []) {
-      await sql`INSERT INTO hall_services (hall_id, name, price, status) VALUES (${id}, ${s.name}, ${s.price || 0}, 'Active')`;
+      const [svc] = await sql`SELECT id FROM services WHERE name = ${s.name}`;
+      if (!svc) throw new Error(`SERVICE_NOT_FOUND:${s.name}`);
+      await sql`
+        INSERT INTO hall_services (hall_id, service_id, price)
+        VALUES (${id}, ${svc.id}, ${s.price ?? 0})
+      `;
     }
 
+    // meal_options — look up meal_type_id by name
     await sql`DELETE FROM meal_options WHERE hall_id = ${id}`;
     for (const m of mealOptions || []) {
-      await sql`INSERT INTO meal_options (hall_id, name, price_per_person) VALUES (${id}, ${m.type}, ${m.pricePerPerson})`;
+      const [mt] =
+        await sql`SELECT id FROM meal_types WHERE name = ${m.type ?? m.name}`;
+      if (!mt) throw new Error(`MEAL_NOT_FOUND:${m.type ?? m.name}`);
+      await sql`
+        INSERT INTO meal_options (hall_id, meal_type_id, price_per_person)
+        VALUES (${id}, ${mt.id}, ${m.pricePerPerson ?? m.price_per_person})
+      `;
     }
 
+    // Secondary contacts
     await sql`DELETE FROM secondary_contacts WHERE hall_id = ${id}`;
     for (const c of secondaryContacts || []) {
-      await sql`INSERT INTO secondary_contacts (hall_id, first_name, last_name, phone_number) VALUES (${id}, ${c.firstName}, ${c.lastName}, ${c.phone})`;
+      await sql`
+        INSERT INTO secondary_contacts (hall_id, first_name, last_name, phone_number)
+        VALUES (${id}, ${c.firstName}, ${c.lastName}, ${c.phone})
+      `;
     }
 
     res.send("✔️ تم تحديث الصالة بنجاح");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("❌ حدث خطأ");
-  }
-};
-
-export const deleteHall = async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    if (!id) return res.status(400).send("❌ معرف غير صالح");
-
-    const [hall] = await sql<
-      Hall[]
-    >`SELECT id FROM halls WHERE id = ${id} AND owner_id = ${req.userId!}`;
-    if (!hall) return res.status(403).send("❌ غير مصرح");
-
-    await sql`DELETE FROM halls WHERE id = ${id}`;
-    res.send("✔️ تم حذف الصالة بنجاح");
   } catch (err) {
     console.error(err);
     res.status(500).send("❌ خطأ في الخادم");
@@ -179,7 +197,7 @@ cron.schedule("0 0 * * *", async () => {
 
     await sql`
       UPDATE halls
-      SET status = 'Inactive'
+      SET status = 'suspended'
       WHERE id IN (
         SELECT hall_id
         FROM hall_payments

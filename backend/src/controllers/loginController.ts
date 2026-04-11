@@ -13,30 +13,37 @@ export const login = async (req: Request, res: Response) => {
     const email = req.body.email.trim().toLowerCase();
     const password = req.body.password.trim();
 
-    const [userData] = await sql<
-      UserTable[]
-    >`SELECT id, email, password, role, status FROM users WHERE email = ${email}`;
+    const [userData] = await sql<UserTable[]>`
+      SELECT id, email, password, role, status
+      FROM users
+      WHERE email = ${email}
+    `;
 
     if (!userData)
       return res.status(401).send("❌ المستخدم غير موجود على النظام");
 
-    if (userData.status === "Inactive")
-      return res.status(401).send("تم تعطيل حسابك");
+    if (userData.status === "pending")
+      return res.status(401).send("❌ لم يتم تفعيل الحساب بعد");
+
+    if (userData.status === "suspended")
+      return res.status(401).send("❌ تم تعطيل حسابك");
 
     if (!(await comparePassword(password, userData.password)))
       return res.status(401).send("❌ كلمة المرور خاطئة");
 
     const sessionId = uuid();
-    await sql`INSERT INTO sessions(id, user_id, last_activity)
-    VALUES(${sessionId}, ${userData.id}, NOW())`;
+    await sql`
+      INSERT INTO sessions (id, user_id, last_activity)
+      VALUES (${sessionId}, ${userData.id}, NOW())
+    `;
 
     res.json({
       sessionId,
       role: userData.role,
-      message: "✔️ تم تسجبل الدخول بنجاح",
+      message: "✔️ تم تسجيل الدخول بنجاح",
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).send("❌ خطا في الخادم");
+    return res.status(500).send("❌ خطأ في الخادم");
   }
 };

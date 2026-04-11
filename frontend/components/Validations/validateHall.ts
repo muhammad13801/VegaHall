@@ -1,12 +1,14 @@
 import { phoneRegex } from "../reusable func/regex";
 
 export interface ServiceData {
+  serviceId: number;
   name: string;
   price?: number;
 }
 
 export interface MealOption {
-  type: string;
+  mealTypeId: number;
+  name: string;
   pricePerPerson: number;
 }
 
@@ -23,7 +25,8 @@ export interface HallData {
   price: number;
   city: string;
   address: string;
-  location: string;
+  latitude?: number;
+  longitude?: number;
   description: string;
   images: string[];
   videos?: string[];
@@ -32,7 +35,29 @@ export interface HallData {
   secondaryContacts?: Contact[];
 }
 
-export const ValidateHall = (data: HallData) => {
+export interface HallFormProps {
+  form: HallData;
+  setForm: React.Dispatch<React.SetStateAction<HallData>>;
+  errors: { [key: string]: string };
+}
+
+export const PALESTINE_CITIES: string[] = [
+  "الخليل",
+  "إذنا",
+  "رام الله",
+  "نابلس",
+  "جنين",
+  "طولكرم",
+  "قلقيلية",
+  "بيت لحم",
+  "أريحا",
+  "طوباس",
+  "سلفيت",
+  "غزة",
+  "القدس",
+];
+
+export const ValidateHall = (data: HallData): { [key: string]: string } => {
   const errors: { [key: string]: string } = {};
 
   if (!data.name) errors.name = "اسم الصالة مطلوب";
@@ -46,27 +71,32 @@ export const ValidateHall = (data: HallData) => {
 
   if (!data.address) errors.address = "عنوان الصالة مطلوب";
 
-  if (!data.location) errors.location = "موقع الصالة مطلوب (GPS)";
+  if (data.latitude === undefined || data.longitude === undefined)
+    errors.location = "موقع الصالة مطلوب (GPS)";
 
   if (!data.description) errors.description = "وصف الصالة مطلوب";
 
   if (!data.images || data.images.length === 0)
     errors.images = "يجب إضافة صورة واحدة على الأقل";
 
-  if (data.services?.some((s) => s.name === "وجبات عشاء")) {
-    if (!data.mealOptions || data.mealOptions.length === 0) {
-      errors.mealOptions = "يجب إضافة خيار واحد على الأقل للوجبات";
-    } else {
-      data.mealOptions.forEach((meal, idx) => {
-        if (!meal.pricePerPerson || meal.pricePerPerson <= 0) {
-          errors[`mealPrice_${idx}`] = "يجب أن يكون سعر الوجبة أكبر من صفر";
-        }
-      });
-    }
+  if (data.mealOptions && data.mealOptions.length > 0) {
+    data.mealOptions.forEach((meal: MealOption, idx: number) => {
+      if (!meal.pricePerPerson || meal.pricePerPerson <= 0) {
+        errors[`mealPrice_${idx}`] = "يجب أن يكون سعر الوجبة أكبر من صفر";
+      }
+    });
+  }
+
+  if (data.services && data.services.length > 0) {
+    data.services.forEach((service: ServiceData, idx: number) => {
+      if (service.price === undefined || service.price < 0) {
+        errors[`servicePrice_${idx}`] = "يجب أن يكون سعر الخدمة صحيحاً";
+      }
+    });
   }
 
   if (data.secondaryContacts && data.secondaryContacts.length > 0) {
-    data.secondaryContacts.forEach((contact, idx) => {
+    data.secondaryContacts.forEach((contact: Contact, idx: number) => {
       if (!contact.firstName)
         errors[`contactFirstName_${idx}`] = "الاسم الأول مطلوب";
       if (!contact.lastName)

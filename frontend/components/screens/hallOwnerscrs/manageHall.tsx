@@ -36,7 +36,8 @@ export default function ManageHall() {
     name: "",
     city: "",
     address: "",
-    location: "",
+    latitude: undefined,
+    longitude: undefined,
     capacity: 0,
     price: 0,
     description: "",
@@ -48,8 +49,8 @@ export default function ManageHall() {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [fetching, setFetching] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchHall = async () => {
@@ -59,20 +60,23 @@ export default function ManageHall() {
           name: data.hall_name,
           city: data.city,
           address: data.address,
-          location: data.location,
+          latitude: data.latitude ?? undefined,
+          longitude: data.longitude ?? undefined,
           capacity: data.capacity,
-          price: data.price,
+          price: data.base_price,
           description: data.description,
           images: data.images || [],
           videos: data.videos || [],
           services:
             data.services?.map((s: any) => ({
+              serviceId: s.service_id,
               name: s.name,
               price: s.price,
             })) || [],
           mealOptions:
             data.mealOptions?.map((m: any) => ({
-              type: m.name,
+              mealTypeId: m.meal_type_id,
+              name: m.name,
               pricePerPerson: m.price_per_person,
             })) || [],
           secondaryContacts:
@@ -102,7 +106,7 @@ export default function ManageHall() {
     setLoading(true);
     try {
       const uploadedImages = await Promise.all(
-        form.images.map((uri) =>
+        form.images.map((uri: string) =>
           uri.startsWith("http") ? uri : uploadToSupabase(uri, "images"),
         ),
       );
@@ -118,11 +122,12 @@ export default function ManageHall() {
         images: uploadedImages,
         videos: uploadedVideos,
       });
+
+      Toast.show({ type: "success", text1: response.data });
       NavigateAndReset("HallOwner", {
         screen: "Home",
         params: { refresh: true },
       });
-      Toast.show({ type: "success", text1: response.data });
     } catch (err: any) {
       Toast.show({
         type: "error",
@@ -132,40 +137,6 @@ export default function ManageHall() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDelete = () => {
-    Alert.alert(
-      "حذف الصالة",
-      "هل أنت متأكد من حذف هذه الصالة؟ لا يمكن التراجع عن هذا الإجراء",
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "حذف",
-          style: "destructive",
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await deleteHallApi(hallId);
-              Toast.show({ type: "success", text1: "تم حذف الصالة بنجاح" });
-              NavigateAndReset("HallOwner", {
-                screen: "Home",
-                params: { refresh: true },
-              });
-            } catch (err: any) {
-              Toast.show({
-                type: "error",
-                text1:
-                  err.response?.data ||
-                  "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
-              });
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ],
-    );
   };
 
   if (fetching) {
@@ -212,18 +183,6 @@ export default function ManageHall() {
                   <Text style={styles.actionButtonText}>حفظ التعديلات</Text>
                 </View>
               )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: "#FF5A5A" }]}
-              onPress={handleDelete}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.row, { alignItems: "center", gap: 5 }]}>
-                <Ionicons name="trash" size={20} color="#fff" />
-                <Text style={styles.actionButtonText}>حذف الصالة</Text>
-              </View>
             </TouchableOpacity>
           </View>
         </View>

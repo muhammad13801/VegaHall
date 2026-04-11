@@ -79,8 +79,8 @@ export default function HallDetail() {
   const hallId = route.params?.hallId;
 
   const [hall, setHall] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
 
   useEffect(() => {
     const fetchHall = async () => {
@@ -122,12 +122,11 @@ export default function HallDetail() {
   const images: string[] = hall.images || [];
   const videos: string[] = hall.videos || [];
   const media = [
-    ...images.map((uri) => ({ type: "image", uri })),
-    ...videos.map((uri) => ({ type: "video", uri })),
+    ...images.map((uri: string) => ({ type: "image", uri })),
+    ...videos.map((uri: string) => ({ type: "video", uri })),
   ];
 
-  const isActive = hall.status === "Active";
-  const hasMeals = hall.services?.some((s: any) => s.name === "وجبات عشاء");
+  const isActive = hall.status === "active";
 
   return (
     <SafeAreaView style={styles.container}>
@@ -140,13 +139,17 @@ export default function HallDetail() {
           <View style={{ marginBottom: 4 }}>
             <FlatList
               data={media}
-              keyExtractor={(_, i) => i.toString()}
+              keyExtractor={(_: any, i: number) => i.toString()}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               onScroll={onScroll}
               scrollEventThrottle={16}
-              renderItem={({ item: mediaItem }) =>
+              renderItem={({
+                item: mediaItem,
+              }: {
+                item: { type: string; uri: string };
+              }) =>
                 mediaItem.type === "image" ? (
                   <View style={{ width: SCREEN_WIDTH, aspectRatio: 16 / 9 }}>
                     <ImageBackground
@@ -179,7 +182,7 @@ export default function HallDetail() {
                   gap: 6,
                 }}
               >
-                {media.map((_, i) => (
+                {media.map((_: any, i: number) => (
                   <View
                     key={i}
                     style={{
@@ -273,7 +276,7 @@ export default function HallDetail() {
                 { alignItems: "center", gap: 4, marginBottom: 8 },
               ]}
             >
-              {[1, 2, 3, 4, 5].map((star) => (
+              {[1, 2, 3, 4, 5].map((star: number) => (
                 <Ionicons
                   key={star}
                   name={
@@ -292,7 +295,6 @@ export default function HallDetail() {
               </Text>
             </View>
 
-            {/* Description */}
             {hall.description ? (
               <Text
                 style={{
@@ -322,7 +324,7 @@ export default function HallDetail() {
             <InfoRow
               icon="cash-outline"
               label="السعر"
-              value={`₪${hall.price}`}
+              value={`₪${hall.base_price}`}
             />
           </SectionCard>
 
@@ -342,38 +344,32 @@ export default function HallDetail() {
                   </View>
                 ))}
               </View>
+            </SectionCard>
+          )}
 
-              {/* Meal Options */}
-              {hasMeals && hall.mealOptions && hall.mealOptions.length > 0 && (
-                <View style={[styles.borderTopSection, { marginTop: 14 }]}>
-                  <Text style={[styles.label, { marginBottom: 10 }]}>
-                    أنواع الوجبات
+          {/* Meal Options — now a separate section */}
+          {hall.mealOptions && hall.mealOptions.length > 0 && (
+            <SectionCard title="أنواع الوجبات" icon="restaurant-outline">
+              {hall.mealOptions.map((m: any, i: number) => (
+                <View key={i} style={[styles.info, { marginBottom: 8 }]}>
+                  <View style={[styles.row, { alignItems: "center", gap: 6 }]}>
+                    <Ionicons
+                      name="restaurant-outline"
+                      size={15}
+                      color="#6C4AB6"
+                    />
+                    <Text style={styles.profileValue}>{m.name}</Text>
+                  </View>
+                  <Text style={[styles.itemText, { color: "#6C4AB6" }]}>
+                    {m.price_per_person} ₪/شخص
                   </Text>
-                  {hall.mealOptions.map((m: any, i: number) => (
-                    <View key={i} style={[styles.info, { marginBottom: 8 }]}>
-                      <View
-                        style={[styles.row, { alignItems: "center", gap: 6 }]}
-                      >
-                        <Ionicons
-                          name="restaurant-outline"
-                          size={15}
-                          color="#6C4AB6"
-                        />
-                        <Text style={styles.profileValue}>{m.name}</Text>
-                      </View>
-                      <Text style={[styles.itemText, { color: "#6C4AB6" }]}>
-                        {m.price_per_person} ₪/شخص
-                      </Text>
-                    </View>
-                  ))}
                 </View>
-              )}
+              ))}
             </SectionCard>
           )}
 
           {/* Secondary Contacts */}
           <SectionCard title="جهات الاتصال" icon="call-outline">
-            {/* Owner (main contact) */}
             {hall.phone_number && (
               <View
                 style={[
@@ -409,7 +405,6 @@ export default function HallDetail() {
               </View>
             )}
 
-            {/* Secondary contacts */}
             {hall.secondaryContacts?.map((c: any, i: number) => (
               <View
                 key={i}
