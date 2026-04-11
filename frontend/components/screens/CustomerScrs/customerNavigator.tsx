@@ -6,12 +6,14 @@ import Favorites from "./favorites";
 import Profile from "../hallOwnerscrs/profile/profile";
 import MyBookings from "./myBookings";
 import Notifications from "../hallOwnerscrs/notifications";
-;
+
 
 const Tab = createBottomTabNavigator();
 
 export default function CustomerNavigator() {
+  
   return (
+    <RefreshProvider>
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
@@ -74,5 +76,6 @@ export default function CustomerNavigator() {
           }}
         />
       </Tab.Navigator>
+      </RefreshProvider>
   );
 }

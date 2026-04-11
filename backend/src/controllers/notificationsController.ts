@@ -11,8 +11,6 @@ export interface Notification {
   channel: string;
   sent: boolean;
   created_at: string;
-  first_name?: string;
-  last_name?: string;
 }
 
 // GET /notifications — fetch notifications for the current user
@@ -23,15 +21,12 @@ export const getNotifications = async (req: AuthRequest, res: Response) => {
     const offset = (page - 1) * limit;
 
     const notifications = await sql<Notification[]>`
-      SELECT n.id, n.title, n.content, n.notification_type, n.channel, n.sent, n.created_at, 
-             u.first_name, u.last_name
-      FROM notifications n
-      JOIN users u ON u.id = n.user_id
-      WHERE n.user_id = ${req.userId!}
-      ORDER BY n.created_at DESC, n.id DESC
+      SELECT id, title, content, notification_type, channel, sent, created_at
+      FROM notifications
+      WHERE user_id = ${req.userId!}
+      ORDER BY created_at DESC, id DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
-
     if (!notifications) return res.status(404).send("❌ لا توجد إشعارات");
 
     res.json(notifications);

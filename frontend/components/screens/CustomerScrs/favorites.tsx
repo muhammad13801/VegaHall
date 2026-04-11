@@ -1,12 +1,10 @@
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { getFavoritesApi, toggleFavoriteApi } from "../../Services/customerApi";
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
 import { useRefresh } from "../../reusable func/refreshContext";
 import { NavigateTo } from "../../reusable func/navigateTo";
-
 import { HallCard } from "../hallOwnerscrs/hallCard";
 import { styles as s, styles } from "./ibrahimStyles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";

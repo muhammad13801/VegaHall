@@ -14,6 +14,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { goBack } from "../../reusable func/navigateTo";
 import { styles as s } from "./ibrahimStyles";
 import { createRatingApi } from "../../Services/customerApi";
+import { styles } from "../../styles";
+import BackgroundDecoration from "../../reusable func/backgroundDecoration";
+import BackButton from "../../reusable func/backButton";
 
 const RATING_LABELS = ["", "سيء جداً 😞", "سيء 😕", "جيد 🙂", "جيد جداً 😊", "ممتاز 🤩"];
 
@@ -75,20 +78,15 @@ export default function RateHall({ route }: any) {
     };
 
     return (
-        <SafeAreaView style={s.screen} edges={["top", "left", "right"]}>
-            <StatusBar barStyle="light-content" backgroundColor="#5B3A9E" />
+        <SafeAreaView style={styles.container} edges={["top"]}>
+            <BackgroundDecoration/>
+                    <View style={[styles.info, {width:"90%",marginVertical:5}]}>
+                        <Text style={styles.title}>تقييم الصالة</Text>
+                        <BackButton/>
 
-            <LinearGradient colors={["#7B5EC6", "#5B3A9E"]}>
-                <View style={s.header}>
-                    <View style={{ alignItems: "flex-end" }}>
-                        <Text style={s.headerTitle}>تقييم الصالة</Text>
-                        <Text style={s.headerSubtitle}>{hallName}</Text>
                     </View>
-                    <TouchableOpacity style={s.backBtn} onPress={goBack}>
-                        <Feather name="arrow-left" size={22} color="#FFF" />
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
+                    
+           
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -96,17 +94,13 @@ export default function RateHall({ route }: any) {
                 keyboardShouldPersistTaps="handled"
             >
                 {/* Hall Info Header */}
-                <View style={[s.card, { flexDirection: "row", alignItems: "center", justifyContent: "flex-end" }]}>
-                    <View style={{ alignItems: "flex-end", marginRight: 15 }}>
+                <View style={[styles.card, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
+                    <View style={{ alignItems: "flex-start", marginRight: 15 }}>
                         <Text style={{ fontSize: 18, fontWeight: "bold", color: "#1A1A2E" }}>{hallName}</Text>
                         <Text style={{ fontSize: 13, color: "#888", marginTop: 2 }}>📍 {hallCity}</Text>
                     </View>
-                    <LinearGradient
-                        colors={["#E8DEFF", "#F5F0FF"]}
-                        style={{ width: 50, height: 50, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
-                    >
-                        <MaterialCommunityIcons name="office-building" size={26} color="#7B5EC6" />
-                    </LinearGradient>
+                    
+                        
                 </View>
 
                 {/* Star Rating Section */}

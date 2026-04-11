@@ -22,7 +22,9 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
-  const [openFilter, setOpenFilter] = useState<"services" | "city" | null>(null);
+  const [openFilter, setOpenFilter] = useState<"services" | "city" | "price" | null>(null);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [dateModalVis, setDateModalVis] = useState(false);
   const [halls, setHalls] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -85,6 +87,8 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
       city: finalCity,
       date: finalDate,
       services: finalServices,
+      minPrice: overrideMinPrice !== undefined ? overrideMinPrice : minPrice,
+      maxPrice: overrideMaxPrice !== undefined ? overrideMaxPrice : maxPrice,
     });
   };
 
@@ -99,20 +103,20 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
     handleSearch(newServices);
   };
 
-  const toggleFilter = (filter: "services" | "city") => {
+  const toggleFilter = (filter: "services" | "city" | "price") => {
     setOpenFilter(openFilter === filter ? null : filter);
   };
 
   return (
-    <SafeAreaView style={s.screen} edges={["top", "left", "right"]}>
+    <SafeAreaView style={s.screen} edges={["top"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        stickyHeaderIndices={[0]}
       >
-        <View style={s.homeHero}>
-          <Text style={s.homeTitle}>ابحث عن القاعة المثالية لمناسبتك</Text>
+        <View style={{ backgroundColor: "#F7F8FC", paddingBottom: 10 }}>
 
-          <View style={[s.searchCard, { marginTop: 0, width: '100%' }]}>
+          <View style={s.searchCard}>
             <View style={s.searchRow}>
               <TouchableOpacity style={s.searchBtn} onPress={() => handleSearch()}>
                 <Feather name="search" size={20} color="#FFF" />
@@ -128,7 +132,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
           </View>
         </View>
 
-        <View style={s.body}>
+        <View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -149,16 +153,23 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
               onPress={() => { setOpenFilter(null); setDateModalVis(true); }}
               isCustomerPage={true}
             />
-            <FilterBox
+             <FilterBox
               title="المدينة"
               value={selectedCity || "الكل"}
               isOpen={openFilter === "city"}
               onPress={() => toggleFilter("city")}
               isCustomerPage={true}
             />
+            <FilterBox
+              title="السعر"
+              value={minPrice || maxPrice ? `${minPrice || 0} - ${maxPrice || "∞"}` : "الكل"}
+              isOpen={openFilter === "price"}
+              onPress={() => toggleFilter("price")}
+              isCustomerPage={true}
+            />
           </ScrollView>
 
-          {openFilter && (
+           {openFilter && openFilter !== "price" && (
             <View style={s.dropdownPanel}>
               <Text style={s.panelTitle}>
                 {openFilter === "services" ? "اختر الخدمات المطلوبة:" : "اختر المدينة:"}
@@ -188,6 +199,66 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
                     </TouchableOpacity>
                   );
                 })}
+              </View>
+            </View>
+          )}
+
+          {openFilter === "price" && (
+            <View style={s.dropdownPanel}>
+              <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, color: "#666", marginBottom: 8, textAlign: 'left' }}>أعلى سعر</Text>
+                  <TextInput
+                    style={s.input}
+                    placeholder="إلى"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={minPrice}
+                    onChangeText={setMinPrice}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, color: "#666", marginBottom: 8, textAlign: 'left' }}>أدنى سعر</Text>
+                  <TextInput
+                    style={s.input}
+                    placeholder="من"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={maxPrice}
+                    onChangeText={setMaxPrice}
+                  />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row-reverse', gap: 12 }}>
+                <TouchableOpacity
+                  style={[s.primaryButton, { flex: 2, height: 48 }]}
+                  onPress={() => {
+                    handleSearch();
+                    setOpenFilter(null);
+                  }}
+                >
+                  <Text style={s.primaryButtonText}>فلترة</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    height: 48,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: "#DDD",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onPress={() => {
+                    setMinPrice("");
+                    setMaxPrice("");
+                    handleSearch(undefined, undefined, "", "");
+                    setOpenFilter(null);
+                  }}
+                >
+                  <Text style={{ color: "#666", fontSize: 15 }}>حذف</Text>
+                </TouchableOpacity>
               </View>
             </View>
           )}
