@@ -26,7 +26,7 @@ interface HallCardProps {
   onToggleFavorite?: (id: number) => void;
 }
 
-export const HallCard = memo(({ item, onPress }: HallCardProps) => {
+export const HallCard = memo(({ item, onPress, isCustomer, isFav, onToggleFavorite }: HallCardProps) => {
   const isActive = item.status === "active";
 
   const media = useMemo(

@@ -21,6 +21,8 @@ export default function HallsResult({ route }: any) {
     const queryParam = params.query || "";
     const cityParam = params.city || "";
     const servicesParam = params.services || [];
+    const minPriceParam = params.minPrice || "";
+    const maxPriceParam = params.maxPrice || "";
 
     const [halls, setHalls] = useState<any[]>([]);
     const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
@@ -37,6 +39,8 @@ export default function HallsResult({ route }: any) {
                 query: queryParam,
                 city: cityParam,
                 service: servicesParam[0],
+                minPrice: minPriceParam,
+                maxPrice: maxPriceParam,
             });
 
             let results = res.data;
@@ -85,6 +89,7 @@ export default function HallsResult({ route }: any) {
     if (params.city) activeFilters.push(`📍 ${params.city}`);
     if (params.date) activeFilters.push("📅 تاريخ محدد");
     if (params.services?.length > 0) activeFilters.push(`🎯 ${params.services.length} خدمة`);
+    if (params.minPrice || params.maxPrice) activeFilters.push(`💰 ${params.minPrice || 0} - ${params.maxPrice || "∞"}`);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -104,8 +109,8 @@ export default function HallsResult({ route }: any) {
                 </View>
             )}
 
-            <View style={s.sortBar}>
-                <Text style={[s.ctaLabel, { marginLeft: 8 }]}>ترتيب حسب:</Text>
+            <View style={s.sortContainer}>
+                <Text style={[s.ctaLabel]}>ترتيب حسب:</Text>
                 <View style={s.sortOptions}>
                     {[
                         { key: "rating" as SortMode, label: "التقييم" },

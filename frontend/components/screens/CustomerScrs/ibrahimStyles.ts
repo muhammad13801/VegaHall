@@ -14,81 +14,11 @@ export const styles = StyleSheet.create({
     direction: "rtl",
   },
 
-  homeHero: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    backgroundColor: "#6C4AB6", // Premium Purple
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    alignItems: "center",
-    paddingHorizontal: 20,
-    direction: "rtl",
-  },
-
-  homeTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#FFF",
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 38,
-  },
 
   body: {
     padding: 16,
     paddingBottom: 120,
     direction: "rtl",
-  },
-header: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-},
-
-headerTitle: {
-  fontSize: 20,
-  fontWeight: "bold",
-  color: "#FFF",
-  textAlign: "left",
-   marginLeft:5,
-},
-
-headerSubtitle: {
-  fontSize: 13,
-  color: "rgba(255,255,255,0.8)",
-  marginTop: 2,
-  textAlign: "left",
-},
-
-  headerCount: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.8)",
-    marginTop: 2,
-    textAlign: "left",
-  },
-
-  subHeaderHero: {
-    paddingTop: 50,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 35,
-    borderBottomRightRadius: 35,
-    alignItems: "center",
-    justifyContent: "center",
-    
-  },
-
-  subHeaderTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#FFF",
-    textAlign: "center",
-  },
-
-  subHeaderSubtitle: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.8)",
-    marginTop: 4,
-    textAlign: "center",
   },
 
   backBtn: {
@@ -196,26 +126,20 @@ headerSubtitle: {
   },
 
   // ─── Search Bar ───
-  searchCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
-    backgroundColor: "#FFF",
-    borderRadius: 16,
-    padding: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 4,
-    direction: "rtl",
-  },
-
+searchCard: {
+  width: "90%",
+  alignSelf: "center",
+  marginTop: 14,
+  marginBottom: 8,
+  backgroundColor: "#FFF",
+  borderRadius: 16,
+  padding: 8,
+  elevation: 4,
+},
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-
   searchInput: {
     flex: 1,
     height: "100%",
@@ -258,8 +182,8 @@ headerSubtitle: {
     fontWeight: "600",
   },
 
-  sortBar: {
-    flexDirection: "row-reverse",
+  sortContainer: {
+    flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -268,7 +192,7 @@ headerSubtitle: {
   },
 
   sortOptions: {
-    flexDirection:"row-reverse",
+    flexDirection: "row",
     gap: 8,
     flex: 1,
   },
@@ -466,8 +390,9 @@ headerSubtitle: {
   },
 
   ctaLabel: {
-    fontSize: 12,
-    color: "#888",
+    fontSize: 13,
+    color: "#333",
+    fontWeight: "bold",
   },
 
   ctaButton: {
