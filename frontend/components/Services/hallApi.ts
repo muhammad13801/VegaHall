@@ -23,13 +23,27 @@ export const getHallCommentsApi = (id: number) =>
 export const getOwnerBookingsApi = (page: number = 1, limit: number = 10) =>
   api.get(`/halls/bookings?page=${page}&limit=${limit}`);
 
-// Owner actions
+// Owner proposes a new date → status: owner_rescheduled
 export const proposeRescheduleApi = (id: number, proposed_date: string) =>
   api.patch(`/halls/bookings/${id}/propose-reschedule`, { proposed_date });
 
-export const rejectBookingApi = (id: number) =>
-  api.patch(`/halls/bookings/${id}/reject`);
+// Customer responds to owner's reschedule proposal (accept/reject)
+export const respondRescheduleApi = (id: number, accept: boolean) =>
+  api.patch(`/halls/bookings/${id}/reschedule/respond`, { accept });
 
+// Owner cancels the booking → refund is automatic
+export const ownerCancelBookingApi = (id: number) =>
+  api.patch(`/halls/bookings/${id}/owner-cancel`);
+
+// Customer cancels their booking → status: customer_cancelled
+export const customerCancelBookingApi = (id: number) =>
+  api.patch(`/halls/bookings/${id}/customer-cancel`);
+
+// Owner responds to customer cancellation → decides refund or not
+export const customerCancelResponseApi = (id: number, refund: boolean) =>
+  api.patch(`/halls/bookings/${id}/customer-cancel-response`, { refund });
+
+// Services & meals
 export const requestServiceApi = (name: string) =>
   api.post("/halls/request-service", { name });
 

@@ -35,7 +35,7 @@ export default function Home() {
       <BackgroundDecoration />
 
       {/* Header + Add Hall Button */}
-      <View style={[styles.info, { width: "90%", marginVertical: 5 }]}>
+      <View style={[styles.info, { width: "90%" }]}>
         <Text style={styles.title}>صالاتي</Text>
         <TouchableOpacity
           style={[styles.actionButton, { width: 110, marginTop: 0 }]}

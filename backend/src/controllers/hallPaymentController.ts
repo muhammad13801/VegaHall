@@ -3,7 +3,7 @@ import { AuthRequest } from "../middleware/sessionMiddleware";
 import Stripe from "stripe";
 import sql from "../db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-02-25.clover",
 });
 

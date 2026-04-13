@@ -6,7 +6,7 @@ import { goBack } from "./navigateTo";
 export default function BackButton() {
   return (
     <TouchableOpacity style={styles.backButton} onPress={() => goBack()}>
-      <Ionicons name="arrow-back" size={28} color="#6C4AB6" />
+      <Ionicons name="arrow-forward" size={28} color="#6C4AB6" />
     </TouchableOpacity>
   );
 }

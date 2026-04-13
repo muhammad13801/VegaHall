@@ -1,23 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import { useState, useEffect } from "react";
-import {
-  Alert,
-  Text,
-  ActivityIndicator,
-  View,
-  TouchableOpacity,
-} from "react-native";
+import { Text, ActivityIndicator, View, TouchableOpacity } from "react-native";
 import Toast from "react-native-toast-message";
 import BackButton from "../../reusable func/backButton";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import KeyboardAwareScreen from "../../reusable func/keyboardAwarScreen";
 import { NavigateAndReset } from "../../reusable func/navigateTo";
-import {
-  getHallApi,
-  updateHallApi,
-  deleteHallApi,
-} from "../../Services/hallApi";
+import { getHallApi, updateHallApi } from "../../Services/hallApi";
 import { uploadToSupabase } from "../../Services/uploadMedia";
 import { styles } from "../../styles";
 import { HallData, ValidateHall } from "../../Validations/validateHall";

@@ -59,7 +59,10 @@ export default function UpdateEmail() {
         params: { refresh: true },
       });
     } catch (err: any) {
-      Toast.show({ type: "error", text1: err.response?.data });
+      Toast.show({
+        type: "error",
+        text1: err.response?.data || "حدث خطأ غير متوقع",
+      });
     } finally {
       setLoading(false);
     }

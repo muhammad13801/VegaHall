@@ -5,14 +5,13 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export const styles = StyleSheet.create({
   // Muhammad Styles
   gradient: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 
   container: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    direction: "rtl",
   },
 
   title: {
@@ -47,12 +46,7 @@ export const styles = StyleSheet.create({
   showPasswordButton: {
     position: "absolute",
     top: 13,
-    left: 15,
-  },
-
-  forgotPassword: {
-    fontSize: 16,
-    color: "#6C4AB6",
+    right: 15,
   },
 
   actionButton: {
@@ -71,13 +65,11 @@ export const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  signUpRow: {
-    flexDirection: "row",
+  justifyCenter: {
     justifyContent: "center",
-    marginTop: 12,
   },
 
-  signUpText: {
+  actionText: {
     fontSize: 14,
     color: "#6C4AB6",
     fontWeight: "bold",
@@ -91,21 +83,8 @@ export const styles = StyleSheet.create({
   },
 
   backButton: {
-    alignSelf: "flex-end",
-    padding: 8,
-    marginRight: 8,
-    marginTop: 4,
-  },
-
-  backButtonText: {
-    color: "#6C4AB6",
-    fontSize: 24,
-  },
-
-  resendCode: {
-    fontSize: 14,
-    color: "#6C4AB6",
-    marginBottom: 12,
+    alignSelf: "flex-start",
+    paddingLeft: 10,
   },
 
   cardText: {
@@ -127,23 +106,6 @@ export const styles = StyleSheet.create({
     width: 10,
   },
 
-  pickerWrapper: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#DDD",
-    borderRadius: 10,
-    backgroundColor: "#FAFAFA",
-    marginBottom: 12,
-    justifyContent: "center",
-    height: 50,
-  },
-
-  options: {
-    width: "100%",
-    height: 60,
-    direction: "ltr",
-  },
-
   input: {
     borderWidth: 1,
     borderColor: "#DDD",
@@ -155,6 +117,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FAFAFA",
     textAlignVertical: "center",
     padding: 8,
+    color: "#000",
   },
 
   passwordHintBox: {
@@ -183,8 +146,8 @@ export const styles = StyleSheet.create({
   toast: {
     backgroundColor: "#fff",
     borderRadius: 10,
-    padding: 15,
     borderLeftWidth: 5,
+    padding: 8,
     alignSelf: "center",
   },
 
@@ -452,5 +415,4 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   // Muhammad Styles
-  
 });
