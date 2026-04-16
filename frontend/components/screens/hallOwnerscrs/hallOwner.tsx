@@ -5,7 +5,7 @@ import Notifications from "./notifications";
 import ManageBookings from "./manageBookings";
 import Home from "./home";
 
-const Tab = createBottomTabNavigator();
+export const Tab = createBottomTabNavigator();
 
 export default function HallOwnerTabs() {
   return (

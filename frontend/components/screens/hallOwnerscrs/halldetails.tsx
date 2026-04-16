@@ -141,10 +141,12 @@ export default function HallDetail() {
               data={media}
               keyExtractor={(_: any, i: number) => i.toString()}
               horizontal
+              inverted
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               onScroll={onScroll}
               scrollEventThrottle={16}
+              style={{ direction: "ltr" }}
               renderItem={({
                 item: mediaItem,
               }: {
