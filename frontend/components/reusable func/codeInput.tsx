@@ -94,7 +94,7 @@ export default function CodeInput({
             {resendLoading ? (
               <ActivityIndicator color="#6C4AB6" />
             ) : (
-              <Text style={[styles.resendCode, !canResend && { opacity: 0.5 }]}>
+              <Text style={[styles.actionText, !canResend && { opacity: 0.5 }]}>
                 {canResend
                   ? "إعادة إرسال كود جديد"
                   : `يمكن إعادة الإرسال بعد ${timer} ثانية`}

@@ -136,7 +136,7 @@ export default function ServicesPicker({
     } catch (err: any) {
       Toast.show({
         type: "error",
-        text1: err.response?.data || "❌ خطأ في الخادم",
+        text1: err.response?.data || "حدث خطأ غير متوقع",
       });
     } finally {
       setServiceRequestLoading(false);

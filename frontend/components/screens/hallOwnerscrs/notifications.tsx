@@ -11,6 +11,7 @@ import { styles } from "../../styles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import { getNotificationsApi } from "../../Services/notificationApi";
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
+import { formatDate } from "../../reusable func/formatDate";
 
 interface Notification {
   id: number;
@@ -46,13 +47,6 @@ const getNotificationStyle = (type: string) => {
   }
 };
 
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString("ar-EG", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
 export default function Notifications() {
   const {
     items: notifications,
@@ -78,12 +72,6 @@ export default function Notifications() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
-
-      {/* Header */}
-      <View style={[styles.info, { width: "90%", marginVertical: 5 }]}>
-        <Text style={styles.title}>الاشعارات</Text>
-        <Ionicons name="notifications-outline" size={28} color="#6C4AB6" />
-      </View>
 
       <FlatList
         data={notifications as Notification[]}
@@ -151,7 +139,12 @@ export default function Notifications() {
               />
 
               {/* Date */}
-              <View style={[styles.row, { marginTop: 10, gap: 5 }]}>
+              <View
+                style={[
+                  styles.row,
+                  { marginTop: 10, gap: 5, alignItems: "center" },
+                ]}
+              >
                 <Ionicons
                   name="time-outline"
                   size={12}

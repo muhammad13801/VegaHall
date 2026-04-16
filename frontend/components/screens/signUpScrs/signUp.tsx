@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Picker } from "@react-native-picker/picker";
+import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Input } from "../../reusable func/input";
+import MaskInput, { Mask } from "react-native-mask-input";
 import PasswordInput from "../../reusable func/passwordInput";
 import KeyboardAwareScreen from "../../reusable func/keyboardAwarScreen";
 import BackButton from "../../reusable func/backButton";
@@ -11,10 +12,28 @@ import { NavigateTo } from "../../reusable func/navigateTo";
 import { registerUser } from "../../Services/authApi";
 import { styles } from "../../styles";
 import { UserData, validateUser } from "../../Validations/validateUser";
-import { TextInputMask } from "react-native-masked-text";
 import Toast from "react-native-toast-message";
 import { useHandleChange } from "../../reusable func/useHandleChange";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
+
+export const phoneMask: Mask = [
+  "+",
+  "9",
+  "7",
+  /\d/,
+  "-",
+  "5",
+  /\d/,
+  /\d/,
+  "-",
+  /\d/,
+  /\d/,
+  /\d/,
+  "-",
+  /\d/,
+  /\d/,
+  /\d/,
+];
 
 export default function SignUp() {
   const [form, setForm] = useState<UserData>({
@@ -31,6 +50,21 @@ export default function SignUp() {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(form.gender || null);
+  const [items, setItems] = useState([
+    { label: "ذكر", value: "male" },
+    { label: "انثى", value: "female" },
+  ]);
+
+  const [openUserType, setOpenUserType] = useState(false);
+  const [valueUserType, setValueUserType] = useState(form.userType || null);
+  const [itemsUserType, setItemsUserType] = useState([
+    { label: "زبون", value: "customer" },
+    { label: "مالك قاعة", value: "owner" },
+  ]);
+
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const change = useHandleChange(setForm);
@@ -56,7 +90,6 @@ export default function SignUp() {
       Toast.show({
         type: "success",
         text1: response.data,
-        visibilityTime: 3000,
       });
       NavigateTo("EmailCode", { email: form.email });
     } catch (err: any) {
@@ -64,7 +97,6 @@ export default function SignUp() {
         type: "error",
         text1:
           err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
-        visibilityTime: 3000,
       });
     } finally {
       setLoading(false);
@@ -108,67 +140,72 @@ export default function SignUp() {
 
           {/* Gender + UserType */}
           <View style={styles.info}>
-            <View style={styles.pickerWrapper}>
-              <View style={{ flex: 1 }}>
-                <Picker
-                  selectedValue={form.gender}
-                  onValueChange={(val) => change("gender", val)}
-                  style={styles.options}
-                  mode="dropdown"
-                >
-                  <Picker.Item label="اختر الجنس" value="" />
-                  <Picker.Item label="ذكر" value="male" />
-                  <Picker.Item label="انثى" value="female" />
-                </Picker>
+            <View style={{ flex: 1 }}>
+              <DropDownPicker
+                open={open}
+                value={value}
+                items={items}
+                setOpen={setOpen}
+                setValue={(callback) => {
+                  const val = callback(value);
+                  setValue(val);
+                  change("gender", val); // update your form
+                }}
+                style={styles.input}
+                setItems={setItems}
+                placeholder="اختر الجنس"
+                listMode="SCROLLVIEW"
+              />
 
-                {errors.gender && (
-                  <Text style={styles.errorText}>{errors.gender}</Text>
-                )}
-              </View>
+              {errors.gender && (
+                <Text style={styles.errorText}>{errors.gender}</Text>
+              )}
             </View>
 
             <View style={styles.gapBetween} />
 
-            <View style={styles.pickerWrapper}>
-              <View style={{ flex: 1 }}>
-                <Picker
-                  selectedValue={form.userType}
-                  onValueChange={(val) => change("userType", val)}
-                  style={styles.options}
-                  mode="dropdown"
-                >
-                  <Picker.Item label="نوع المستخدم" value="" />
-                  <Picker.Item label="زبون" value="customer" />
-                  <Picker.Item label="مالك قاعة" value="owner" />
-                </Picker>
+            <View style={{ flex: 1 }}>
+              <DropDownPicker
+                open={openUserType}
+                value={valueUserType}
+                items={itemsUserType}
+                setOpen={setOpenUserType}
+                setValue={(callback) => {
+                  const val = callback(valueUserType);
+                  setValueUserType(val);
+                  change("userType", val);
+                }}
+                style={styles.input}
+                setItems={setItemsUserType}
+                placeholder="نوع المستخدم"
+                listMode="SCROLLVIEW" // ✅ no warning
+              />
 
-                {errors.userType && (
-                  <Text style={styles.errorText}>{errors.userType}</Text>
-                )}
-              </View>
+              {errors.userType && (
+                <Text style={styles.errorText}>{errors.userType}</Text>
+              )}
+
+              {errors.userType && (
+                <Text style={styles.errorText}>{errors.userType}</Text>
+              )}
             </View>
           </View>
 
           {/* Phone + Date */}
           <View style={styles.info}>
-            <TextInputMask
-              type={"custom"}
-              options={{
-                mask: "+97C-5DD-DDD-DDD",
-                translation: {
-                  "9": (val: string) => (val === "9" ? val : "9"),
-                  "7": (val: string) => (val === "7" ? val : "7"),
-                  C: (val: string) => (/[02]/.test(val) ? val : null),
-                  D: (val: string) => (/[0-9]/.test(val) ? val : null),
-                },
-              }}
+            <MaskInput
               value={form.phoneNumber}
-              onChangeText={(text) => change("phoneNumber", text)}
+              onChangeText={(unmasked) => {
+                change("phoneNumber", unmasked);
+              }}
+              mask={phoneMask}
               keyboardType="numeric"
-              placeholder="+97X-XXX-XXX-XXX"
-              style={[styles.input, { flex: 1, direction: "ltr" }]}
+              placeholderTextColor="#999"
+              style={[
+                styles.input,
+                { flex: 1, direction: "ltr", textAlign: "center" },
+              ]}
             />
-
             <View style={styles.gapBetween} />
 
             <TouchableOpacity

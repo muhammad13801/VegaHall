@@ -45,8 +45,7 @@ export default function PaymentHall() {
         // User cancelled or card failed
         Toast.show({
           type: "error",
-          text1: "فشل الدفع",
-          text2: presentError.message,
+          text1: presentError.message,
         });
         return;
       }

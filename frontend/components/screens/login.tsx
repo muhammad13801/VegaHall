@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
 import { useHandleChange } from "../reusable func/useHandleChange";
 import BackgroundDecoration from "../reusable func/backgroundDecoration";
+//import { registerPushToken } from "../Services/notificationApi";
 
 export default function Login() {
   const [form, setForm] = useState<Partial<AuthData>>({
@@ -35,10 +36,11 @@ export default function Login() {
       const { sessionId, role } = res.data;
       await AsyncStorage.setItem("sessionId", sessionId);
 
+     // await registerPushToken();
+
       Toast.show({
         type: "success",
         text1: res.data.message,
-        visibilityTime: 3000,
       });
 
       if (role === "customer") return NavigateAndReset("Customer");
@@ -49,7 +51,6 @@ export default function Login() {
         type: "error",
         text1:
           err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
-        visibilityTime: 3000,
       });
     } finally {
       setLoading(false);
@@ -81,7 +82,7 @@ export default function Login() {
           )}
 
           <TouchableOpacity onPress={() => NavigateTo("ForgotPassword")}>
-            <Text style={styles.forgotPassword}>نسيت كلمة المرور؟</Text>
+            <Text style={styles.actionText}>نسيت كلمة المرور؟</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -97,10 +98,11 @@ export default function Login() {
             )}
           </TouchableOpacity>
 
-          <View style={styles.signUpRow}>
+          <View style={{ marginTop: 12 }} />
+          <View style={[styles.justifyCenter, styles.row]}>
             <Text>ليس لديك حساب؟</Text>
             <TouchableOpacity onPress={() => NavigateTo("SignUp")}>
-              <Text style={styles.signUpText}> إنشاء حساب</Text>
+              <Text style={styles.actionText}> إنشاء حساب</Text>
             </TouchableOpacity>
           </View>
         </View>

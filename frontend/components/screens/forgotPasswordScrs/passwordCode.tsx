@@ -10,7 +10,6 @@ export default function EmailCode() {
   const [code, setCode] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [resendLoading, setResendLoading] = useState<boolean>(false);
-  const [canResend, setCanResend] = useState<boolean>(true);
 
   const route = useRoute<any>();
   const { email } = route.params;
@@ -30,14 +29,12 @@ export default function EmailCode() {
       Toast.show({
         type: "success",
         text1: response.data,
-        visibilityTime: 3000,
       });
       NavigateTo("SetNewPassword", { email });
     } catch (err: any) {
       Toast.show({
         type: "error",
-        text1: err.response?.data,
-        visibilityTime: 3000,
+        text1: err.response?.data || "حدث خطأ غير متوقع",
       });
     } finally {
       setLoading(false);
@@ -54,13 +51,11 @@ export default function EmailCode() {
       Toast.show({
         type: "success",
         text1: response.data,
-        visibilityTime: 3000,
       });
     } catch (err: any) {
       Toast.show({
         type: "error",
-        text1: err.response?.data,
-        visibilityTime: 3000,
+        text1: err.response?.data || "حدث خطأ غير متوقع",
       });
 
       throw err;

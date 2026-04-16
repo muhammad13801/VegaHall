@@ -6,7 +6,10 @@ import KeyboardAwareScreen from "../../../reusable func/keyboardAwarScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 
-import { NavigateTo } from "../../../reusable func/navigateTo";
+import {
+  NavigateAndReset,
+  NavigateTo,
+} from "../../../reusable func/navigateTo";
 import Toast from "react-native-toast-message";
 import { AuthData, validateAuth } from "../../../Validations/validateAuth";
 import PasswordInput from "../../../reusable func/passwordInput";
@@ -39,25 +42,20 @@ export default function UpdatePassword() {
 
     setLoading(true);
     try {
-      await changePasswordApi({
+      const response = await changePasswordApi({
         oldPassword,
         password: form.password,
       });
 
-      Toast.show({ type: "success", text1: "✅ تم تغيير كلمة المرور بنجاح" });
-      setTimeout(() => {
-        NavigateTo("HallOwner", {
-          screen: "Profile",
-          params: { refresh: true },
-        });
-      }, 1500);
+      Toast.show({ type: "success", text1: response.data });
+      NavigateAndReset("HallOwner", {
+        screen: "Profile",
+        params: { refresh: true },
+      });
     } catch (err: any) {
-      console.log("Change password error:", err);
-      const errorMessage =
-        err.response?.data || err.message || "حدث خطأ غير متوقع";
       Toast.show({
         type: "error",
-        text1: errorMessage,
+        text1: err.response?.data || "حدث خطأ غير متوقع",
       });
     } finally {
       setLoading(false);
