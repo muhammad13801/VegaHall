@@ -1,6 +1,7 @@
 import { getAllHalls, getHallById, searchHalls } from "../controllers/hallsController";
 import { getFavorites, toggleFavorite } from "../controllers/favoritesController";
 import { getBookings, createBooking, cancelBooking } from "../controllers/bookingsController";
+import { respondReschedule } from "../controllers/manageBookingsController";
 import { getHallRatings, createRating } from "../controllers/ratingsController";
 import { Router } from "express";
 import { sessionAuthenticate } from "../middleware/sessionMiddleware";
@@ -25,6 +26,7 @@ router.post("/favorites/toggle", sessionAuthenticate, toggleFavorite);
 router.get("/bookings", sessionAuthenticate, getBookings);
 router.post("/bookings", sessionAuthenticate, createBooking);
 router.put("/bookings/:id/cancel", sessionAuthenticate, cancelBooking);
+router.patch("/bookings/:id/reschedule/respond", sessionAuthenticate, respondReschedule);
 
 // Ratings Routes
 router.get("/halls/:hallId/ratings", getHallRatings);

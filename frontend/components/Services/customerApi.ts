@@ -30,6 +30,9 @@ export const createBookingApi = async (data: any) =>
 export const cancelBookingApi = async (id: number) =>
   api.put(`${CUSTOMER_BASE_URL}/bookings/${id}/cancel`, {});
 
+export const respondRescheduleApi = async (id: number, accept: boolean) =>
+  api.patch(`${CUSTOMER_BASE_URL}/bookings/${id}/reschedule/respond`, { accept });
+
 // Ratings
 export const getHallRatingsApi = async (hallId: number) =>
   api.get(`${CUSTOMER_BASE_URL}/halls/${hallId}/ratings`);

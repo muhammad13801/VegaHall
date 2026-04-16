@@ -17,7 +17,7 @@ export const getAllHalls = async (req: AuthRequest, res: Response) => {
           '[]'::json
         ) as videos,
         COALESCE(
-          (SELECT json_agg(name) FROM hall_services WHERE hall_id = h.id),
+          (SELECT json_agg(s.name) FROM hall_services hs JOIN services s ON hs.service_id = s.id WHERE hs.hall_id = h.id),
           '[]'::json
         ) as services,
         ROUND(COALESCE((SELECT AVG(rating) FROM ratings WHERE hall_id = h.id), 0), 1) as average_rating,
@@ -47,11 +47,11 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
           '[]'::json
         ) as videos,
         COALESCE(
-          (SELECT json_agg(json_build_object('name', name, 'price', price)) FROM hall_services WHERE hall_id = h.id),
+          (SELECT json_agg(json_build_object('name', s.name, 'price', hs.price)) FROM hall_services hs JOIN services s ON hs.service_id = s.id WHERE hs.hall_id = h.id),
           '[]'::json
         ) as services,
         COALESCE(
-          (SELECT json_agg(json_build_object('name', name, 'price_per_person', price_per_person)) FROM meal_options WHERE hall_id = h.id),
+          (SELECT json_agg(json_build_object('name', mt.name, 'price_per_person', mo.price_per_person)) FROM meal_options mo JOIN meal_types mt ON mo.meal_type_id = mt.id WHERE mo.hall_id = h.id),
           '[]'::json
         ) as meal_options,
         COALESCE(
@@ -73,7 +73,7 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
 
 export const searchHalls = async (req: AuthRequest, res: Response) => {
   try {
-    const { query, city, service } = req.body;
+    const { query, city, service, minPrice, maxPrice } = req.body;
     
     let conditions = [];
 
@@ -87,6 +87,14 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
 
     if (service) {
       conditions.push(sql`s.name ILIKE ${`%${service}%`}`);
+    }
+
+    if (minPrice) {
+      conditions.push(sql`h.base_price >= ${Number(minPrice)}`);
+    }
+
+    if (maxPrice) {
+      conditions.push(sql`h.base_price <= ${Number(maxPrice)}`);
     }
 
     let whereClause: any = sql``;
@@ -111,15 +119,15 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
           '[]'::json
         ) as videos,
         COALESCE(
-          (SELECT json_agg(name) FROM hall_services WHERE hall_id = h.id),
+          (SELECT json_agg(s.name) FROM hall_services hs JOIN services s ON hs.service_id = s.id WHERE hs.hall_id = h.id),
           '[]'::json
         ) as services,
         ROUND(COALESCE((SELECT AVG(rating) FROM ratings WHERE hall_id = h.id), 0), 1) as average_rating,
         (SELECT COUNT(*) FROM ratings WHERE hall_id = h.id) as reviews_count
       FROM halls h
-      ${service ? sql`LEFT JOIN hall_services s ON h.id = s.hall_id` : sql``}
+      ${service ? sql`LEFT JOIN hall_services hs ON h.id = hs.hall_id LEFT JOIN services s ON hs.service_id = s.id` : sql``}
       ${whereClause}
-      ${service ? sql`GROUP BY h.id` : sql``}
+      ${service ? sql`GROUP BY h.id, name, images, videos, average_rating, reviews_count` : sql``}
       ORDER BY h.id DESC
     `;
 

@@ -2,7 +2,6 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/sessionMiddleware";
 import sql from "../db";
 import { insertNotification } from "./notificationsController";
-import { HallService } from "./manageHallController";
 
 interface Booking {
   id: number;
@@ -11,7 +10,6 @@ interface Booking {
   customer_id: number;
   booking_date: string;
   guests_number: number;
-  services: HallService[] | null;
   status: string;
   proposed_date: string | null;
   amount?: number;
@@ -78,7 +76,7 @@ export const proposeReschedule = async (req: AuthRequest, res: Response) => {
 
     await sql`
       UPDATE bookings
-      SET status = 'rescheduled', proposed_date = ${proposed_date}
+      SET status = 'owner_rescheduled', proposed_date = ${proposed_date}
       WHERE id = ${id}
     `;
 
@@ -117,7 +115,7 @@ export const respondReschedule = async (req: AuthRequest, res: Response) => {
       WHERE b.id = ${id} AND b.customer_id = ${req.userId!}
     `;
     if (!booking) return res.status(403).send("❌ غير مصرح");
-    if (booking.status !== "rescheduled")
+    if (booking.status !== "owner_rescheduled")
       return res.status(400).send("❌ لا يوجد طلب تعديل موعد نشط لهذا الحجز");
 
     if (accept) {
@@ -170,7 +168,7 @@ export const rejectBooking = async (req: AuthRequest, res: Response) => {
     `;
     if (!booking) return res.status(403).send("❌ غير مصرح");
 
-    await sql`UPDATE bookings SET status = 'cancelled' WHERE id = ${id}`;
+    await sql`UPDATE bookings SET status = 'owner_cancelled' WHERE id = ${id}`;
 
     if (booking.payment_intent_id) {
       await sql`
@@ -209,7 +207,7 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
     `;
     if (!booking) return res.status(403).send("❌ غير مصرح");
 
-    await sql`UPDATE bookings SET status = 'cancelled' WHERE id = ${id}`;
+    await sql`UPDATE bookings SET status = 'customer_cancelled' WHERE id = ${id}`;
 
     await insertNotification(
       booking.owner_id!,

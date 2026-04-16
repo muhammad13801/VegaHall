@@ -4,30 +4,24 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
-  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigateTo } from "../../reusable func/navigateTo";
 import { styles as s, styles } from "./ibrahimStyles";
-import { createBookingApi } from "../../Services/customerApi";
-import { useRefresh } from "../../reusable func/refreshContext";
-import { HallData } from "../../Validations/validateHall";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import BackButton from "../../reusable func/backButton";
 
 export default function BookingRequest({ route }: any) {
-  const hall: HallData = route?.params?.hall;
-  const { triggerRefresh } = useRefresh();
-
+  const hall = route?.params?.hall;
   const [date, setDate] = useState<Date>(new Date());
   const [hasDate, setHasDate] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [guestCount, setGuestCount] = useState(100);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [notes, setNotes] = useState("");
+  const [selectedMeals, setSelectedMeals] = useState<string[]>([]);
 
   if (!hall) {
     return (
@@ -43,9 +37,26 @@ export default function BookingRequest({ route }: any) {
     );
   };
 
-  const baseCost = hall.price;
-  const servicesCost = selectedServices.length * 200;
-  const totalCost = baseCost + servicesCost;
+  const toggleMeal = (mealName: string) => {
+    setSelectedMeals((prev) =>
+      prev.includes(mealName) ? prev.filter((m) => m !== mealName) : [...prev, mealName]
+    );
+  };
+
+  const baseCost = hall.base_price || 0;
+  
+  const servicesCost = selectedServices.reduce((sum, name) => {
+    const svc = (hall.services || []).find((s: any) => (typeof s === "string" ? s : s.name) === name);
+    const price = typeof svc === "object" ? (svc.price || 0) : 0;
+    return sum + price;
+  }, 0);
+
+  const mealsCost = selectedMeals.reduce((sum, name) => {
+    const meal = ((hall as any).meal_options || []).find((m: any) => m.name === name);
+    return sum + ((meal?.price_per_person || 0) * guestCount);
+  }, 0);
+
+  const totalCost = baseCost + servicesCost + mealsCost;
 
   const isValid = hasDate && guestCount > 0;
 
@@ -58,7 +69,7 @@ export default function BookingRequest({ route }: any) {
         bookingDate: date.toISOString(),
         guestCount,
         services: selectedServices,
-        notes,
+        meals: selectedMeals,
         totalCost,
       }
     });
@@ -144,6 +155,37 @@ export default function BookingRequest({ route }: any) {
           </View>
         </View>
 
+        {/* Meals */}
+        {(hall as any).meal_options && (hall as any).meal_options.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.label}>🍱 خيارات الطعام</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: 8 }}>
+              {(hall as any).meal_options.map((meal: any) => {
+                const isActive = selectedMeals.includes(meal.name);
+                return (
+                  <TouchableOpacity
+                    key={meal.name}
+                    style={[
+                      s.quickTag,
+                      isActive && s.checkboxBoxActive,
+                    ]}
+                    onPress={() => toggleMeal(meal.name)}
+                  >
+                    <Text
+                      style={[
+                        s.quickTagText,
+                        isActive && s.serviceChipTextActive,
+                      ]}
+                    >
+                      {meal.name} (+{meal.price_per_person}₪)
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {/* Services */}
         <View style={styles.card}>
           <Text style={styles.label}>🎯 الخدمات الإضافية</Text>
@@ -151,6 +193,7 @@ export default function BookingRequest({ route }: any) {
           <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: 8 }}>
             {(hall.services || []).map((svc: any) => {
               const svcName = typeof svc === "string" ? svc : svc.name;
+              const svcPrice = typeof svc === "object" ? svc.price : 0;
               const isActive = selectedServices.includes(svcName);
 
               return (
@@ -168,7 +211,7 @@ export default function BookingRequest({ route }: any) {
                       isActive && s.serviceChipTextActive,
                     ]}
                   >
-                    {svcName}
+                    {svcName} {svcPrice > 0 ? `(+${svcPrice}₪)` : ""}
                   </Text>
                 </TouchableOpacity>
               );
@@ -188,8 +231,15 @@ export default function BookingRequest({ route }: any) {
 
             {selectedServices.length > 0 && (
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ color: "#666" }}>الخدمات ({selectedServices.length})</Text>
+                <Text style={{ color: "#666" }}>الخدمات الإضافية</Text>
                 <Text style={{ fontWeight: "600" }}>+{servicesCost.toLocaleString()} ₪</Text>
+              </View>
+            )}
+
+            {selectedMeals.length > 0 && (
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ color: "#666" }}>الوجبات ({guestCount} شخص)</Text>
+                <Text style={{ fontWeight: "600" }}>+{mealsCost.toLocaleString()} ₪</Text>
               </View>
             )}
 

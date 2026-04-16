@@ -195,7 +195,7 @@ export default function HallDetails({ route }: any) {
                             <Text style={s.hallName}>{hall.hall_name || hall.name}</Text>
                             <View style={s.priceBox}>
                                 <Text style={s.priceText}>
-                                    {(hall.price || 0).toLocaleString()} <Text style={s.currency}>₪</Text>
+                                    {(hall.base_price || 0).toLocaleString()} <Text style={s.currency}>₪</Text>
                                 </Text>
                                 <Text style={s.priceLabel}>يبدأ من</Text>
                             </View>
@@ -367,7 +367,7 @@ export default function HallDetails({ route }: any) {
             <View style={s.bottomCTA}>
                 <View style={s.ctaPriceInfo}>
                     <Text style={s.priceText}>
-                        {(hall.price || 0).toLocaleString()} <Text style={s.currency}>₪</Text>
+                        {(hall.base_price || 0).toLocaleString()} <Text style={s.currency}>₪</Text>
                     </Text>
                     <Text style={s.ctaLabel}>يبدأ من</Text>
                 </View>

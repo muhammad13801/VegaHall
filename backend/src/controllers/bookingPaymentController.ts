@@ -86,8 +86,8 @@ export const confirmBookingPayment = async (req: AuthRequest, res: Response) => 
 
       // Insert the booking
       const [newBooking] = await tx`
-        INSERT INTO bookings (hall_id, customer_id, booking_date, status, guests_number, services)
-        VALUES (${hallId}, ${userId}, ${bookingDate}, 'Confirmed', ${guestCount}, ${JSON.stringify(services || [])}::jsonb)
+        INSERT INTO bookings (hall_id, customer_id, booking_date, status, guests_number)
+        VALUES (${hallId}, ${userId}, ${bookingDate}, 'confirmed', ${guestCount})
         RETURNING id
       `;
       const bookingId = newBooking.id;
@@ -95,7 +95,7 @@ export const confirmBookingPayment = async (req: AuthRequest, res: Response) => 
       // Record the payment
       await tx`
         INSERT INTO customer_payments (customer_id, booking_id, amount, type, status, payment_intent_id)
-        VALUES (${userId}, ${bookingId}, ${totalCost}, 'booking', 'Success', ${paymentIntentId})
+        VALUES (${userId}, ${bookingId}, ${totalCost}, 'payment', 'success', ${paymentIntentId})
       `;
 
       // Notify the hall owner

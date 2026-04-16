@@ -50,10 +50,10 @@ export default function HallsResult({ route }: any) {
                     results.sort((a: any, b: any) => ((b.average_rating || b.avg_rating || 0) - (a.average_rating || a.avg_rating || 0)));
                     break;
                 case "price_low":
-                    results.sort((a: any, b: any) => a.price - b.price);
+                    results.sort((a: any, b: any) => a.base_price - b.base_price);
                     break;
                 case "price_high":
-                    results.sort((a: any, b: any) => b.price - a.price);
+                    results.sort((a: any, b: any) => b.base_price - a.base_price);
                     break;
             }
             setHalls(results);
