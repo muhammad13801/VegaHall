@@ -12,6 +12,7 @@ import hallRoutes from "./routes/hallRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import customerRoutes from "./routes/customerRoutes";
+import appStateRoutes from "./routes/appStateRoutes";
 
 const app = express();
 app.use(cors());
@@ -24,6 +25,7 @@ app.use("/user", userRoutes);
 app.use("/halls", hallRoutes);
 app.use("/upload", uploadRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/app-state", appStateRoutes);
 
 app.use("/customer", customerRoutes);
 

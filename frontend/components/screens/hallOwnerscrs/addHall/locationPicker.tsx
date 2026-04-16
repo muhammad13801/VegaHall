@@ -254,14 +254,10 @@ export default function LocationPicker({
       </Modal>
 
       {/* City + Street row */}
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ flex: 1 }}>
+      <View style={styles.row}>
+        <View style={{ flex: 0.36 }}>
           <TouchableOpacity
-            style={[
-              styles.pickerWrapper,
-              styles.row,
-              { alignItems: "center", paddingHorizontal: 12 },
-            ]}
+            style={[styles.input, styles.row, { alignItems: "center" }]}
             onPress={() => setCityPickerVisible(true)}
           >
             <Text
@@ -279,7 +275,7 @@ export default function LocationPicker({
 
         <View style={styles.gapBetween} />
 
-        <View style={{ flex: 1.6 }}>
+        <View style={{ flex: 0.64 }}>
           <Input
             placeholder="الشارع..."
             value={form.address}

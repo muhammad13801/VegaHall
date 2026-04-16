@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react"; // ✅ CHANGED: added useMemo
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,21 +6,22 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  Modal,
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Toast from "react-native-toast-message";
 import { styles } from "../../styles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
+import BookingCalendarModal from "../../reusable func/Bookingcalendarmodal";
 import {
   getOwnerBookingsApi,
-  rejectBookingApi,
+  ownerCancelBookingApi,
+  customerCancelResponseApi,
   proposeRescheduleApi,
 } from "../../Services/hallApi";
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
+import { formatDate } from "../../reusable func/formatDate";
 
 interface Service {
   name: string;
@@ -41,17 +42,11 @@ interface Booking {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  confirmed:   { label: "مؤكد",          color: "#22C55E" },
-  rescheduled: { label: "تعديل مقترح",  color: "#6C4AB6" },
-  cancelled:   { label: "ملغي",           color: "#EF4444" },
+  confirmed: { label: "مؤكد", color: "#22C55E" },
+  owner_rescheduled: { label: "تعديل مقترح", color: "#6C4AB6" },
+  customer_cancelled: { label: "إلغاء من العميل", color: "#F97316" },
+  owner_cancelled: { label: "ملغي", color: "#EF4444" },
 };
-
-const formatDate = (d: string) =>
-  new Date(d).toLocaleDateString("ar-EG", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 
 export default function ManageBookings() {
   const {
@@ -68,28 +63,11 @@ export default function ManageBookings() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [rescheduleModal, setRescheduleModal] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [proposedDate, setProposedDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // ✅ ADDED: derive booked dates from existing bookings list (Confirmed or Pending only)
-  const bookedDates = useMemo(() => {
-    return (bookings as Booking[])
-      .filter((b) => b.status === "confirmed")
-      .map((b) => new Date(b.booking_date));
-  }, [bookings]);
-
-  // ✅ ADDED: check if a chosen date is already taken
-  const isDateBooked = useCallback(
-    (date: Date) => {
-      return bookedDates.some(
-        (booked) =>
-          booked.getFullYear() === date.getFullYear() &&
-          booked.getMonth() === date.getMonth() &&
-          booked.getDate() === date.getDate(),
-      );
-    },
-    [bookedDates],
-  );
+  // All confirmed booking dates — passed to the calendar as blocked dates
+  const bookedDates = (bookings as Booking[])
+    .filter((b) => b.status === "confirmed")
+    .map((b) => b.booking_date);
 
   const updateStatus = useCallback(
     (id: number, status: string, extra = {}) =>
@@ -101,27 +79,28 @@ export default function ManageBookings() {
     [setItems],
   );
 
-  const handleReject = useCallback(
+  // Owner cancels a confirmed or owner_rescheduled booking → refund is automatic
+  const handleOwnerCancel = useCallback(
     (id: number) => {
       Alert.alert(
-        "رفض الحجز",
-        "سيتم رفض الحجز وإعادة المبلغ كاملاً للعميل. هل تريد المتابعة؟",
+        "إلغاء الحجز",
+        "سيتم إلغاء الحجز وإعادة المبلغ كاملاً للعميل تلقائياً. هل تريد المتابعة؟",
         [
-          { text: "إلغاء", style: "cancel" },
+          { text: "تراجع", style: "cancel" },
           {
-            text: "رفض وإعادة المبلغ",
+            text: "إلغاء الحجز",
             style: "destructive",
             onPress: async () => {
               setActionLoading(id);
               try {
-                await rejectBookingApi(id);
-                updateStatus(id, "cancelled");
+                const response = await ownerCancelBookingApi(id);
+                updateStatus(id, "owner_cancelled");
                 Toast.show({
                   type: "success",
-                  text1: "تم رفض الحجز وإعادة المبلغ للعميل",
+                  text1: response?.data,
                 });
-              } catch {
-                Toast.show({ type: "error", text1: "فشل رفض الحجز" });
+              } catch (error: any) {
+                Toast.show({ type: "error", text1: error.response?.data });
               } finally {
                 setActionLoading(null);
               }
@@ -133,22 +112,77 @@ export default function ManageBookings() {
     [updateStatus],
   );
 
-  const handleReschedule = useCallback(async () => {
-    if (!selectedId) return;
-    setActionLoading(selectedId);
-    setRescheduleModal(false);
-    try {
-      const dateStr = proposedDate.toISOString().split("T")[0];
-      await proposeRescheduleApi(selectedId, dateStr);
-      updateStatus(selectedId, "rescheduled", { proposed_date: dateStr });
-      Toast.show({ type: "success", text1: "تم إرسال الموعد الجديد للعميل" });
-    } catch {
-      Toast.show({ type: "error", text1: "فشل إرسال طلب الموعد" });
-    } finally {
-      setActionLoading(null);
-      setSelectedId(null);
-    }
-  }, [selectedId, proposedDate, updateStatus]);
+  // Owner responds to a customer_cancelled booking → chooses refund or not
+  const handleCustomerCancelResponse = useCallback(
+    (id: number) => {
+      Alert.alert(
+        "رد على طلب الإلغاء",
+        "قام العميل بإلغاء حجزه. هل تريد إعادة المبلغ المدفوع؟",
+        [
+          { text: "تراجع", style: "cancel" },
+          {
+            text: "لا، بدون إعادة",
+            style: "destructive",
+            onPress: async () => {
+              setActionLoading(id);
+              try {
+                const response = await customerCancelResponseApi(id, false);
+                updateStatus(id, "owner_cancelled");
+                Toast.show({
+                  type: "success",
+                  text1: response?.data,
+                });
+              } catch (error: any) {
+                Toast.show({ type: "error", text1: error.response?.data });
+              } finally {
+                setActionLoading(null);
+              }
+            },
+          },
+          {
+            text: "نعم، أعد المبلغ",
+            onPress: async () => {
+              setActionLoading(id);
+              try {
+                const response = await customerCancelResponseApi(id, true);
+                updateStatus(id, "owner_cancelled");
+                Toast.show({
+                  type: "success",
+                  text1: response?.data,
+                });
+              } catch (error: any) {
+                Toast.show({ type: "error", text1: error.response?.data });
+              } finally {
+                setActionLoading(null);
+              }
+            },
+          },
+        ],
+      );
+    },
+    [updateStatus],
+  );
+
+  const handleReschedule = useCallback(
+    async (dateString: string) => {
+      if (!selectedId) return;
+      setActionLoading(selectedId);
+      setRescheduleModal(false);
+      try {
+        const response = await proposeRescheduleApi(selectedId, dateString);
+        updateStatus(selectedId, "owner_rescheduled", {
+          proposed_date: dateString,
+        });
+        Toast.show({ type: "success", text1: response?.data });
+      } catch (error: any) {
+        Toast.show({ type: "error", text1: error.response?.data });
+      } finally {
+        setActionLoading(null);
+        setSelectedId(null);
+      }
+    },
+    [selectedId, updateStatus],
+  );
 
   const openReschedule = useCallback((id: number) => {
     Alert.alert(
@@ -160,7 +194,6 @@ export default function ManageBookings() {
           text: "نعم",
           onPress: () => {
             setSelectedId(id);
-            setProposedDate(new Date());
             setRescheduleModal(true);
           },
         },
@@ -179,11 +212,6 @@ export default function ManageBookings() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
-
-      <View style={[styles.info, { width: "90%", marginVertical: 12 }]}>
-        <Text style={styles.title}>إدارة الحجوزات</Text>
-        <Ionicons name="calendar-outline" size={26} color="#6C4AB6" />
-      </View>
 
       <FlatList
         data={bookings as Booking[]}
@@ -227,11 +255,13 @@ export default function ManageBookings() {
             color: "#888",
           };
           const isConfirmed = item.status === "confirmed";
-          const isPending = item.status === "rescheduled";
+          const isOwnerRescheduled = item.status === "owner_rescheduled";
+          const isCustomerCancelled = item.status === "customer_cancelled";
           const isActioning = actionLoading === item.id;
 
           return (
             <View style={[styles.card, { marginBottom: 14 }]}>
+              {/* Hall name + status */}
               <View style={[styles.info, { marginBottom: 12 }]}>
                 <Text style={[styles.profileValue, { fontSize: 16 }]}>
                   {item.hall_name}
@@ -241,6 +271,7 @@ export default function ManageBookings() {
                 </Text>
               </View>
 
+              {/* Customer name */}
               <View
                 style={[
                   styles.row,
@@ -253,6 +284,7 @@ export default function ManageBookings() {
                 </Text>
               </View>
 
+              {/* Date + guests */}
               <View style={[styles.row, { gap: 16, marginBottom: 10 }]}>
                 <View style={[styles.row, { alignItems: "center", gap: 6 }]}>
                   <Ionicons name="calendar-outline" size={14} color="#888" />
@@ -268,7 +300,8 @@ export default function ManageBookings() {
                 </View>
               </View>
 
-              {isPending && item.proposed_date && (
+              {/* Pending reschedule notice */}
+              {isOwnerRescheduled && item.proposed_date && (
                 <View
                   style={[
                     styles.mealOptionRow,
@@ -291,6 +324,31 @@ export default function ManageBookings() {
                 </View>
               )}
 
+              {/* Customer cancelled notice */}
+              {isCustomerCancelled && (
+                <View
+                  style={[
+                    styles.mealOptionRow,
+                    {
+                      gap: 8,
+                      marginBottom: 10,
+                      backgroundColor: "#FFF7ED",
+                      borderColor: "#FDBA74",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={15}
+                    color="#F97316"
+                  />
+                  <Text style={[styles.profileLabel, { color: "#9A3412" }]}>
+                    ألغى العميل الحجز — يرجى اتخاذ قرار بشأن استرجاع المبلغ
+                  </Text>
+                </View>
+              )}
+
+              {/* Services */}
               {((Array.isArray(item.services) &&
                 (item.services as any[]).length > 0) ||
                 (typeof item.services === "string" &&
@@ -331,7 +389,7 @@ export default function ManageBookings() {
                       >
                         <Text style={[styles.itemText, { fontSize: 13 }]}>
                           {s.name}
-                          {s.price > 0 ? `₪${s.price}` : ""}
+                          {s.price > 0 ? ` ₪${s.price}` : ""}
                         </Text>
                       </View>
                     ))}
@@ -339,6 +397,7 @@ export default function ManageBookings() {
                 </View>
               )}
 
+              {/* Total + action buttons */}
               <View
                 style={[
                   styles.borderTopSection,
@@ -361,6 +420,7 @@ export default function ManageBookings() {
                   />
                 ) : (
                   <>
+                    {/* confirmed: reschedule or cancel (forced refund) */}
                     {isConfirmed && (
                       <View style={[styles.row, { gap: 8 }]}>
                         <TouchableOpacity
@@ -388,7 +448,7 @@ export default function ManageBookings() {
                               backgroundColor: "#FEF2F2",
                             },
                           ]}
-                          onPress={() => handleReject(item.id)}
+                          onPress={() => handleOwnerCancel(item.id)}
                         >
                           <Text
                             style={[
@@ -396,19 +456,20 @@ export default function ManageBookings() {
                               { color: "#D32F2F" },
                             ]}
                           >
-                            رفض وإعادة المبلغ
+                            إلغاء الحجز
                           </Text>
                         </TouchableOpacity>
                       </View>
                     )}
 
-                    {isPending && (
+                    {/* owner_rescheduled: only cancel is allowed (forced refund) */}
+                    {isOwnerRescheduled && (
                       <TouchableOpacity
                         style={[
                           styles.actionButton,
                           { marginTop: 0, backgroundColor: "#FEF2F2" },
                         ]}
-                        onPress={() => handleReject(item.id)}
+                        onPress={() => handleOwnerCancel(item.id)}
                       >
                         <Text
                           style={[
@@ -416,7 +477,27 @@ export default function ManageBookings() {
                             { color: "#D32F2F" },
                           ]}
                         >
-                          رفض وإعادة المبلغ
+                          إلغاء الحجز
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {/* customer_cancelled: owner decides refund or not */}
+                    {isCustomerCancelled && (
+                      <TouchableOpacity
+                        style={[
+                          styles.actionButton,
+                          { marginTop: 0, backgroundColor: "#FFF7ED" },
+                        ]}
+                        onPress={() => handleCustomerCancelResponse(item.id)}
+                      >
+                        <Text
+                          style={[
+                            styles.actionButtonText,
+                            { color: "#C2410C" },
+                          ]}
+                        >
+                          قرار استرجاع المبلغ
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -428,83 +509,18 @@ export default function ManageBookings() {
         }}
       />
 
-      {/* Reschedule Modal */}
-      <Modal
+      <BookingCalendarModal
         visible={rescheduleModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setRescheduleModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>اقتراح موعد جديد</Text>
-            <Text
-              style={[
-                styles.profileLabel,
-                { textAlign: "center", marginBottom: 20 },
-              ]}
-            >
-              اختر التاريخ الجديد. سيبقى الحجز في حالة انتظار حتى يقبل العميل.
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.secondaryActionButton,
-                { marginTop: 0, marginBottom: 12 },
-              ]}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <View style={[styles.row, { alignItems: "center", gap: 8 }]}>
-                <Ionicons name="calendar-outline" size={20} color="#6C4AB6" />
-                <Text style={[styles.actionButtonText, { color: "#6C4AB6" }]}>
-                  {proposedDate.toLocaleDateString("ar-EG", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleReschedule}
-            >
-              <Text style={styles.actionButtonText}>إرسال الاقتراح</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.secondaryActionButton, { borderWidth: 0 }]}
-              onPress={() => setRescheduleModal(false)}
-            >
-              <Text style={[styles.actionButtonText, { color: "#6C4AB6" }]}>
-                إلغاء
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ✅ CHANGED: added isDateBooked check in onConfirm */}
-      <DateTimePickerModal
-        isVisible={showDatePicker}
-        mode="date"
-        minimumDate={new Date()}
-        date={proposedDate}
-        onConfirm={(date) => {
-          if (isDateBooked(date)) {
-            Alert.alert(
-              "التاريخ محجوز",
-              "هذا التاريخ محجوز بالفعل، يرجى اختيار تاريخ آخر",
-            );
-            return;
-          }
-          setProposedDate(date);
-          setShowDatePicker(false);
+        onClose={() => {
+          setRescheduleModal(false);
+          setSelectedId(null);
         }}
-        onCancel={() => setShowDatePicker(false)}
-        confirmTextIOS="تأكيد"
-        cancelTextIOS="إلغاء"
+        onConfirm={handleReschedule}
+        bookedDates={bookedDates}
+        loading={actionLoading === selectedId}
+        title="اقتراح موعد جديد"
+        subtitle="اختر تاريخاً متاحاً. سيبقى الحجز في انتظار موافقة العميل."
+        confirmLabel="إرسال الاقتراح"
       />
     </SafeAreaView>
   );

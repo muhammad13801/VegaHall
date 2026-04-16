@@ -17,7 +17,7 @@ export const getAllHalls = async (req: AuthRequest, res: Response) => {
           '[]'::json
         ) as videos,
         COALESCE(
-          (SELECT json_agg(name) FROM hall_services WHERE hall_id = h.id),
+          (SELECT json_agg(s.name) FROM hall_services hs JOIN services s ON hs.service_id = s.id WHERE hs.hall_id = h.id),
           '[]'::json
         ) as services,
         ROUND(COALESCE((SELECT AVG(rating) FROM ratings WHERE hall_id = h.id), 0), 1) as average_rating,
@@ -38,6 +38,9 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
       SELECT 
         h.*, 
         h.hall_name as name,
+        u.first_name as owner_first_name,
+        u.last_name as owner_last_name,
+        u.phone_number as owner_phone,
         COALESCE(
           (SELECT json_agg(url) FROM media WHERE hall_id = h.id AND type = 'image'),
           '[]'::json
@@ -47,11 +50,11 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
           '[]'::json
         ) as videos,
         COALESCE(
-          (SELECT json_agg(json_build_object('name', name, 'price', price)) FROM hall_services WHERE hall_id = h.id),
+          (SELECT json_agg(json_build_object('name', s.name, 'price', hs.price)) FROM hall_services hs JOIN services s ON hs.service_id = s.id WHERE hs.hall_id = h.id),
           '[]'::json
         ) as services,
         COALESCE(
-          (SELECT json_agg(json_build_object('name', name, 'price_per_person', price_per_person)) FROM meal_options WHERE hall_id = h.id),
+          (SELECT json_agg(json_build_object('name', mt.name, 'price_per_person', mo.price_per_person)) FROM meal_options mo JOIN meal_types mt ON mo.meal_type_id = mt.id WHERE mo.hall_id = h.id),
           '[]'::json
         ) as meal_options,
         COALESCE(
@@ -61,6 +64,7 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
         ROUND(COALESCE((SELECT AVG(rating) FROM ratings WHERE hall_id = h.id), 0), 1) as average_rating,
         (SELECT COUNT(*) FROM ratings WHERE hall_id = h.id) as reviews_count
       FROM halls h
+      JOIN users u ON h.owner_id = u.id
       WHERE h.id = ${id}
     `;
 
@@ -71,9 +75,24 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getBusyDates = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const dates = await sql`
+      SELECT booking_date 
+      FROM bookings 
+      WHERE hall_id = ${id} 
+      AND status IN ('confirmed', 'owner_rescheduled')
+    `;
+    res.json(dates.map(d => d.booking_date));
+  } catch (error: any) {
+    res.status(500).send("❌ خطأ في الخادم: " + error.message);
+  }
+};
+
 export const searchHalls = async (req: AuthRequest, res: Response) => {
   try {
-    const { query, city, service } = req.body;
+    const { query, city, service, minPrice, maxPrice, date } = req.body;
     
     let conditions = [];
 
@@ -87,6 +106,22 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
 
     if (service) {
       conditions.push(sql`s.name ILIKE ${`%${service}%`}`);
+    }
+
+    if (minPrice && !isNaN(Number(minPrice))) {
+      conditions.push(sql`h.base_price >= ${Number(minPrice)}`);
+    }
+
+    if (maxPrice && !isNaN(Number(maxPrice))) {
+      conditions.push(sql`h.base_price <= ${Number(maxPrice)}`);
+    }
+
+    if (date) {
+      conditions.push(sql`h.id NOT IN (
+        SELECT hall_id FROM bookings 
+        WHERE booking_date = ${date} 
+        AND status IN ('confirmed', 'owner_rescheduled')
+      )`);
     }
 
     let whereClause: any = sql``;
@@ -111,13 +146,13 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
           '[]'::json
         ) as videos,
         COALESCE(
-          (SELECT json_agg(name) FROM hall_services WHERE hall_id = h.id),
+          (SELECT json_agg(s.name) FROM hall_services hs JOIN services s ON hs.service_id = s.id WHERE hs.hall_id = h.id),
           '[]'::json
         ) as services,
         ROUND(COALESCE((SELECT AVG(rating) FROM ratings WHERE hall_id = h.id), 0), 1) as average_rating,
         (SELECT COUNT(*) FROM ratings WHERE hall_id = h.id) as reviews_count
       FROM halls h
-      ${service ? sql`LEFT JOIN hall_services s ON h.id = s.hall_id` : sql``}
+      ${service ? sql`LEFT JOIN hall_services hs ON h.id = hs.hall_id LEFT JOIN services s ON hs.service_id = s.id` : sql``}
       ${whereClause}
       ${service ? sql`GROUP BY h.id` : sql``}
       ORDER BY h.id DESC
@@ -125,6 +160,7 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
 
     res.json(halls);
   } catch (error: any) {
+    console.error("❌ Search error details:", error);
     res.status(500).send("❌ خطأ في الخادم: " + error.message);
   }
 };

@@ -1,6 +1,8 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/sessionMiddleware";
 import sql from "../db";
+import { Expo, ExpoPushMessage } from "expo-server-sdk";
+import { updateAppState } from "../utils/updateAppState";
 
 export interface Notification {
   id: number;
@@ -12,6 +14,23 @@ export interface Notification {
   sent: boolean;
   created_at: string;
 }
+
+const expo = new Expo();
+
+// PATCH /notifications/token — save push token for current user
+export const savePushToken = async (req: AuthRequest, res: Response) => {
+  const { token } = req.body;
+
+  if (!token || !Expo.isExpoPushToken(token)) {
+    return res.status(400).json({ error: "Invalid Expo push token" });
+  }
+
+  await sql`
+    UPDATE users SET expo_push_token = ${token} WHERE id = ${req.userId!}
+  `;
+
+  res.json({ success: true });
+};
 
 // GET /notifications — fetch notifications for the current user
 export const getNotifications = async (req: AuthRequest, res: Response) => {
@@ -43,8 +62,42 @@ export const insertNotification = async (
   content: string,
   notificationType: string,
 ) => {
+  // 1. Save to DB
   await sql`
     INSERT INTO notifications (user_id, title, content, notification_type, channel, sent)
     VALUES (${userId}, ${title}, ${content}, ${notificationType}, 'app', true)
   `;
+  await updateAppState();
+
+  // 2. Get user's push token
+  const [user] = await sql<{ expo_push_token: string | null }[]>`
+    SELECT expo_push_token FROM users WHERE id = ${userId}
+  `;
+
+  if (!user?.expo_push_token || !Expo.isExpoPushToken(user.expo_push_token))
+    return; // No token saved, skip push silently
+
+  // 3. Send push notification
+  const message: ExpoPushMessage = {
+    to: user.expo_push_token,
+    sound: "default",
+    title,
+    body: content,
+    data: { notification_type: notificationType },
+  };
+
+  try {
+    const [ticket] = await expo.sendPushNotificationsAsync([message]);
+
+    if (!ticket) return;
+    if (ticket.status === "error") {
+      console.error("Push failed:", ticket.message);
+
+      if (ticket.details?.error === "DeviceNotRegistered") {
+        await sql`UPDATE users SET expo_push_token = NULL WHERE id = ${userId}`;
+      }
+    }
+  } catch (err) {
+    console.error("Expo push error:", err);
+  }
 };

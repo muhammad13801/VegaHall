@@ -141,10 +141,12 @@ export default function HallDetail() {
               data={media}
               keyExtractor={(_: any, i: number) => i.toString()}
               horizontal
+              inverted
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               onScroll={onScroll}
               scrollEventThrottle={16}
+              style={{ direction: "ltr" }}
               renderItem={({
                 item: mediaItem,
               }: {
@@ -460,7 +462,7 @@ export default function HallDetail() {
             onPress={() => NavigateTo("HallComments", { hallId })}
           >
             <Ionicons name="chatbubble-outline" size={18} color="#6C4AB6" />
-            <Text style={[styles.signUpText, { fontSize: 15 }]}>
+            <Text style={[styles.actionText, { fontSize: 15 }]}>
               عرض التعليقات
             </Text>
           </TouchableOpacity>

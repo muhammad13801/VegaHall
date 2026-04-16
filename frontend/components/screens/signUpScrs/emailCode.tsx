@@ -53,13 +53,11 @@ export default function EmailCode() {
       Toast.show({
         type: "success",
         text1: response.data,
-        visibilityTime: 3000,
       });
     } catch (err: any) {
       Toast.show({
         type: "error",
         text1: err.response?.data,
-        visibilityTime: 3000,
       });
 
       throw err;

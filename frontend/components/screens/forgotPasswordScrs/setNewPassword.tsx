@@ -38,14 +38,12 @@ export default function SetNewPassword() {
       Toast.show({
         type: "success",
         text1: response.data,
-        visibilityTime: 3000,
       });
       NavigateAndReset("Login");
     } catch (err: any) {
       Toast.show({
         type: "error",
-        text1: err.response?.data,
-        visibilityTime: 3000,
+        text1: err.response?.data || "حدث خطأ غير متوقع",
       });
     } finally {
       setLoading(false);

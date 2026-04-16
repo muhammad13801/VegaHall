@@ -8,9 +8,10 @@ import { useState } from "react";
 import { phoneRegex } from "../../../reusable func/regex";
 import Toast from "react-native-toast-message";
 import { NavigateAndReset } from "../../../reusable func/navigateTo";
-import { TextInputMask } from "react-native-masked-text";
 import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
 import { updatePhoneApi } from "../../../Services/userApi";
+import { phoneMask } from "../../signUpScrs/signUp";
+import MaskInput from "react-native-mask-input";
 
 export default function UpdatePhone() {
   const [phone, setPhone] = useState<string>("");
@@ -31,7 +32,10 @@ export default function UpdatePhone() {
         params: { refresh: true },
       });
     } catch (err: any) {
-      Toast.show({ type: "error", text1: err.response?.data });
+      Toast.show({
+        type: "error",
+        text1: err.response?.data || "حدث خطأ غير متوقع",
+      });
     } finally {
       setLoading(false);
     }
@@ -53,21 +57,12 @@ export default function UpdatePhone() {
             />
             <Text style={styles.label}>رقم الهاتف</Text>
           </View>
-          <TextInputMask
-            type={"custom"}
-            options={{
-              mask: "+97C-5DD-DDD-DDD",
-              translation: {
-                "9": (val: string) => (val === "9" ? val : "9"),
-                "7": (val: string) => (val === "7" ? val : "7"),
-                C: (val: string) => (/[02]/.test(val) ? val : null),
-                D: (val: string) => (/[0-9]/.test(val) ? val : null),
-              },
-            }}
+          <MaskInput
             value={phone}
             onChangeText={setPhone}
+            mask={phoneMask}
             keyboardType="numeric"
-            placeholder="+97X-XXX-XXX-XXX"
+            placeholderTextColor="#999"
             style={[styles.input, { textAlign: "center", direction: "ltr" }]}
           />
           {error && <Text style={styles.errorText}>{error}</Text>}

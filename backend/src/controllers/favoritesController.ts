@@ -18,7 +18,7 @@ export const getFavorites = async (req: AuthRequest, res: Response) => {
         h.city, 
         h.address, 
         h.capacity, 
-        h.price, 
+        h.base_price, 
         h.status,
         COALESCE(
           (SELECT json_agg(url) FROM media WHERE hall_id = h.id AND type = 'image'),
@@ -26,7 +26,7 @@ export const getFavorites = async (req: AuthRequest, res: Response) => {
         ) as images,
         ROUND(AVG(r.rating), 1) as avg_rating,
         COUNT(r.id) FILTER (WHERE r.comment IS NOT NULL AND r.comment != '') as comment_count
-      FROM favorite_halls f
+      FROM favorites f
       JOIN halls h ON f.hall_id = h.id
       LEFT JOIN ratings r ON r.hall_id = h.id
       WHERE f.customer_id = ${userId}
@@ -36,7 +36,7 @@ export const getFavorites = async (req: AuthRequest, res: Response) => {
         h.city, 
         h.address, 
         h.capacity, 
-        h.price, 
+        h.base_price, 
         h.status
       ORDER BY h.id DESC
       LIMIT ${limit} OFFSET ${offset}
@@ -58,15 +58,15 @@ export const toggleFavorite = async (req: AuthRequest, res: Response) => {
 
   try {
     const [existing] = await sql`
-      SELECT 1 FROM favorite_halls WHERE customer_id = ${userId} AND hall_id = ${hallId}
+      SELECT 1 FROM favorites WHERE customer_id = ${userId} AND hall_id = ${hallId}
     `;
 
     if (existing) {
-      await sql`DELETE FROM favorite_halls WHERE customer_id = ${userId} AND hall_id = ${hallId}`;
+      await sql`DELETE FROM favorites WHERE customer_id = ${userId} AND hall_id = ${hallId}`;
       return res.json({ message: "تمت إزالة الصالة من المفضلة", status: "removed" });
     } else {
       await sql`
-        INSERT INTO favorite_halls (customer_id, hall_id)
+        INSERT INTO favorites (customer_id, hall_id)
         VALUES (${userId}, ${hallId})
       `;
       return res.json({ message: "تمت إضافة الصالة للمفضلة", status: "added" });

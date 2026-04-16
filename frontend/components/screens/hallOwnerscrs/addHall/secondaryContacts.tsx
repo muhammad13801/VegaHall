@@ -1,20 +1,11 @@
 import React, { useState, useCallback, memo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TextInputMask } from "react-native-masked-text";
 import { Input } from "../../../reusable func/input";
 import { styles } from "../../../styles";
 import { HallFormProps } from "../../../Validations/validateHall";
-
-const PHONE_OPTIONS = {
-  mask: "+97C-5DD-DDD-DDD",
-  translation: {
-    "9": (val: string) => (val === "9" ? val : "9"),
-    "7": (val: string) => (val === "7" ? val : "7"),
-    C: (val: string) => (/[02]/.test(val) ? val : null),
-    D: (val: string) => (/[0-9]/.test(val) ? val : null),
-  },
-};
+import MaskInput from "react-native-mask-input";
+import { phoneMask } from "../../signUpScrs/signUp";
 
 const ContactCard = memo(
   ({
@@ -69,14 +60,15 @@ const ContactCard = memo(
         </View>
       </View>
 
-      <TextInputMask
-        type={"custom"}
-        options={PHONE_OPTIONS}
+      <MaskInput
         value={contact.phone}
-        onChangeText={(text) => onUpdate(index, "phone", text)}
+        onChangeText={(unmasked) => {
+          onUpdate(index, "phoneNumber", unmasked);
+        }}
+        mask={phoneMask}
         keyboardType="numeric"
-        placeholder="+97X-XXX-XXX-XXX"
-        style={[styles.input, { direction: "ltr" }]}
+        placeholderTextColor="#999"
+        style={[styles.input, { textAlign: "center", direction: "ltr" }]}
       />
       {errors[`contactPhone_${index}`] && (
         <Text style={styles.errorText}>{errors[`contactPhone_${index}`]}</Text>

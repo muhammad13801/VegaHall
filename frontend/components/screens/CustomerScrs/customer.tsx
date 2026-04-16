@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Text, TouchableOpacity, View, ScrollView, TextInput, ActivityIndicator } from "react-native";
+import { Text, TouchableOpacity, View, ScrollView, TextInput, ActivityIndicator, RefreshControl } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigateTo } from "../../reusable func/navigateTo";
@@ -9,8 +9,8 @@ import { getHallsApi, searchApi, getFavoritesApi, toggleFavoriteApi } from "../.
 import { useRefresh } from "../../reusable func/refreshContext";
 import { HallCard } from "../hallOwnerscrs/hallCard";
 import { styles as s } from "./ibrahimStyles";
+import { PALESTINE_CITIES } from "../../Validations/validateHall";
 
-const CITIES = ["نابلس", "رام الله", "جنين", "طولكرم", "قلقيلية"];
 const ALL_SERVICES = ["مساحة خارجية", "مسبح", "دي جي", "ضيافة", "تصوير", "قاعة طعام", "تكييف"];
 
 export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }) {
@@ -28,14 +28,24 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
   const [dateModalVis, setDateModalVis] = useState(false);
   const [halls, setHalls] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchHallsAndFavorites = useCallback(async () => {
     setLoading(true);
+    
+    // جلب المفضلة (بيانات ثانوية)
     try {
       const favRes = await getFavoritesApi(1, 100);
       const userFavIds = new Set<number>(favRes.data.map((fav: any) => fav.id));
       setFavoriteIds(userFavIds);
+    } catch (favError: any) {
+      if (favError.response?.status !== 401) {
+        console.error("Error fetching favorites:", favError);
+      }
+    }
 
+    // جلب الصالات (تطبيق رئيسي)
+    try {
       if (query.trim()) {
         const res = await searchApi({ query });
         setHalls(res.data);
@@ -44,11 +54,17 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
         setHalls(res.data);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching halls:", error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [query]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchHallsAndFavorites();
+  }, [fetchHallsAndFavorites]);
 
   useEffect(() => {
     fetchHallsAndFavorites();
@@ -113,6 +129,13 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         stickyHeaderIndices={[0]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#6C4AB6"]}
+          />
+        }
       >
         <View style={{ backgroundColor: "#F7F8FC", paddingBottom: 10 }}>
 
@@ -175,7 +198,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
                 {openFilter === "services" ? "اختر الخدمات المطلوبة:" : "اختر المدينة:"}
               </Text>
               <View style={s.checkboxesGrid}>
-                {(openFilter === "services" ? ALL_SERVICES : CITIES).map((item) => {
+                {(openFilter === "services" ? ALL_SERVICES : PALESTINE_CITIES).map((item) => {
                   const isActive = openFilter === "services" ? selectedServices.includes(item) : selectedCity === item;
                   return (
                     <TouchableOpacity
@@ -213,8 +236,8 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
                     placeholder="إلى"
                     placeholderTextColor="#999"
                     keyboardType="numeric"
-                    value={minPrice}
-                    onChangeText={setMinPrice}
+                    value={maxPrice}
+                    onChangeText={setMaxPrice}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -224,8 +247,8 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
                     placeholder="من"
                     placeholderTextColor="#999"
                     keyboardType="numeric"
-                    value={maxPrice}
-                    onChangeText={setMaxPrice}
+                    value={minPrice}
+                    onChangeText={setMinPrice}
                   />
                 </View>
               </View>
@@ -253,7 +276,6 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
                   onPress={() => {
                     setMinPrice("");
                     setMaxPrice("");
-                    handleSearch(undefined, undefined, "", "");
                     setOpenFilter(null);
                   }}
                 >

@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import sql from "../db";
 import { AuthRequest } from "../middleware/sessionMiddleware";
+import cron from "node-cron";
+import { insertNotification } from "./notificationsController";
 
 export const getHallRatings = async (req: Request, res: Response) => {
   try {
@@ -47,3 +49,31 @@ export const createRating = async (req: AuthRequest, res: Response) => {
     res.status(500).send("❌ خطأ في الخادم: " + error.message);
   }
 };
+
+// Run every day at 12:00 PM (noon) to remind about yesterday's events
+cron.schedule("0 12 * * *", async () => {
+  try {
+    console.log("Running hall rating reminder job...");
+
+    const pastBookings = await sql`
+      SELECT b.id, b.customer_id, h.hall_name 
+      FROM bookings b
+      JOIN halls h ON b.hall_id = h.id
+      LEFT JOIN ratings r ON r.booking_id = b.id
+      WHERE b.status = 'confirmed' 
+        AND b.booking_date::date = CURRENT_DATE - INTERVAL '1 day'
+        AND r.id IS NULL
+    `;
+
+    for (const booking of pastBookings) {
+      await insertNotification(
+        booking.customer_id,
+        "شاركونا رأيكم! ⭐",
+        `يرجى تقييم الصالة (${booking.hall_name}) عن طريق قائمة "حجوزاتي".`,
+        "rate_hall"
+      );
+    }
+  } catch (err) {
+    console.error("Cron error in rating reminder:", err);
+  }
+});

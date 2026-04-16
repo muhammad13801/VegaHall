@@ -1,14 +1,13 @@
 {
   "expo": {
-    "name": "vegaHall",
+    "name": "Vega Hall",
     "slug": "vegaHall",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/vega-hall-icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/vega-hall-icon-android.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,12 +16,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/vega-icon2.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "usesCleartextTraffic": true
+      "package": "com.muhammad_abujheihsa.vegaHall"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,7 +34,13 @@
           "enableGooglePay": false
         }
       ],
-      "expo-video"
-    ]
+      "expo-video",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e956bfde-bb9c-4f6f-b2ab-386bb9e468b3"
+      }
+    }
   }
 }

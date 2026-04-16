@@ -130,10 +130,7 @@ export default function HallComments() {
   return (
     <SafeAreaView style={styles.container}>
       <BackgroundDecoration />
-      <View style={[styles.info, { width: "95%" }]}>
-        <Text style={styles.title}>التعليقات</Text>
-        <BackButton />
-      </View>
+      <BackButton />
 
       <FlatList
         data={comments}
