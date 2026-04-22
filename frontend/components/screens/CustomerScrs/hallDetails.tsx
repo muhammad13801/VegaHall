@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Text, TouchableOpacity, View, ScrollView, StatusBar, Dimensions, FlatList, NativeSyntheticEvent, NativeScrollEvent, Linking, ImageBackground, Image, ActivityIndicator } from "react-native";
+import { Text, TouchableOpacity, View, ScrollView, StatusBar, Dimensions, FlatList, NativeSyntheticEvent, NativeScrollEvent, Linking, ImageBackground, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,19 +11,11 @@ import { VideoCard } from "../../reusable func/videoCard";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const SERVICE_ICONS: Record<string, string> = {
-    "دي جي": "music",
-    "تصوير": "camera",
-    "ضيافة": "restaurant-outline",
-    "ديكور": "flower-outline",
-    "إضاءة": "bulb-outline",
-    "شاشات": "tv-outline",
-};
-
 export default function HallDetails({ route }: any) {
     const initialHall = route?.params?.hall;
     const [hall, setHall] = useState<any>(initialHall);
     const [loading, setLoading] = useState(!initialHall);
+    const [refreshing, setRefreshing] = useState(false);
     const [isFav, setIsFav] = useState(false);
     const { triggerRefresh } = useRefresh();
     const [activeSlide, setActiveSlide] = useState(0);
@@ -46,7 +38,13 @@ export default function HallDetails({ route }: any) {
             console.error("Failed to fetch hall details:", error);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchDetails();
     };
 
     useEffect(() => {
@@ -115,7 +113,14 @@ export default function HallDetails({ route }: any) {
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                bounces={false}
+                bounces={true}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={["#6C4AB6"]}
+                    />
+                }
             >
                 <View style={s.galleryContainer}>
                     {media.length > 0 ? (
@@ -201,12 +206,24 @@ export default function HallDetails({ route }: any) {
                             </View>
                         </View>
 
-                        <View style={[s.infoChipsRow, { justifyContent: "space-between", alignItems: "center" }]}>
+                        <View style={[s.infoChipsRow]}>
+                            <TouchableOpacity 
+                                style={[s.infoChip, { flex: 1, justifyContent: "flex-start" }]}
+                                onPress={() => {
+                                    const query = hall.location || `${hall.city} ${hall.address}`;
+                                    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`);
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <Feather name="map-pin" size={15} color="#6C4AB6" />
+                                <Text style={[s.costLabel, { flex: 1, textAlign: "left" }]}>
+                                    {hall.city} {hall.address ? `- ${hall.address}` : ""}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={[s.infoChipsRow, { justifyContent: "space-between", alignItems: "center", marginTop: 8 }]}>
                             <View style={{ flexDirection: "row", gap: 8 }}>
-                                <View style={s.infoChip}>
-                                    <Feather name="map-pin" size={15} color="#6C4AB6" />
-                                    <Text style={s.costLabel}>{hall.city}</Text>
-                                </View>
                                 <View style={s.infoChip}>
                                     <Feather name="star" size={15} color="#F4B400" />
                                     <Text style={s.ratingChipText}>{Number(hall.average_rating || hall.rating || 0).toFixed(1)}</Text>
@@ -255,13 +272,6 @@ export default function HallDetails({ route }: any) {
                                 <Text style={s.infoGridValue}>{hall.services?.length || 0}</Text>
                                 <Text style={s.infoGridLabel}>خدمات متوفرة</Text>
                             </View>
-                            <View style={s.infoGridItem}>
-                                <View style={s.infoGridIcon}>
-                                    <Feather name="message-circle" size={20} color="#6C4AB6" />
-                                </View>
-                                <Text style={s.infoGridValue}>{hall.reviews_count || hall.reviewsCount || 0}</Text>
-                                <Text style={s.infoGridLabel}>تقييم</Text>
-                            </View>
                         </View>
                     </View>
 
@@ -296,7 +306,7 @@ export default function HallDetails({ route }: any) {
                                             <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
                                                 <View style={s.serviceIconCircle}>
                                                     <Ionicons
-                                                        name={(SERVICE_ICONS[svcName] || "checkmark") as any}
+                                                        name="checkmark"
                                                         size={16}
                                                         color="#FFF"
                                                     />

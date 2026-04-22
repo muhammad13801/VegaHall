@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Text, TouchableOpacity, View, FlatList, StatusBar, ActivityIndicator } from "react-native";
+import { Text, TouchableOpacity, View, FlatList, StatusBar, ActivityIndicator, RefreshControl } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { goBack, NavigateTo } from "../../reusable func/navigateTo";
@@ -23,10 +23,12 @@ export default function HallsResult({ route }: any) {
     const servicesParam = params.services || [];
     const minPriceParam = params.minPrice || "";
     const maxPriceParam = params.maxPrice || "";
+    const dateParam = params.date || null;
 
     const [halls, setHalls] = useState<any[]>([]);
     const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     const performSearchAndFetchFavorites = useCallback(async () => {
         setLoading(true);
@@ -41,6 +43,7 @@ export default function HallsResult({ route }: any) {
                 service: servicesParam[0],
                 minPrice: minPriceParam,
                 maxPrice: maxPriceParam,
+                date: dateParam ? dateParam.split('T')[0] : null,
             });
 
             let results = res.data;
@@ -61,8 +64,14 @@ export default function HallsResult({ route }: any) {
             console.error("Search failed:", error);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [queryParam, cityParam, servicesParam, sortMode]);
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        performSearchAndFetchFavorites();
+    }, [performSearchAndFetchFavorites]);
 
     useEffect(() => {
         performSearchAndFetchFavorites();
@@ -87,7 +96,7 @@ export default function HallsResult({ route }: any) {
     const activeFilters: string[] = [];
     if (params.query) activeFilters.push(`"${params.query}"`);
     if (params.city) activeFilters.push(`📍 ${params.city}`);
-    if (params.date) activeFilters.push("📅 تاريخ محدد");
+    if (params.date) activeFilters.push(`📅 ${params.date.split('T')[0]}`);
     if (params.services?.length > 0) activeFilters.push(`🎯 ${params.services.length} خدمة`);
     if (params.minPrice || params.maxPrice) activeFilters.push(`💰 ${params.minPrice || 0} - ${params.maxPrice || "∞"}`);
 
@@ -147,6 +156,13 @@ export default function HallsResult({ route }: any) {
                     )}
                     contentContainerStyle={s.listContainer}
                     showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={["#6C4AB6"]}
+                        />
+                    }
                 />
             ) : (
                 <View style={s.emptyContainer}>

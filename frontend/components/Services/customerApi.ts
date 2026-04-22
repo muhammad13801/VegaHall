@@ -13,6 +13,9 @@ export const getHallsApi = async () =>
 export const getHallByIdApi = async (id: number) =>
   api.get(`${CUSTOMER_BASE_URL}/halls/${id}`);
 
+export const getBusyDatesApi = async (id: number) =>
+  api.get(`${CUSTOMER_BASE_URL}/halls/${id}/busy-dates`);
+
 // Favorites
 export const getFavoritesApi = async (page: number, limit: number) =>
   api.get(`${CUSTOMER_BASE_URL}/favorites?page=${page}&limit=${limit}`);
@@ -32,6 +35,9 @@ export const cancelBookingApi = async (id: number) =>
 
 export const respondRescheduleApi = async (id: number, accept: boolean) =>
   api.patch(`${CUSTOMER_BASE_URL}/bookings/${id}/reschedule/respond`, { accept });
+
+export const requestRescheduleApi = async (id: number, proposed_date: string) =>
+  api.post(`${CUSTOMER_BASE_URL}/bookings/${id}/request-reschedule`, { proposed_date });
 
 // Ratings
 export const getHallRatingsApi = async (hallId: number) =>

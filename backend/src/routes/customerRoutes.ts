@@ -1,6 +1,6 @@
-import { getAllHalls, getHallById, searchHalls } from "../controllers/hallsController";
+import { getAllHalls, getHallById, searchHalls, getBusyDates } from "../controllers/hallsController";
 import { getFavorites, toggleFavorite } from "../controllers/favoritesController";
-import { getBookings, createBooking, cancelBooking } from "../controllers/bookingsController";
+import { getBookings, createBooking, cancelBooking, requestReschedule } from "../controllers/bookingsController";
 import { respondReschedule } from "../controllers/manageBookingsController";
 import { getHallRatings, createRating } from "../controllers/ratingsController";
 import { Router } from "express";
@@ -16,6 +16,7 @@ router.post("/confirm-booking-payment", sessionAuthenticate, confirmBookingPayme
 // Hall Routes
 router.get("/halls", sessionAuthenticate, getAllHalls);
 router.get("/halls/:id", sessionAuthenticate, getHallById);
+router.get("/halls/:id/busy-dates", sessionAuthenticate, getBusyDates);
 router.post("/search", sessionAuthenticate, searchHalls);
 
 // Favorites Routes
@@ -27,6 +28,7 @@ router.get("/bookings", sessionAuthenticate, getBookings);
 router.post("/bookings", sessionAuthenticate, createBooking);
 router.put("/bookings/:id/cancel", sessionAuthenticate, cancelBooking);
 router.patch("/bookings/:id/reschedule/respond", sessionAuthenticate, respondReschedule);
+router.post("/bookings/:id/request-reschedule", sessionAuthenticate, requestReschedule);
 
 // Ratings Routes
 router.get("/halls/:hallId/ratings", getHallRatings);

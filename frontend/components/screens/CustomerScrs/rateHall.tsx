@@ -17,6 +17,8 @@ import { createRatingApi } from "../../Services/customerApi";
 import { styles } from "../../styles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import BackButton from "../../reusable func/backButton";
+import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const RATING_LABELS = ["", "سيء جداً 😞", "سيء 😕", "جيد 🙂", "جيد جداً 😊", "ممتاز 🤩"];
 
@@ -64,14 +66,25 @@ export default function RateHall({ route }: any) {
                 comment: fullComment
             });
 
-            Alert.alert(
-                "شكراً لتقييمك! ⭐",
-                `تم إرسال تقييمك لـ "${hallName}" بنجاح.\n\nتقييمك: ${"⭐".repeat(rating)}`,
-                [{ text: "حسناً", onPress: goBack }]
-            );
-        } catch (error) {
+            await AsyncStorage.setItem(`rated_booking_${bookingId}`, "true");
+
+            Toast.show({
+                type: "success",
+                text1: `تم إرسال تقييمك لـ "${hallName}" بنجاح. ⭐`
+            });
+            setTimeout(goBack, 1500);
+        } catch (error: any) {
             console.error("Submission failed:", error);
-            Alert.alert("خطأ", "فشل في إرسال التقييم. يرجى المحاولة مرة أخرى.");
+            const errMsg = error.response?.data || "فشل في إرسال التقييم. يرجى المحاولة مرة أخرى.";
+            
+            if (typeof errMsg === 'string' && errMsg.includes("لقد قمت بتقييم هذا الحجز مسبقاً")) {
+                await AsyncStorage.setItem(`rated_booking_${bookingId}`, "true");
+            }
+
+            Toast.show({
+                type: "error",
+                text1: typeof errMsg === 'string' ? errMsg : "فشل في إرسال التقييم."
+            });
         } finally {
             setLoading(false);
         }

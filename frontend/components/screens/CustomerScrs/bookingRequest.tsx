@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -6,18 +6,74 @@ import {
   ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigateTo } from "../../reusable func/navigateTo";
 import { styles as s, styles } from "./ibrahimStyles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import BackButton from "../../reusable func/backButton";
+import { Calendar, LocaleConfig } from "react-native-calendars";
+import { getBusyDatesApi } from "../../Services/customerApi";
+
+LocaleConfig.locales['ar'] = {
+  monthNames: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+  monthNamesShort: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+  dayNames: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+  dayNamesShort: ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'],
+  today: 'اليوم'
+};
+LocaleConfig.defaultLocale = 'ar';
 
 export default function BookingRequest({ route }: any) {
   const hall = route?.params?.hall;
   const [date, setDate] = useState<Date>(new Date());
   const [hasDate, setHasDate] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [busyDates, setBusyDates] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (hall?.id) {
+      loadBusyDates();
+    }
+  }, [hall?.id]);
+
+  const loadBusyDates = async () => {
+    try {
+      const response = await getBusyDatesApi(hall.id);
+      if (response.data) {
+        // Normalize dates to YYYY-MM-DD
+        const formatted = response.data.map((d: string) => d.split('T')[0]);
+        setBusyDates(formatted);
+      }
+    } catch (error) {
+      console.error("Error loading busy dates:", error);
+    }
+  };
+
+  const getMarkedDates = () => {
+    const marked: any = {};
+    
+    // Mark busy dates
+    busyDates.forEach(d => {
+      marked[d] = { 
+        disabled: true, 
+        disableTouchEvent: true, 
+        marked: true, 
+        dotColor: 'red' 
+      };
+    });
+
+    // Mark selected date
+    if (hasDate) {
+      const dateStr = date.toISOString().split('T')[0];
+      marked[dateStr] = { 
+        ...marked[dateStr],
+        selected: true, 
+        selectedColor: '#6C4AB6' 
+      };
+    }
+
+    return marked;
+  };
 
   const [guestCount, setGuestCount] = useState(100);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -57,6 +113,9 @@ export default function BookingRequest({ route }: any) {
   }, 0);
 
   const totalCost = baseCost + servicesCost + mealsCost;
+  const depositAmount = (baseCost + servicesCost) * 0.20;
+  const remainingBalance = (baseCost + servicesCost) * 0.80;
+  const amountToPayNow = depositAmount + mealsCost;
 
   const isValid = hasDate && guestCount > 0;
 
@@ -64,6 +123,8 @@ export default function BookingRequest({ route }: any) {
     NavigateTo("Payment", {
       hallName: (hall as any).hall_name || hall.name,
       totalCost,
+      amountToPayNow,
+      remainingBalance,
       bookingForm: {
         hallId: hall.id,
         bookingDate: date.toISOString(),
@@ -103,26 +164,41 @@ export default function BookingRequest({ route }: any) {
 
           <TouchableOpacity
             style={s.input}
-            onPress={() => setShowDatePicker(true)}
+            onPress={() => setShowCalendar(!showCalendar)}
           >
             <Text style={{ textAlign: "left", color: hasDate ? "#000" : "#999", height: "100%", textAlignVertical: "center" }}>
               {hasDate ? formatDate(date) : "اختر تاريخ المناسبة"}
             </Text>
           </TouchableOpacity>
 
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              minimumDate={new Date()}
-              onChange={(_, selected) => {
-                setShowDatePicker(false);
-                if (selected) {
-                  setDate(selected);
+          {showCalendar && (
+            <View style={{ backgroundColor: "#FFF", borderRadius: 12, overflow: "hidden", marginBottom: 15, borderWidth: 1, borderColor: "#EEE" }}>
+              <Calendar
+                current={date.toISOString().split('T')[0]}
+                minDate={new Date().toISOString().split('T')[0]}
+                onDayPress={(day: any) => {
+                  setDate(new Date(day.dateString));
                   setHasDate(true);
-                }
-              }}
-            />
+                  setShowCalendar(false);
+                }}
+                renderArrow={(direction: any) => (
+                  <Feather 
+                    name={direction === 'left' ? 'chevron-right' : 'chevron-left'} 
+                    size={24} 
+                    color="#6C4AB6" 
+                  />
+                )}
+                markedDates={getMarkedDates()}
+                theme={{
+                  selectedDayBackgroundColor: '#6C4AB6',
+                  todayTextColor: '#6C4AB6',
+                  arrowColor: '#6C4AB6',
+                  textDayFontWeight: '500',
+                  textMonthFontWeight: 'bold',
+                  textDayHeaderFontWeight: 'bold',
+                }}
+              />
+            </View>
           )}
         </View>
 
@@ -247,7 +323,20 @@ export default function BookingRequest({ route }: any) {
 
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ fontSize: 16, fontWeight: "bold", color: "#333" }}>المجموع الإجمالي</Text>
-              <Text style={{ fontSize: 18, fontWeight: "bold", color: "#6C4AB6" }}>{totalCost.toLocaleString()} ₪</Text>
+              <Text style={{ fontSize: 18, fontWeight: "bold", color: "#333" }}>{totalCost.toLocaleString()} ₪</Text>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", backgroundColor: "#F8F8FF", padding: 8, borderRadius: 8, marginTop: 4 }}>
+              <View>
+                <Text style={{ fontSize: 16, fontWeight: "bold", color: "#6C4AB6" }}>المطلوب سداده الآن</Text>
+                <Text style={{ fontSize: 12, color: "#999", marginTop: 2 }}>عربون (20%) + الوجبات</Text>
+              </View>
+              <Text style={{ fontSize: 18, fontWeight: "bold", color: "#6C4AB6" }}>{amountToPayNow.toLocaleString()} ₪</Text>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
+              <Text style={{ fontSize: 14, color: "#666" }}>يُدفع لاحقاً في الصالة</Text>
+              <Text style={{ fontSize: 14, fontWeight: "bold", color: "#666" }}>{remainingBalance.toLocaleString()} ₪</Text>
             </View>
           </View>
         </View>

@@ -32,7 +32,16 @@ export default function CustomerNavigator() {
             ),
           }}
         />
-
+        <Tab.Screen
+          name="NotificationTab"
+          component={Notifications}
+          options={{
+            title: "الاشعارات",
+            tabBarIcon: ({ size, color }) => (
+              <Ionicons name="notifications-outline" size={size} color={color} />
+            ),
+          }}
+        />
         <Tab.Screen
           name="FavoritesTab"
           component={Favorites}
@@ -43,7 +52,6 @@ export default function CustomerNavigator() {
             ),
           }}
         />
-
         <Tab.Screen
           name="BookingsTab"
           component={MyBookings}
@@ -54,7 +62,6 @@ export default function CustomerNavigator() {
             ),
           }}
         />
-
         <Tab.Screen
           name="ProfileTab"
           component={Profile}
@@ -62,16 +69,6 @@ export default function CustomerNavigator() {
             title: "حسابي",
             tabBarIcon: ({ size, color }) => (
               <Ionicons name="person-outline" size={size} color={color} />
-            ),
-          }}
-        />
-         <Tab.Screen
-          name="NotificationTab"
-          component={Notifications}
-          options={{
-            title: "الاشعارات",
-            tabBarIcon: ({ size, color }) => (
-              <Ionicons name="notifications-outline" size={size} color={color} />
             ),
           }}
         />

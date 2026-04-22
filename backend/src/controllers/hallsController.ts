@@ -71,9 +71,24 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getBusyDates = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const dates = await sql`
+      SELECT booking_date 
+      FROM bookings 
+      WHERE hall_id = ${id} 
+      AND status IN ('confirmed', 'owner_rescheduled')
+    `;
+    res.json(dates.map(d => d.booking_date));
+  } catch (error: any) {
+    res.status(500).send("❌ خطأ في الخادم: " + error.message);
+  }
+};
+
 export const searchHalls = async (req: AuthRequest, res: Response) => {
   try {
-    const { query, city, service, minPrice, maxPrice } = req.body;
+    const { query, city, service, minPrice, maxPrice, date } = req.body;
     
     let conditions = [];
 
@@ -89,12 +104,20 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
       conditions.push(sql`s.name ILIKE ${`%${service}%`}`);
     }
 
-    if (minPrice) {
+    if (minPrice && !isNaN(Number(minPrice))) {
       conditions.push(sql`h.base_price >= ${Number(minPrice)}`);
     }
 
-    if (maxPrice) {
+    if (maxPrice && !isNaN(Number(maxPrice))) {
       conditions.push(sql`h.base_price <= ${Number(maxPrice)}`);
+    }
+
+    if (date) {
+      conditions.push(sql`h.id NOT IN (
+        SELECT hall_id FROM bookings 
+        WHERE booking_date = ${date} 
+        AND status IN ('confirmed', 'owner_rescheduled')
+      )`);
     }
 
     let whereClause: any = sql``;
@@ -127,12 +150,13 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
       FROM halls h
       ${service ? sql`LEFT JOIN hall_services hs ON h.id = hs.hall_id LEFT JOIN services s ON hs.service_id = s.id` : sql``}
       ${whereClause}
-      ${service ? sql`GROUP BY h.id, name, images, videos, average_rating, reviews_count` : sql``}
+      ${service ? sql`GROUP BY h.id` : sql``}
       ORDER BY h.id DESC
     `;
 
     res.json(halls);
   } catch (error: any) {
+    console.error("❌ Search error details:", error);
     res.status(500).send("❌ خطأ في الخادم: " + error.message);
   }
 };

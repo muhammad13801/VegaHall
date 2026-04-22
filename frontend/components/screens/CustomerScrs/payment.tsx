@@ -21,6 +21,8 @@ import { chargeBookingApi, confirmBookingPaymentApi } from "../../Services/custo
 export default function Payment({ route }: any) {
     const hallName: string = route?.params?.hallName || "";
     const totalCost: number = route?.params?.totalCost || 0;
+    const amountToPayNow: number = route?.params?.amountToPayNow || totalCost;
+    const remainingBalance: number = route?.params?.remainingBalance || 0;
     const bookingForm = route?.params?.bookingForm;
 
     const [loading, setLoading] = useState(false);
@@ -36,7 +38,7 @@ export default function Payment({ route }: any) {
 
         setLoading(true);
         try {
-            const { data } = await chargeBookingApi({ amount: totalCost });
+            const { data } = await chargeBookingApi({ amount: amountToPayNow });
 
             const { error: initError } = await initPaymentSheet({
                 paymentIntentClientSecret: data.paymentIntent,
@@ -51,8 +53,8 @@ export default function Payment({ route }: any) {
             if (presentError) {
                 Toast.show({
                     type: "error",
-                    text1: "لم يتم الدفع",
-                    text2: presentError.message,
+                    text1: presentError.message,
+                    
                 });
                 return;
             }
@@ -66,9 +68,10 @@ export default function Payment({ route }: any) {
             setPaid(true);
         } catch (err: any) {
             console.error(err);
+            const errMsg = err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا";
             Toast.show({
                 type: "error",
-                text1: err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
+                text1: typeof errMsg === 'string' ? errMsg : "لا يمكن الاتصال بالخادم",
             });
         } finally {
             setLoading(false);
@@ -88,10 +91,11 @@ export default function Payment({ route }: any) {
 
                 <Text style={s.successTitle}>تمت عملية الدفع بنجاح!</Text>
                 <Text style={s.successAmount}>
-                    {totalCost.toLocaleString()} <Text style={s.successCurrency}>₪</Text>
+                    {amountToPayNow.toLocaleString()} <Text style={s.successCurrency}>₪</Text>
                 </Text>
                 <Text style={s.successSubtitle}>
-                    تم تأكيد حجزك في "{hallName}".{"\n"}
+                    تم تأكيد حجزك في "{hallName}" بدفعة مبدئية.{"\n"}
+                    المتبقي للدفع لاحقاً: {remainingBalance.toLocaleString()} ₪{"\n"}
                     ستصلك رسالة تأكيد قريباً عبر التطبيق.
                 </Text>
 
@@ -132,10 +136,18 @@ export default function Payment({ route }: any) {
                         <Text style={s.costLabel}>الاسم</Text>
                         <Text style={s.costValue}>{hallName}</Text>
                     </View>
+                    <View style={[s.summaryRow, { marginTop: 10 }]}>
+                        <Text style={[s.costLabel, { fontSize: 14 }]}>التكلفة الكلية</Text>
+                        <Text style={[s.costValue, { fontSize: 14 }]}>{totalCost.toLocaleString()} ₪</Text>
+                    </View>
+                    <View style={s.summaryRow}>
+                        <Text style={[s.costLabel, { fontSize: 14 }]}>الباقي (يُدفع في الصالة)</Text>
+                        <Text style={[s.costValue, { fontSize: 14 }]}>{remainingBalance.toLocaleString()} ₪</Text>
+                    </View>
                     <View style={s.costTotalRow}>
-                        <Text style={s.costTotalLabel}>المبلغ المطلوب</Text>
+                        <Text style={s.costTotalLabel}>المبلغ المطلوب الآن</Text>
                         <Text style={s.priceText}>
-                            {totalCost.toLocaleString()} <Text style={s.currency}>₪</Text>
+                            {amountToPayNow.toLocaleString()} <Text style={s.currency}>₪</Text>
                         </Text>
                     </View>
                 </View>
@@ -154,7 +166,7 @@ export default function Payment({ route }: any) {
                     >
                         <Feather name="credit-card" size={20} color="#FFF" />
                         <Text style={s.primaryButtonText}>
-                            {loading ? "جاري المعالجة..." : `إتمام عملية الدفع (${totalCost.toLocaleString()} ₪)`}
+                            {loading ? "جاري المعالجة..." : `إتمام عملية الدفع (${amountToPayNow.toLocaleString()} ₪)`}
                         </Text>
                     </TouchableOpacity>
                 </View>
