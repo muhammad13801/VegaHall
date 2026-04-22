@@ -14,6 +14,10 @@ import {
 } from "../controllers/manageBookingsController";
 import { getServices } from "../controllers/getServicesController";
 import { getMealTypes } from "../controllers/getMealTypesController";
+import {
+  requestMeal,
+  requestService,
+} from "../controllers/serviceRequestsController";
 
 const router = Router();
 
@@ -76,5 +80,11 @@ router.put("/:id", sessionAuthenticate, updateHall);
 
 // Get hall comments
 router.get("/:id/comments", sessionAuthenticate, getHallComments);
+
+// post hall request meal
+router.post("/request-meal", sessionAuthenticate, requestMeal);
+
+// post hall request service
+router.post("/request-service", sessionAuthenticate, requestService);
 
 export default router;

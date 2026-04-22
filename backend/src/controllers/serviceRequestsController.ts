@@ -15,10 +15,10 @@ export const requestService = async (req: AuthRequest, res: Response) => {
 
     // Get owner data
     const [user] = await sql`
-      SELECT id, name FROM users WHERE id = ${userId}
+      SELECT id, first_name, last_name FROM users WHERE id = ${userId}
     `;
 
-    const ownerName = user?.name || "مستخدم";
+    const ownerName = user?.first_name + " " + user?.last_name;
     const ownerId = user?.id;
 
     // Check if already requested
@@ -29,16 +29,13 @@ export const requestService = async (req: AuthRequest, res: Response) => {
       AND status = 'pending'
     `;
 
-    if (existing) {
-      return res.status(409).send("❌ لقد أرسلت هذا الطلب مسبقاً");
-    }
+    if (existing) return res.status(409).send("❌ لقد أرسلت هذا الطلب مسبقاً");
 
     // Insert request
     await sql`
       INSERT INTO service_requests (owner_id, name, status)
       VALUES (${userId}, ${serviceName}, 'pending')
     `;
-
     // Get admins
     const admins = await sql`
       SELECT id FROM users WHERE role = 'admin'
@@ -50,7 +47,7 @@ export const requestService = async (req: AuthRequest, res: Response) => {
         insertNotification(
           admin.id,
           "طلب خدمة جديد",
-          `${ownerName} (ID: ${ownerId}) طلب خدمة جديدة: ${serviceName}`,
+          `لقد طلب المستخدم ${ownerName} صاحب رقم: ${ownerId} خدمة جديدة هي: ${serviceName}`,
           "service_request",
         ),
       ),
@@ -58,7 +55,7 @@ export const requestService = async (req: AuthRequest, res: Response) => {
 
     return res.send("✔️ تم إرسال طلبك للمراجعة");
   } catch (err) {
-    console.error(err);
+    console.error("SERVICE REQUEST ERROR:", err);
     return res.status(500).send("❌ خطأ في الخادم");
   }
 };
@@ -75,10 +72,10 @@ export const requestMeal = async (req: AuthRequest, res: Response) => {
 
     // Get owner data
     const [user] = await sql`
-      SELECT id, name FROM users WHERE id = ${userId}
+      SELECT id, first_name, last_name FROM users WHERE id = ${userId}
     `;
 
-    const ownerName = user?.name || "مستخدم";
+    const ownerName = user?.first_name + " " + user?.last_name;
     const ownerId = user?.id;
 
     // Check if already requested
@@ -110,7 +107,7 @@ export const requestMeal = async (req: AuthRequest, res: Response) => {
         insertNotification(
           admin.id,
           "طلب وجبة جديد",
-          `${ownerName} (ID: ${ownerId}) طلب وجبة جديدة: ${mealName}`,
+          `لقد طلب المستخدم ${ownerName} صاحب رقم: ${ownerId} وجبة جديدة هي: ${mealName}`,
           "meal_request",
         ),
       ),
@@ -118,7 +115,7 @@ export const requestMeal = async (req: AuthRequest, res: Response) => {
 
     return res.send("✔️ تم إرسال طلبك للمراجعة");
   } catch (err) {
-    console.error(err);
+    console.error("MEAL REQUEST ERROR:", err);
     return res.status(500).send("❌ خطأ في الخادم");
   }
 };
