@@ -13,6 +13,7 @@ import uploadRoutes from "./routes/uploadRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import customerRoutes from "./routes/customerRoutes";
 import appStateRoutes from "./routes/appStateRoutes";
+import adminRoutes from "./routes/adminRoutes";
 
 const app = express();
 app.use(cors());
@@ -28,6 +29,7 @@ app.use("/notifications", notificationRoutes);
 app.use("/app-state", appStateRoutes);
 
 app.use("/customer", customerRoutes);
+app.use("/admin", adminRoutes);
 
 const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, "0.0.0.0", () =>
