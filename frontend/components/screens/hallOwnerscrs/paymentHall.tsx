@@ -96,11 +96,10 @@ export default function PaymentHall() {
         <Text style={styles.subtitle}>يتم الدفع بشكل آمن عبر Stripe</Text>
 
         <View style={styles.card}>
-          {/* We remove the manual TextInputs for Card Number/CVV */}
           <Text
             style={[styles.label, { textAlign: "center", marginBottom: 20 }]}
           >
-            سيتم فتح بوابة دفع آمنة عند الضغط على الزر أدناه
+            ليتم تفعيل واضافة صالتك يجب عليك دفع $50
           </Text>
 
           <TouchableOpacity
@@ -108,12 +107,6 @@ export default function PaymentHall() {
             onPress={handlePay}
             disabled={loading}
           >
-            <Ionicons
-              name={loading ? "hourglass-outline" : "logo-usd"}
-              size={22}
-              color="#FFF"
-              style={{ marginLeft: 8 }}
-            />
             <Text style={[styles.actionButtonText, { fontSize: 18 }]}>
               {loading ? "جاري المعالجة..." : "ابدأ الدفع (50$)"}
             </Text>

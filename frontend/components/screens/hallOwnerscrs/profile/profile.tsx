@@ -157,14 +157,9 @@ export default function Profile() {
               name="lock-closed-outline"
               size={20}
               color="#6C4AB6"
-              style={{ marginRight: 8 }}
+              style={styles.screenIcon}
             />
-            <Text
-              style={[
-                styles.actionButtonText,
-                { color: "#6C4AB6", width: "40%" },
-              ]}
-            >
+            <Text style={[styles.actionButtonText, { color: "#6C4AB6" }]}>
               تغيير كلمة المرور
             </Text>
           </View>

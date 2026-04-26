@@ -48,6 +48,18 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   owner_cancelled: { label: "ملغي", color: "#EF4444" },
 };
 
+// Helper function to check if a date has passed
+const hasDatePassed = (dateString: string): boolean => {
+  const bookingDate = new Date(dateString);
+  const today = new Date();
+
+  // Set time to start of day for accurate comparison
+  bookingDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  return bookingDate < today;
+};
+
 export default function ManageBookings() {
   const {
     items: bookings,
@@ -257,7 +269,18 @@ export default function ManageBookings() {
           const isConfirmed = item.status === "confirmed";
           const isOwnerRescheduled = item.status === "owner_rescheduled";
           const isCustomerCancelled = item.status === "customer_cancelled";
+          const isOwnerCancelled = item.status === "owner_cancelled";
           const isActioning = actionLoading === item.id;
+
+          // Determine if action buttons should be shown
+          const confirmedDatePassed =
+            isConfirmed && hasDatePassed(item.booking_date);
+          const rescheduledDatePassed =
+            isOwnerRescheduled &&
+            item.proposed_date &&
+            hasDatePassed(item.proposed_date);
+          const shouldHideButtons =
+            confirmedDatePassed || rescheduledDatePassed || isOwnerCancelled;
 
           return (
             <View style={[styles.card, { marginBottom: 14 }]}>
@@ -413,93 +436,99 @@ export default function ManageBookings() {
                   </Text>
                 </View>
 
-                {isActioning ? (
-                  <ActivityIndicator
-                    color="#6C4AB6"
-                    style={{ paddingVertical: 10 }}
-                  />
-                ) : (
+                {!shouldHideButtons && (
                   <>
-                    {/* confirmed: reschedule or cancel (forced refund) */}
-                    {isConfirmed && (
-                      <View style={[styles.row, { gap: 8 }]}>
-                        <TouchableOpacity
-                          style={[
-                            styles.secondaryActionButton,
-                            { flex: 1, marginTop: 0 },
-                          ]}
-                          onPress={() => openReschedule(item.id)}
-                        >
-                          <Text
-                            style={[
-                              styles.actionButtonText,
-                              { color: "#6C4AB6" },
-                            ]}
-                          >
-                            تعديل التاريخ
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[
-                            styles.actionButton,
-                            {
-                              flex: 1,
-                              marginTop: 0,
-                              backgroundColor: "#FEF2F2",
-                            },
-                          ]}
-                          onPress={() => handleOwnerCancel(item.id)}
-                        >
-                          <Text
-                            style={[
-                              styles.actionButtonText,
-                              { color: "#D32F2F" },
-                            ]}
-                          >
-                            إلغاء الحجز
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
+                    {isActioning ? (
+                      <ActivityIndicator
+                        color="#6C4AB6"
+                        style={{ paddingVertical: 10 }}
+                      />
+                    ) : (
+                      <>
+                        {/* confirmed: reschedule or cancel (forced refund) */}
+                        {isConfirmed && (
+                          <View style={[styles.row, { gap: 8 }]}>
+                            <TouchableOpacity
+                              style={[
+                                styles.secondaryActionButton,
+                                { flex: 1, marginTop: 0 },
+                              ]}
+                              onPress={() => openReschedule(item.id)}
+                            >
+                              <Text
+                                style={[
+                                  styles.actionButtonText,
+                                  { color: "#6C4AB6" },
+                                ]}
+                              >
+                                تعديل التاريخ
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={[
+                                styles.actionButton,
+                                {
+                                  flex: 1,
+                                  marginTop: 0,
+                                  backgroundColor: "#FEF2F2",
+                                },
+                              ]}
+                              onPress={() => handleOwnerCancel(item.id)}
+                            >
+                              <Text
+                                style={[
+                                  styles.actionButtonText,
+                                  { color: "#D32F2F" },
+                                ]}
+                              >
+                                إلغاء الحجز
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
 
-                    {/* owner_rescheduled: only cancel is allowed (forced refund) */}
-                    {isOwnerRescheduled && (
-                      <TouchableOpacity
-                        style={[
-                          styles.actionButton,
-                          { marginTop: 0, backgroundColor: "#FEF2F2" },
-                        ]}
-                        onPress={() => handleOwnerCancel(item.id)}
-                      >
-                        <Text
-                          style={[
-                            styles.actionButtonText,
-                            { color: "#D32F2F" },
-                          ]}
-                        >
-                          إلغاء الحجز
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                        {/* owner_rescheduled: only cancel is allowed (forced refund) */}
+                        {isOwnerRescheduled && (
+                          <TouchableOpacity
+                            style={[
+                              styles.actionButton,
+                              { marginTop: 0, backgroundColor: "#FEF2F2" },
+                            ]}
+                            onPress={() => handleOwnerCancel(item.id)}
+                          >
+                            <Text
+                              style={[
+                                styles.actionButtonText,
+                                { color: "#D32F2F" },
+                              ]}
+                            >
+                              إلغاء الحجز
+                            </Text>
+                          </TouchableOpacity>
+                        )}
 
-                    {/* customer_cancelled: owner decides refund or not */}
-                    {isCustomerCancelled && (
-                      <TouchableOpacity
-                        style={[
-                          styles.actionButton,
-                          { marginTop: 0, backgroundColor: "#FFF7ED" },
-                        ]}
-                        onPress={() => handleCustomerCancelResponse(item.id)}
-                      >
-                        <Text
-                          style={[
-                            styles.actionButtonText,
-                            { color: "#C2410C" },
-                          ]}
-                        >
-                          قرار استرجاع المبلغ
-                        </Text>
-                      </TouchableOpacity>
+                        {/* customer_cancelled: owner decides refund or not */}
+                        {isCustomerCancelled && (
+                          <TouchableOpacity
+                            style={[
+                              styles.actionButton,
+                              { marginTop: 0, backgroundColor: "#FFF7ED" },
+                            ]}
+                            onPress={() =>
+                              handleCustomerCancelResponse(item.id)
+                            }
+                          >
+                            <Text
+                              style={[
+                                styles.actionButtonText,
+                                { color: "#C2410C" },
+                              ]}
+                            >
+                              قرار استرجاع المبلغ
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </>
                     )}
                   </>
                 )}

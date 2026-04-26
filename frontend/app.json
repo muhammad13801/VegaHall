@@ -26,17 +26,27 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@react-native-community/datetimepicker",
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.com.vegahall",
-          "enableGooglePay": false
-        }
+        "@react-native-community/datetimepicker",
+
+        [
+          "@stripe/stripe-react-native",
+          {
+            "merchantIdentifier": "merchant.com.vegahall",
+            "enableGooglePay": false
+          }
+        ],
+
+        [
+          "react-native-maps",
+          {
+            "androidGoogleMapsApiKey": "AIzaSyAEItCjF9zYSYAnIJixdzFiOLdJ3XYwLzA",
+            "iosGoogleMapsApiKey": "AIzaSyAEItCjF9zYSYAnIJixdzFiOLdJ3XYwLzA"
+          }
+        ],
+
+        "expo-video",
+        "expo-font"
       ],
-      "expo-video",
-      "expo-font"
-    ],
     "extra": {
       "eas": {
         "projectId": "e956bfde-bb9c-4f6f-b2ab-386bb9e468b3"

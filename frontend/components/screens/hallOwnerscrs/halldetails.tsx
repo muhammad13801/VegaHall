@@ -402,7 +402,14 @@ export default function HallDetail() {
                   <Text style={styles.profileValue}>
                     {hall.first_name} {hall.last_name}
                   </Text>
-                  <Text style={styles.profileLabel}>{hall.phone_number}</Text>
+                  <Text
+                    style={[
+                      styles.profileValue,
+                      { fontSize: 13, color: "#888" },
+                    ]}
+                  >
+                    {hall.phone_number}
+                  </Text>
                 </View>
               </View>
             )}
@@ -441,7 +448,14 @@ export default function HallDetail() {
                   <Text style={styles.profileValue}>
                     {c.first_name} {c.last_name}
                   </Text>
-                  <Text style={styles.profileLabel}>{c.phone_number}</Text>
+                  <Text
+                    style={[
+                      styles.profileValue,
+                      { fontSize: 13, color: "#888" },
+                    ]}
+                  >
+                    {c.phone_number}
+                  </Text>
                 </View>
               </View>
             ))}

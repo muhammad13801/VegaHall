@@ -17,12 +17,15 @@ import {
   HallFormProps,
   PALESTINE_CITIES,
 } from "../../../Validations/validateHall";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LocationPicker({
   form,
   setForm,
   errors,
 }: HallFormProps) {
+  const inset = useSafeAreaInsets();
+
   const [cityPickerVisible, setCityPickerVisible] = useState<boolean>(false);
   const [mapVisible, setMapVisible] = useState<boolean>(false);
   const [locationLoading, setLocationLoading] = useState<boolean>(false);
@@ -184,7 +187,7 @@ export default function LocationPicker({
             style={{
               position: "absolute",
               width: "90%",
-              top: 5,
+              top: inset.top,
               alignSelf: "center",
             }}
             placeholder="ابحث عن موقع..."
@@ -200,7 +203,7 @@ export default function LocationPicker({
             disabled={locationLoading}
             style={{
               position: "absolute",
-              bottom: "12%",
+              bottom: inset.bottom + 100,
               left: 10,
               padding: 15,
               backgroundColor: "#fff",
@@ -222,7 +225,7 @@ export default function LocationPicker({
               gap: 5,
               padding: 10,
               position: "absolute",
-              bottom: 0,
+              bottom: inset.bottom,
               width: "100%",
             }}
           >
