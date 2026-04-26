@@ -11,12 +11,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../../styles";
 import { getAllUsers, updateUserStatus } from "../../Services/adminApi";
 import BackButton from "../../reusable func/backButton";
-import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 
 export default function ManageUsers() {
-  const navigation = useNavigation<any>();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,11 +36,11 @@ export default function ManageUsers() {
 
   const handleToggleStatus = async (userId: number, currentStatus: string) => {
     const newStatus = currentStatus === "Active" ? "Frozen" : "Active";
-    const statusText = newStatus === "Active" ? "تفعيل" : "تجميد";
+    const actionLabel = newStatus === "Active" ? "تفعيل" : "تجميد";
 
     Alert.alert(
       "تأكيد الاختيار",
-      `هل أنت متأكد من ${statusText} هذا الحساب؟`,
+      `هل أنت متأكد من ${actionLabel} هذا الحساب؟`,
       [
         { text: "إلغاء", style: "cancel" },
         {
@@ -62,6 +60,7 @@ export default function ManageUsers() {
     );
   };
 
+  // [معدّل - كان AI] كان arrow function inline — حوّلناه لصيغة منفصلة مثل المالك
   const renderUser = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -105,9 +104,7 @@ export default function ManageUsers() {
       </View>
 
       {loading ? (
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <ActivityIndicator size="large" color="#6C4AB6" />
-        </View>
+        <ActivityIndicator size="large" color="#6C4AB6" style={{ flex: 1 }} />
       ) : (
         <FlatList
           data={users}

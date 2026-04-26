@@ -14,11 +14,9 @@ import { styles } from "../../styles";
 import { getAllHallsSimple, addHallService } from "../../Services/adminApi";
 import BackButton from "../../reusable func/backButton";
 import { Input } from "../../reusable func/input";
-import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 
 export default function AddHallServices() {
-  const navigation = useNavigation<any>();
   const [halls, setHalls] = useState<any[]>([]);
   const [loadingHalls, setLoadingHalls] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -67,6 +65,7 @@ export default function AddHallServices() {
       <View style={{ width: "100%", paddingHorizontal: 20, paddingTop: 10 }}>
         <BackButton />
         <Text style={[styles.title, { marginTop: 10 }]}>إضافة خدمات للقاعة</Text>
+        {/* [معدّل - كان AI] النص "بناءً على طلب صاحب القاعة" كان صيغة آلية — أبقيناه كما هو */}
         <Text style={{ color: "#666", marginTop: 5 }}>بناءً على طلب صاحب القاعة</Text>
       </View>
 
