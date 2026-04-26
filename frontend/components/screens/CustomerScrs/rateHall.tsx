@@ -93,11 +93,13 @@ export default function RateHall({ route }: any) {
     return (
         <SafeAreaView style={styles.container} edges={["top"]}>
             <BackgroundDecoration/>
-                    <View style={[styles.info, {width:"90%",marginVertical:5}]}>
-                        <Text style={styles.title}>تقييم الصالة</Text>
-                        <BackButton/>
+            <View style={[styles.info, { width: "90%", alignSelf: "center", marginTop: 30, alignItems: 'center' }]}>
+                <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>تقييم الصالة</Text>
+                <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
+                    <BackButton />
+                </View>
+            </View>
 
-                    </View>
                     
            
 

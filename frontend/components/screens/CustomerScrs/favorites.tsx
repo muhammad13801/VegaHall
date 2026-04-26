@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { getFavoritesApi, toggleFavoriteApi } from "../../Services/customerApi";
@@ -9,6 +9,7 @@ import { HallCard } from "../hallOwnerscrs/hallCard";
 import { styles as s, styles } from "./ibrahimStyles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import BackButton from "../../reusable func/backButton";
+import { StatusBar } from "react-native";
 
 export default function Favorites({ onOpenDrawer }: { onOpenDrawer?: () => void }) {
     const { triggerRefresh } = useRefresh();
@@ -35,11 +36,18 @@ export default function Favorites({ onOpenDrawer }: { onOpenDrawer?: () => void 
 
     return (
         <SafeAreaView style={styles.container} edges={["top"]}>
+            <StatusBar barStyle="light-content" backgroundColor="#5B3A9E"/>
             <BackgroundDecoration />
-            <View style={[styles.info,{width:"90%",marginVertical:5 }]}>
-                <Text style={[styles.title,]}>المفضلة</Text>
-                <BackButton/>
+            <View style={[styles.info, { width: "90%", alignSelf: "center", marginTop: 30, alignItems: 'center' }]}>
+                <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>المفضلة</Text>
+                <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
+                    <BackButton />
+                </View>
             </View>
+
+
+            
+            
 
             <View style={{ flex: 1 }}>
                 {loading && favoriteHalls.length === 0 ? (

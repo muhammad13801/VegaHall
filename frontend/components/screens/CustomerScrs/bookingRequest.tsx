@@ -149,10 +149,13 @@ export default function BookingRequest({ route }: any) {
     <SafeAreaView style={styles.container}>
       <BackgroundDecoration />
 
-      <View style={[styles.info, { width: "90%", marginVertical: 5 }]}>
-        <Text style={styles.title}>طلب حجز</Text>
-        <BackButton />
+      <View style={[styles.info, { width: "90%", alignSelf: "center", marginTop: 30, alignItems: 'center' }]}>
+        <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>طلب حجز</Text>
+        <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
+          <BackButton />
+        </View>
       </View>
+
 
       <ScrollView
         showsVerticalScrollIndicator={false}

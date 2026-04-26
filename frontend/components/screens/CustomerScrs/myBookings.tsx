@@ -213,10 +213,13 @@ export default function MyBookings() {
     return (
         <SafeAreaView style={styles.container} edges={["top"]} >
             <BackgroundDecoration />
-            <View style={[styles.info, { width: "90%", marginVertical: 5 }]}>
-                <Text style={styles.title}>حجوزاتي</Text>
-                <BackButton />
+            <View style={[styles.info, { width: "90%", alignSelf: "center", marginTop: 30, alignItems: 'center' }]}>
+                <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>حجوزاتي</Text>
+                <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
+                    <BackButton />
+                </View>
             </View>
+
             <View style={{ flex: 1 }}>
                 {loading && bookings.length === 0 ? (
                     <ActivityIndicator size="large" color="#6C4AB6" style={{ marginTop: 40 }} />
@@ -372,13 +375,13 @@ export default function MyBookings() {
                                                         </View>
                                                     )}
 
-                                                    {(booking.status === "confirmed" || booking.status === "owner_rescheduled") && (
+                                                    {(booking.status === "confirmed" || booking.status === "owner_rescheduled") && !isPastDate && (
                                                         <TouchableOpacity
                                                             style={[styles.actionButton, { flex: 1, marginTop: 0, backgroundColor: "#FEF2F2" }]}
                                                             onPress={() => handleCancel(booking)}
                                                         >
                                                             <Text style={[styles.actionButtonText, { color: "#EF4444" }]}>
-                                                                إلغاء
+                                                                إلغاء الحجز
                                                             </Text>
                                                         </TouchableOpacity>
                                                     )}

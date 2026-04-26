@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Text, TouchableOpacity, View, FlatList, StatusBar, ActivityIndicator, RefreshControl } from "react-native";
+import { Text, TouchableOpacity, View, FlatList,ActivityIndicator, RefreshControl } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { goBack, NavigateTo } from "../../reusable func/navigateTo";
@@ -94,19 +94,17 @@ export default function HallsResult({ route }: any) {
     };
 
     const activeFilters: string[] = [];
-    if (params.query) activeFilters.push(`"${params.query}"`);
-    if (params.city) activeFilters.push(`📍 ${params.city}`);
-    if (params.date) activeFilters.push(`📅 ${params.date.split('T')[0]}`);
-    if (params.services?.length > 0) activeFilters.push(`🎯 ${params.services.length} خدمة`);
-    if (params.minPrice || params.maxPrice) activeFilters.push(`💰 ${params.minPrice || 0} - ${params.maxPrice || "∞"}`);
 
     return (
         <SafeAreaView style={styles.container}>
             <BackgroundDecoration />
-            <View style={[styles.info, { width: "90%", marginVertical: 5 }]}>
-                <Text style={styles.title}>نتائج البحث</Text>
-                <BackButton />
+            <View style={[styles.info, { width: "90%", alignSelf: "center", marginTop: 30, alignItems: 'center' }]}>
+                <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>نتائج البحث</Text>
+                <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
+                    <BackButton />
+                </View>
             </View>
+
 
             {activeFilters.length > 0 && (
                 <View style={s.filterSummaryContainer}>

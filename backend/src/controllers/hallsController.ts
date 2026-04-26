@@ -38,6 +38,9 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
       SELECT 
         h.*, 
         h.hall_name as name,
+        u.first_name as owner_first_name,
+        u.last_name as owner_last_name,
+        u.phone_number as owner_phone,
         COALESCE(
           (SELECT json_agg(url) FROM media WHERE hall_id = h.id AND type = 'image'),
           '[]'::json
@@ -61,6 +64,7 @@ export const getHallById = async (req: AuthRequest, res: Response) => {
         ROUND(COALESCE((SELECT AVG(rating) FROM ratings WHERE hall_id = h.id), 0), 1) as average_rating,
         (SELECT COUNT(*) FROM ratings WHERE hall_id = h.id) as reviews_count
       FROM halls h
+      JOIN users u ON h.owner_id = u.id
       WHERE h.id = ${id}
     `;
 
