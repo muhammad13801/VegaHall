@@ -61,7 +61,7 @@ export default function UpdatePhone() {
             value={phone}
             onChangeText={setPhone}
             mask={phoneMask}
-            keyboardType="numeric"
+            keyboardType="phone-pad"
             placeholderTextColor="#999"
             style={[styles.input, { textAlign: "center", direction: "ltr" }]}
           />

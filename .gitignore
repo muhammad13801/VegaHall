@@ -8,3 +8,6 @@ frontend/node_modules/
 # Build / cache folders
 frontend/build/
 frontend/.expo/
+frontend/android/
+frontend/ios/
+.vscode/

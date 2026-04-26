@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from "react";
+import React, { useCallback, memo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "../../../reusable func/input";
@@ -26,11 +26,9 @@ const ContactCard = memo(
         <Text style={{ fontWeight: "bold", color: "#6C4AB6" }}>
           جهة اتصال {index + 1}
         </Text>
-        {index > 0 && (
-          <TouchableOpacity onPress={() => onRemove(index)}>
-            <Ionicons name="remove-circle" size={20} color="#FF5A5A" />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={() => onRemove(index)}>
+          <Ionicons name="remove-circle" size={20} color="#FF5A5A" />
+        </TouchableOpacity>
       </View>
 
       <View style={[styles.row, { gap: 10 }]}>
@@ -63,10 +61,10 @@ const ContactCard = memo(
       <MaskInput
         value={contact.phone}
         onChangeText={(unmasked) => {
-          onUpdate(index, "phoneNumber", unmasked);
+          onUpdate(index, "phone", unmasked);
         }}
         mask={phoneMask}
-        keyboardType="numeric"
+        keyboardType="phone-pad"
         placeholderTextColor="#999"
         style={[styles.input, { textAlign: "center", direction: "ltr" }]}
       />
@@ -82,8 +80,6 @@ export default function SecondaryContacts({
   setForm,
   errors,
 }: HallFormProps) {
-  const [hasSecondaryContacts, setHasSecondaryContacts] = useState(false);
-
   const addContact = useCallback(() => {
     if ((form.secondaryContacts?.length || 0) >= 3) return;
     setForm((prev) => ({
@@ -93,14 +89,19 @@ export default function SecondaryContacts({
         { firstName: "", lastName: "", phone: "" },
       ],
     }));
-  }, [form.secondaryContacts?.length]);
+  }, [form.secondaryContacts?.length, setForm]);
 
-  const removeContact = useCallback((index: number) => {
-    setForm((prev) => ({
-      ...prev,
-      secondaryContacts: prev.secondaryContacts?.filter((_, i) => i !== index),
-    }));
-  }, []);
+  const removeContact = useCallback(
+    (index: number) => {
+      setForm((prev) => ({
+        ...prev,
+        secondaryContacts: prev.secondaryContacts?.filter(
+          (_, i) => i !== index,
+        ),
+      }));
+    },
+    [setForm],
+  );
 
   const updateContact = useCallback(
     (index: number, field: string, value: string) => {
@@ -111,18 +112,8 @@ export default function SecondaryContacts({
         ),
       }));
     },
-    [],
+    [setForm],
   );
-
-  const handleYes = useCallback(() => {
-    setHasSecondaryContacts(true);
-    if ((form.secondaryContacts?.length || 0) === 0) addContact();
-  }, [form.secondaryContacts?.length, addContact]);
-
-  const handleNo = useCallback(() => {
-    setHasSecondaryContacts(false);
-    setForm((prev) => ({ ...prev, secondaryContacts: [] }));
-  }, []);
 
   return (
     <View style={styles.secondarySection}>
@@ -134,78 +125,42 @@ export default function SecondaryContacts({
             color={"#6C4AB6"}
             style={styles.screenIcon}
           />
-          <Text style={styles.label}>إضافة أشخاص آخرين للتواصل؟</Text>
-        </View>
-        <View style={[styles.row, { gap: 5 }]}>
-          <TouchableOpacity
-            onPress={handleYes}
-            style={[
-              styles.toggleButton,
-              { backgroundColor: hasSecondaryContacts ? "#6C4AB6" : "#EEE" },
-            ]}
-          >
-            <Text
-              style={{
-                color: hasSecondaryContacts ? "#FFF" : "#666",
-                fontSize: 13,
-              }}
-            >
-              نعم
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleNo}
-            style={[
-              styles.toggleButton,
-              { backgroundColor: !hasSecondaryContacts ? "#6C4AB6" : "#EEE" },
-            ]}
-          >
-            <Text
-              style={{
-                color: !hasSecondaryContacts ? "#FFF" : "#666",
-                fontSize: 13,
-              }}
-            >
-              لا
-            </Text>
-          </TouchableOpacity>
+          <Text style={styles.label}>أشخاص آخرين للتواصل</Text>
         </View>
       </View>
 
-      {hasSecondaryContacts && (
-        <View style={styles.mediaPreviewContainer}>
-          {form.secondaryContacts?.map((contact, index) => (
-            <ContactCard
-              key={index}
-              contact={contact}
-              index={index}
-              errors={errors}
-              onRemove={removeContact}
-              onUpdate={updateContact}
-            />
-          ))}
+      <View style={styles.mediaPreviewContainer}>
+        {form.secondaryContacts?.map((contact, index) => (
+          <ContactCard
+            key={index}
+            contact={contact}
+            index={index}
+            errors={errors}
+            onRemove={removeContact}
+            onUpdate={updateContact}
+          />
+        ))}
 
-          {(form.secondaryContacts?.length || 0) < 3 && (
-            <TouchableOpacity
-              onPress={addContact}
-              style={[styles.secondaryActionButton, { marginTop: 0 }]}
-            >
-              <View style={styles.row}>
-                <Ionicons name="add-circle" size={20} color="#6C4AB6" />
-                <Text
-                  style={{
-                    color: "#6C4AB6",
-                    fontWeight: "bold",
-                    marginRight: 5,
-                  }}
-                >
-                  إضافة شخص آخر
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
+        {(form.secondaryContacts?.length || 0) < 3 && (
+          <TouchableOpacity
+            onPress={addContact}
+            style={[styles.secondaryActionButton, { marginTop: 0 }]}
+          >
+            <View style={styles.row}>
+              <Ionicons name="add-circle" size={20} color="#6C4AB6" />
+              <Text
+                style={{
+                  color: "#6C4AB6",
+                  fontWeight: "bold",
+                  marginRight: 5,
+                }}
+              >
+                إضافة شخص آخر
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }

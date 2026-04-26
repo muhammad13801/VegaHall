@@ -141,6 +141,7 @@ export const styles = StyleSheet.create({
   screenIcon: {
     alignSelf: "center",
     color: "#6C4AB6",
+    marginRight: 5,
   },
 
   toast: {
@@ -207,6 +208,8 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     fontWeight: "600",
+    direction: "ltr",
+    textAlign: "right",
   },
 
   items: {
