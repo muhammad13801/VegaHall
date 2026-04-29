@@ -1,22 +1,22 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  Text,
-  TouchableOpacity,
   View,
+  Text,
   ScrollView,
-  StatusBar,
-  Dimensions,
-  FlatList,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  Linking,
-  ImageBackground,
-  Image,
+  TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
+  Image,
+  FlatList,
+  ImageBackground,
   RefreshControl,
+  Linking,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { styles } from "../../styles";
+import BackButton from "../../reusable func/backButton";
+import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import { NavigateTo } from "../../reusable func/navigateTo";
 import {
   getHallByIdApi,
@@ -26,62 +26,10 @@ import {
 } from "../../Services/customerApi";
 import { useRefresh } from "../../reusable func/refreshContext";
 import { VideoCard } from "../../reusable func/videoCard";
-import { styles } from "../../styles";
-import BackgroundDecoration from "../../reusable func/backgroundDecoration";
-import BackButton from "../../reusable func/backButton";
+import { InfoRow } from "../../reusable func/infoRow";
 import Toast from "react-native-toast-message";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-const SectionCard = ({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: string;
-  children: React.ReactNode;
-}) => (
-  <View style={[styles.card, { marginBottom: 16 }]}>
-    <View
-      style={[styles.row, { alignItems: "center", gap: 8, marginBottom: 14 }]}
-    >
-      <View
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 10,
-          backgroundColor: "#F3EAFF",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Ionicons name={icon as any} size={18} color="#6C4AB6" />
-      </View>
-      <Text style={styles.label}>{title}</Text>
-    </View>
-
-    {children}
-  </View>
-);
-
-const InfoRow = ({
-  icon,
-  label,
-  value,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-}) => (
-  <View
-    style={[styles.row, { alignItems: "center", gap: 10, marginBottom: 12 }]}
-  >
-    <Ionicons name={icon as any} size={16} color="#6C4AB6" />
-    <Text style={styles.profileLabel}>{label}</Text>
-    <Text style={[styles.profileValue, { flex: 1 }]}>{value}</Text>
-  </View>
-);
 
 export default function HallDetails({ route }: any) {
   const initialHall = route?.params?.hall;
@@ -90,7 +38,7 @@ export default function HallDetails({ route }: any) {
   const [refreshing, setRefreshing] = useState(false);
   const [isFav, setIsFav] = useState(false);
   const { triggerRefresh } = useRefresh();
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
 
   const fetchDetails = async () => {
@@ -142,21 +90,58 @@ export default function HallDetails({ route }: any) {
     }
   };
 
-  const onGalleryScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-    setActiveSlide(index);
-  };
+  const media = useMemo(() => {
+    if (!hall) return [];
 
-  const renderStars = (rating: number) => {
-    return [1, 2, 3, 4, 5].map((star) => (
+    const images = (hall.images || []).map((uri: string) => ({
+      type: "image",
+      uri,
+    }));
+
+    const videos = (hall.videos || []).map((uri: string) => ({
+      type: "video",
+      uri,
+    }));
+
+    return [...images, ...videos];
+  }, [hall]);
+
+  const onScroll = useCallback((e: any) => {
+    setActiveIndex(Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH));
+  }, []);
+
+  const renderMediaItem = useCallback(
+    ({ item }: any) =>
+      item.type === "image" ? (
+        <View style={{ width: SCREEN_WIDTH, aspectRatio: 16 / 9 }}>
+          <ImageBackground
+            source={{ uri: item.uri }}
+            style={{ flex: 1 }}
+            resizeMode="cover"
+            blurRadius={15}
+          >
+            <Image
+              source={{ uri: item.uri }}
+              style={{ flex: 1 }}
+              resizeMode="contain"
+            />
+          </ImageBackground>
+        </View>
+      ) : (
+        <VideoCard uri={item.uri} width={SCREEN_WIDTH} />
+      ),
+    [],
+  );
+
+  const renderStars = (rating: number) =>
+    [1, 2, 3, 4, 5].map((s) => (
       <Ionicons
-        key={star}
-        name={star <= Math.round(rating || 0) ? "star" : "star-outline"}
+        key={s}
+        name={s <= Math.round(rating || 0) ? "star" : "star-outline"}
         size={18}
         color="#FFC107"
       />
     ));
-  };
 
   if (!hall && loading) {
     return (
@@ -187,13 +172,6 @@ export default function HallDetails({ route }: any) {
     );
   }
 
-  const images: string[] = hall.images || [];
-  const videos: string[] = hall.videos || [];
-  const media = [
-    ...images.map((uri: string) => ({ type: "image", uri })),
-    ...videos.map((uri: string) => ({ type: "video", uri })),
-  ];
-
   const services = hall.services || [];
   const mealOptions = hall.meal_options || hall.mealOptions || [];
 
@@ -201,7 +179,9 @@ export default function HallDetails({ route }: any) {
     ...(hall.owner_phone
       ? [
           {
-            name: `${hall.owner_first_name || ""} ${hall.owner_last_name || ""}`.trim(),
+            name: `${hall.owner_first_name || ""} ${
+              hall.owner_last_name || ""
+            }`.trim(),
             phone: hall.owner_phone,
           },
         ]
@@ -214,14 +194,12 @@ export default function HallDetails({ route }: any) {
     ),
   ].filter((contact) => contact.phone);
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar barStyle="light-content" backgroundColor="#5B3A9E" />
-      <BackgroundDecoration />
+  const rating = Number(hall.average_rating || hall.rating || 0);
 
-      <View style={{ width: "100%" }}>
-        <BackButton />
-      </View>
+  return (
+    <SafeAreaView style={styles.container}>
+      <BackgroundDecoration />
+      <BackButton />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -233,208 +211,209 @@ export default function HallDetails({ route }: any) {
           />
         }
       >
-        {media.length > 0 ? (
-          <View style={{ marginBottom: 4 }}>
-            <FlatList
-              data={media}
-              keyExtractor={(_: any, i: number) => i.toString()}
-              horizontal
-              inverted
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onScroll={onGalleryScroll}
-              scrollEventThrottle={16}
-              style={{ direction: "ltr" }}
-              renderItem={({
-                item,
-              }: {
-                item: { type: string; uri: string };
-              }) =>
-                item.type === "image" ? (
-                  <View style={{ width: SCREEN_WIDTH, aspectRatio: 16 / 9 }}>
-                    <ImageBackground
-                      source={{ uri: item.uri }}
-                      style={{
-                        position: "absolute",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                      resizeMode="cover"
-                      blurRadius={15}
-                    />
-                    <Image
-                      source={{ uri: item.uri }}
-                      style={{ width: "100%", height: "100%" }}
-                      resizeMode="contain"
-                    />
-                  </View>
-                ) : (
-                  <VideoCard uri={item.uri} width={SCREEN_WIDTH} />
-                )
-              }
-            />
+        <View style={{ marginBottom: 10 }}>
+          {media.length > 0 ? (
+            <>
+              <FlatList
+                data={media}
+                horizontal
+                inverted
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={onScroll}
+                scrollEventThrottle={16}
+                renderItem={renderMediaItem}
+                keyExtractor={(_, i) => i.toString()}
+                style={{ direction: "ltr" }}
+              />
 
-            {media.length > 1 && (
+              <TouchableOpacity
+                style={{
+                  position: "absolute",
+                  bottom: 10,
+                  left: 10,
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  borderRadius: 20,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+                onPress={() => NavigateTo("HallGallery", hall.id)}
+              >
+                <Ionicons name="images" size={14} color="#fff" />
+                <Text
+                  style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}
+                >
+                  المعرض
+                </Text>
+              </TouchableOpacity>
+
               <View
                 style={{
+                  position: "absolute",
+                  top: 10,
+                  left: 10,
+                  backgroundColor: "rgba(0,0,0,0.5)",
+                  borderRadius: 12,
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
                   flexDirection: "row",
-                  justifyContent: "center",
-                  paddingVertical: 8,
-                  gap: 6,
-                }}
-              >
-                {media.map((_: any, i: number) => (
-                  <View
-                    key={i}
-                    style={{
-                      width: i === activeSlide ? 18 : 7,
-                      height: 7,
-                      borderRadius: 4,
-                      backgroundColor: i === activeSlide ? "#6C4AB6" : "#DDD",
-                    }}
-                  />
-                ))}
-              </View>
-            )}
-
-            <View
-              style={{
-                position: "absolute",
-                top: 10,
-                left: 10,
-                backgroundColor: "rgba(0,0,0,0.5)",
-                borderRadius: 12,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              <Ionicons
-                name={
-                  media[activeSlide]?.type === "video"
-                    ? "videocam"
-                    : "image-outline"
-                }
-                size={13}
-                color="#fff"
-              />
-              <Text style={{ color: "#fff", fontSize: 11 }}>
-                {activeSlide + 1} / {media.length}
-              </Text>
-            </View>
-
-            <View
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                flexDirection: "row",
-                gap: 8,
-              }}
-            >
-              <TouchableOpacity
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: "rgba(0,0,0,0.45)",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 4,
                 }}
-                onPress={handleToggleFavorite}
               >
                 <Ionicons
-                  name={isFav ? "heart" : "heart-outline"}
-                  size={21}
-                  color={isFav ? "#E74C3C" : "#FFF"}
+                  name={
+                    media[activeIndex]?.type === "video"
+                      ? "videocam"
+                      : "image-outline"
+                  }
+                  size={13}
+                  color="#fff"
                 />
-              </TouchableOpacity>
+                <Text style={{ color: "#fff", fontSize: 11 }}>
+                  {activeIndex + 1} / {media.length}
+                </Text>
+              </View>
 
-              <TouchableOpacity
+              <View
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: "rgba(0,0,0,0.45)",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  flexDirection: "row",
+                  gap: 8,
                 }}
               >
-                <Ionicons name="share-social-outline" size={20} color="#FFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <View
-            style={{
-              width: "100%",
-              aspectRatio: 16 / 9,
-              backgroundColor: "#F3EAFF",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="business-outline" size={64} color="#C4A8E8" />
-          </View>
-        )}
+                <TouchableOpacity
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onPress={handleToggleFavorite}
+                >
+                  <Ionicons
+                    name={isFav ? "heart" : "heart-outline"}
+                    size={21}
+                    color={isFav ? "#E74C3C" : "#FFF"}
+                  />
+                </TouchableOpacity>
 
-        <View
-          style={{
-            justifyContent: "center",
-            alignSelf: "center",
-            marginBottom: 20,
-          }}
-        >
-          <View style={[styles.card, { marginBottom: 16 }]}>
+                <TouchableOpacity
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="share-social-outline" size={20} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
             <View
-              style={[styles.info, { alignItems: "center", marginBottom: 10 }]}
+              style={{
+                width: "100%",
+                aspectRatio: 16 / 9,
+                backgroundColor: "#F3EAFF",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <Text style={[styles.title, { fontSize: 22, flex: 1 }]}>
-                {hall.hall_name || hall.name}
-              </Text>
+              <Ionicons name="business-outline" size={64} color="#C4A8E8" />
+            </View>
+          )}
+        </View>
 
-              <View style={[styles.items, { backgroundColor: "#F3EAFF" }]}>
-                <Text style={[styles.itemText, { color: "#6C4AB6" }]}>
-                  ₪{(hall.base_price || 0).toLocaleString()}
+        <View style={{ padding: 15, alignItems: "center" }}>
+          <View style={{ marginBottom: 15, alignItems: "center" }}>
+            <Text
+              style={[
+                styles.title,
+                {
+                  fontSize: 28,
+                  color: "#333",
+                  textAlign: "center",
+                  marginBottom: 8,
+                },
+              ]}
+            >
+              {hall.hall_name || hall.name}
+            </Text>
+
+            <View
+              style={{ flexDirection: "row", gap: 15, alignItems: "center" }}
+            >
+              <View
+                style={{ flexDirection: "row", gap: 3, alignItems: "center" }}
+              >
+                {renderStars(rating)}
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: "#666",
+                    fontWeight: "bold",
+                    marginLeft: 5,
+                  }}
+                >
+                  {rating.toFixed(1)}
+                </Text>
+              </View>
+
+              <View style={{ width: 1, height: 14, backgroundColor: "#DDD" }} />
+
+              <View
+                style={[
+                  styles.items,
+                  {
+                    backgroundColor: "#F3EAFF",
+                    marginHorizontal: 0,
+                    height: 26,
+                    paddingHorizontal: 10,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.itemText, { color: "#6C4AB6", fontSize: 12 }]}
+                >
+                  {hall.reviews_count || hall.reviewsCount || 0} تقييم
                 </Text>
               </View>
             </View>
 
-            <View
-              style={[
-                styles.row,
-                { alignItems: "center", gap: 4, marginBottom: 8 },
-              ]}
-            >
-              {renderStars(Number(hall.average_rating || hall.rating || 0))}
-              <Text style={[styles.profileLabel, { marginRight: 4 }]}>
-                {Number(hall.average_rating || hall.rating || 0).toFixed(1)} (
-                {hall.reviews_count || hall.reviewsCount || 0} تقييم)
-              </Text>
-            </View>
-
-            {hall.description ? (
+            {hall.description && (
               <Text
                 style={{
                   fontSize: 14,
-                  color: "#666",
-                  lineHeight: 22,
-                  marginTop: 4,
+                  color: "#777",
+                  marginTop: 10,
+                  textAlign: "center",
+                  lineHeight: 20,
+                  paddingHorizontal: 20,
                 }}
               >
                 {hall.description}
               </Text>
-            ) : null}
+            )}
           </View>
 
-          <SectionCard title="تفاصيل الصالة" icon="information-circle-outline">
+          <View style={[styles.card, { padding: 15 }]}>
             <TouchableOpacity
               onPress={() => {
                 const query = hall.location || `${hall.city} ${hall.address}`;
                 Linking.openURL(
-                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
+                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    query,
+                  )}`,
                 );
               }}
               activeOpacity={0.75}
@@ -442,32 +421,37 @@ export default function HallDetails({ route }: any) {
               <InfoRow
                 icon="location-outline"
                 label="الموقع"
-                value={`${hall.city || ""}${hall.address ? ` - ${hall.address}` : ""}`}
+                value={`${hall.city || ""}${
+                  hall.address ? ` - ${hall.address}` : ""
+                }`}
               />
             </TouchableOpacity>
 
-            <InfoRow
-              icon="people-outline"
-              label="السعة"
-              value={`${hall.capacity || 0} شخص`}
-            />
+            <View style={styles.row}>
+              <InfoRow
+                icon="people-outline"
+                label="السعة"
+                value={`${hall.capacity || 0} شخص`}
+                containerStyle={{ width: "50%" }}
+              />
 
-            <InfoRow
-              icon="cash-outline"
-              label="السعر"
-              value={`₪${(hall.base_price || 0).toLocaleString()}`}
-            />
+              <InfoRow
+                icon="cash-outline"
+                label="السعر الأساسي"
+                value={`₪${(hall.base_price || 0).toLocaleString()}`}
+                valueStyle={{ color: "#6C4AB6" }}
+              />
+            </View>
 
             {hall.location && (
               <TouchableOpacity
                 style={[
                   styles.secondaryActionButton,
+                  styles.row,
                   {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    marginTop: 10,
                     gap: 8,
-                    marginTop: 4,
+                    width: "98%",
                   },
                 ]}
                 onPress={() =>
@@ -482,57 +466,71 @@ export default function HallDetails({ route }: any) {
                 </Text>
               </TouchableOpacity>
             )}
-          </SectionCard>
+          </View>
 
           {services.length > 0 && (
-            <SectionCard title="الخدمات المتاحة" icon="star-outline">
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            <View style={[styles.card, { padding: 15 }]}>
+              <InfoRow
+                label="الخدمات المتاحة"
+                icon="star-outline"
+                containerStyle={{ paddingVertical: 0 }}
+              />
+
+              <View style={[styles.row, { flexWrap: "wrap" }]}>
                 {services.map((svc: any, i: number) => {
                   const svcName = typeof svc === "string" ? svc : svc.name;
                   const svcPrice =
                     typeof svc === "object" && svc.price ? svc.price : 0;
 
                   return (
-                    <View key={i} style={styles.items}>
-                      <Text style={styles.itemText}>{svcName}</Text>
-                      {svcPrice > 0 && (
-                        <Text style={[styles.itemText, { color: "#888" }]}>
-                          {" "}
-                          — {svcPrice} ₪
-                        </Text>
-                      )}
-                    </View>
+                    <InfoRow
+                      key={i}
+                      icon="star"
+                      iconSize={18}
+                      label={svcName}
+                      labelStyle={{ fontSize: 15 }}
+                      value={svcPrice > 0 ? `₪${svcPrice}` : ""}
+                      valueStyle={{ fontSize: 14, color: "#6C4AB6" }}
+                      containerStyle={{ width: "50%", paddingVertical: 5 }}
+                    />
                   );
                 })}
               </View>
-            </SectionCard>
+            </View>
           )}
 
           {mealOptions.length > 0 && (
-            <SectionCard
-              title="خيارات الطعام والوجبات"
-              icon="restaurant-outline"
-            >
-              {mealOptions.map((meal: any, i: number) => (
-                <View key={i} style={[styles.info, { marginBottom: 8 }]}>
-                  <View style={[styles.row, { alignItems: "center", gap: 6 }]}>
-                    <Ionicons
-                      name="restaurant-outline"
-                      size={15}
-                      color="#6C4AB6"
-                    />
-                    <Text style={styles.profileValue}>{meal.name}</Text>
-                  </View>
+            <View style={[styles.card, { padding: 15 }]}>
+              <InfoRow
+                label="أنواع الوجبات"
+                icon="restaurant-outline"
+                containerStyle={{ paddingVertical: 0 }}
+              />
 
-                  <Text style={[styles.itemText, { color: "#6C4AB6" }]}>
-                    {meal.price_per_person} ₪/شخص
-                  </Text>
-                </View>
-              ))}
-            </SectionCard>
+              <View style={[styles.row, { flexWrap: "wrap" }]}>
+                {mealOptions.map((meal: any, i: number) => (
+                  <InfoRow
+                    key={i}
+                    icon="restaurant"
+                    iconSize={18}
+                    label={meal.name}
+                    labelStyle={{ fontSize: 15 }}
+                    value={`${meal.price_per_person} ₪/شخص`}
+                    valueStyle={{ fontSize: 14, color: "#6C4AB6" }}
+                    containerStyle={{ width: "50%", paddingVertical: 8 }}
+                  />
+                ))}
+              </View>
+            </View>
           )}
 
-          <SectionCard title="جهات الاتصال" icon="call-outline">
+          <View style={[styles.card, { padding: 15 }]}>
+            <InfoRow
+              icon="call-outline"
+              label="جهات الاتصال"
+              containerStyle={{ paddingVertical: 0, marginBottom: 10 }}
+            />
+
             {contacts.length === 0 ? (
               <Text style={[styles.profileLabel, { textAlign: "center" }]}>
                 لا توجد جهات اتصال
@@ -541,46 +539,26 @@ export default function HallDetails({ route }: any) {
               contacts.map((contact: any, i: number) => (
                 <TouchableOpacity
                   key={i}
-                  style={[
-                    styles.row,
-                    {
-                      alignItems: "center",
-                      gap: 12,
-                      marginBottom: i < contacts.length - 1 ? 12 : 0,
-                      paddingBottom: i < contacts.length - 1 ? 12 : 0,
-                      borderBottomWidth: i < contacts.length - 1 ? 1 : 0,
-                      borderBottomColor: "#EEE",
-                    },
-                  ]}
                   onPress={() => Linking.openURL(`tel:${contact.phone}`)}
                 >
-                  <View
-                    style={[
-                      styles.profileInfoIcon,
-                      {
-                        borderRadius: 20,
-                        backgroundColor: "#F3EAFF",
-                        height: 40,
-                      },
-                    ]}
-                  >
-                    <Ionicons name="person" size={20} color="#6C4AB6" />
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.profileValue}>
-                      {contact.name || "بدون اسم"}
-                    </Text>
-                    <Text style={styles.profileLabel}>{contact.phone}</Text>
-                  </View>
-
-                  <Ionicons name="call-outline" size={20} color="#6C4AB6" />
+                  <InfoRow
+                    icon="person"
+                    label={contact.name || "بدون اسم"}
+                    value={contact.phone}
+                    hideBorder={i === contacts.length - 1}
+                  />
                 </TouchableOpacity>
               ))
             )}
-          </SectionCard>
+          </View>
 
-          <SectionCard title="آراء الزبائن" icon="chatbubble-outline">
+          <View style={[styles.card, { padding: 15, width: "100%" }]}>
+            <InfoRow
+              icon="chatbubble-outline"
+              label="آراء الزبائن"
+              containerStyle={{ paddingVertical: 0, marginBottom: 10 }}
+            />
+
             {reviews.length === 0 ? (
               <Text
                 style={{
@@ -592,7 +570,7 @@ export default function HallDetails({ route }: any) {
                 لا توجد تقييمات بعد
               </Text>
             ) : (
-              reviews.map((review) => (
+              reviews.map((review: any) => (
                 <View
                   key={review.id}
                   style={{
@@ -600,64 +578,59 @@ export default function HallDetails({ route }: any) {
                     marginBottom: 12,
                     borderBottomWidth: 1,
                     borderBottomColor: "#EEE",
+                    width: "100%",
                   }}
                 >
-                  <View style={[styles.info, { marginBottom: 6 }]}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 6,
+                      width: "100%",
+                    }}
+                  >
                     <View
-                      style={[styles.row, { alignItems: "center", gap: 8 }]}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
                     >
-                      <View
-                        style={[
-                          styles.profileInfoIcon,
-                          {
-                            borderRadius: 20,
-                            backgroundColor: "#F3EAFF",
-                            height: 36,
-                            width: 36,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name="person-outline"
-                          size={18}
-                          color="#6C4AB6"
-                        />
-                      </View>
+                      <Ionicons
+                        name="person-outline"
+                        size={18}
+                        color="#6C4AB6"
+                      />
                       <Text style={styles.profileValue}>
                         {review.user_name || "مستخدم"}
                       </Text>
                     </View>
 
-                    <Text style={styles.profileLabel}>
-                      {new Date(review.created_at).toLocaleDateString()}
-                    </Text>
-                  </View>
-
-                  <View
-                    style={[
-                      styles.row,
-                      { alignItems: "center", gap: 3, marginBottom: 6 },
-                    ]}
+                   </View>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: "#666",
+                      lineHeight: 21,
+                      textAlign: "left",
+                      width: "100%",
+                    }}
                   >
-                    {renderStars(review.rating)}
-                  </View>
-
-                  <Text style={{ fontSize: 14, color: "#666", lineHeight: 21 }}>
-                    {review.comment}
+                    {review.comment || ""}
                   </Text>
                 </View>
               ))
             )}
-          </SectionCard>
+          </View>
 
           <TouchableOpacity
             style={[
               styles.actionButton,
+              styles.row,
               {
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
                 gap: 8,
+                width: "98%",
                 marginBottom: 20,
               },
             ]}

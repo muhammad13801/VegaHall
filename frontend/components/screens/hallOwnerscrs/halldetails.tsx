@@ -24,39 +24,6 @@ import Toast from "react-native-toast-message";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const SectionCard = ({
-  title,
-  icon,
-  children,
-}: {
-  title?: string;
-  icon?: string;
-  children?: React.ReactNode;
-}) => (
-  <View style={[styles.card, { padding: 15 }]}>
-    <View
-      style={[styles.row, { alignItems: "center", gap: 8, marginBottom: 15 }]}
-    >
-      <View
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: 10,
-          backgroundColor: "#F3EAFF",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Ionicons name={icon as any} size={18} color="#6C4AB6" />
-      </View>
-      <Text style={[styles.label, { fontSize: 16, marginBottom: 0 }]}>
-        {title}
-      </Text>
-    </View>
-    {children}
-  </View>
-);
-
 export default function HallDetail() {
   const { hallId } = useRoute<any>().params || {};
   const [hall, setHall] = useState<any>(null);

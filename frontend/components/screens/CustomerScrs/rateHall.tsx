@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { goBack } from "../../reusable func/navigateTo";
 import { styles as s } from "./ibrahimStyles";
 import { createRatingApi } from "../../Services/customerApi";
@@ -197,5 +196,6 @@ export default function RateHall({ route }: any) {
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
+        
     );
 }

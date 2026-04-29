@@ -252,12 +252,29 @@ export default function MyBookings() {
                     >
                         {bookings.map((booking: any) => {
                             const statusCfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.confirmed;
-                            const isPastDate = new Date(booking.booking_date || booking.date) < new Date();
+                            const bDate = new Date(booking.booking_date || booking.date);
+                            bDate.setHours(0, 0, 0, 0);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const isPastDate = today > bDate;
+                            
+                            const msPerDay = 1000 * 60 * 60 * 24;
+                            const daysUntilEvent = (bDate.getTime() - today.getTime()) / msPerDay;
+                            
                             const canRate = booking.status === "confirmed" && isPastDate && !ratedBookings[booking.id];
                             
                             const hasServices = (Array.isArray(booking.services) && booking.services.length > 0) ||
                                               (typeof booking.services === "string" && booking.services.length > 2);
                             const parsedServices = typeof booking.services === "string" ? JSON.parse(booking.services) : booking.services;
+                            
+                            const parsedMeals = typeof booking.meals === "string" ? JSON.parse(booking.meals) : (booking.meals || []);
+                            const guestCount = booking.guest_count || booking.guestCount || 0;
+                            const mealsCost = parsedMeals.reduce((sum: number, meal: any) => {
+                                return sum + ((meal.price_per_person || 0) * guestCount);
+                            }, 0);
+                            const totalCost = Number(booking.total_cost || booking.totalCost || 0);
+                            const remainingBalance = (totalCost - mealsCost) * 0.80;
+                            const paidAmount = totalCost - remainingBalance;
 
                             return (
                                 <View key={booking.id} style={[styles.card, { marginBottom: 14 }]}>
@@ -330,11 +347,26 @@ export default function MyBookings() {
 
                                     {/* Total + Action Buttons */}
                                     <View style={[styles.borderTopSection, { marginTop: 8, paddingTop: 12 }]}>
-                                        <View style={[styles.info, { marginBottom: 10 }]}>
-                                            <Text style={styles.label}>إجمالي التكلفة</Text>
-                                            <Text style={[styles.title, { fontSize: 20, color: "#22C55E" }]}>
-                                                {booking.total_cost || booking.totalCost ? `₪${(Number(booking.total_cost || booking.totalCost)).toLocaleString()}` : "—"}
-                                            </Text>
+                                        <View style={{ marginBottom: 15, backgroundColor: "#F8F8FF", borderRadius: 10, padding: 12 }}>
+                                            <View style={[styles.row, { justifyContent: "space-between", marginBottom: 8 }]}>
+                                                <Text style={{ color: "#666", fontSize: 14 }}>إجمالي التكلفة</Text>
+                                                <Text style={{ fontWeight: "bold", fontSize: 14 }}>
+                                                    {`₪${totalCost.toLocaleString()}`}
+                                                </Text>
+                                            </View>
+                                            <View style={[styles.row, { justifyContent: "space-between", marginBottom: 8 }]}>
+                                                <Text style={{ color: "#22C55E", fontSize: 14 }}>المدفوع (عربون + وجبات)</Text>
+                                                <Text style={{ fontWeight: "bold", color: "#22C55E", fontSize: 14 }}>
+                                                    {`₪${paidAmount.toLocaleString()}`}
+                                                </Text>
+                                            </View>
+                                            <View style={{ height: 1, backgroundColor: "#E9E4FF", marginVertical: 4 }} />
+                                            <View style={[styles.row, { justifyContent: "space-between", marginTop: 4 }]}>
+                                                <Text style={{ color: "#EF4444", fontWeight: "bold", fontSize: 15 }}>المبلغ المتبقي</Text>
+                                                <Text style={{ fontWeight: "bold", color: "#EF4444", fontSize: 15 }}>
+                                                    {`₪${remainingBalance.toLocaleString()}`}
+                                                </Text>
+                                            </View>
                                         </View>
 
                                         <View style={[styles.row, { gap: 8 }]}>
@@ -342,7 +374,7 @@ export default function MyBookings() {
                                                 <ActivityIndicator color="#6C4AB6" style={{ flex: 1, paddingVertical: 10 }} />
                                             ) : (
                                                 <>
-                                                    {booking.status === "confirmed" && !isPastDate && (
+                                                    {booking.status === "confirmed" && !isPastDate && daysUntilEvent >= 4 && (
                                                         <TouchableOpacity
                                                             style={[styles.secondaryActionButton, { flex: 1, marginTop: 0 }]}
                                                             onPress={() => openRescheduleCustomer(booking)}
@@ -404,6 +436,12 @@ export default function MyBookings() {
                                                 </>
                                             )}
                                         </View>
+                                        
+                                        {booking.status === "confirmed" && !isPastDate && daysUntilEvent < 4 && (
+                                            <Text style={{ textAlign: "center", color: "#EF4444", fontSize: 13, marginTop: 10 }}>
+                                                في حال يوجد اي تعديل تواصل مع صاحب الصاله
+                                            </Text>
+                                        )}
                                     </View>
                                 </View>
                             );
