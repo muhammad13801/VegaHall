@@ -15,13 +15,15 @@ import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import { getHallCommentsApi } from "../../Services/hallApi";
 import { useRefresh } from "../../reusable func/refreshContext";
 import Toast from "react-native-toast-message";
+import { formatDate } from "../../reusable func/formatDate";
+import { InfoRow } from "../../reusable func/infoRow";
 
 const StarRating = memo(({ rating }: { rating: number }) => (
   <View style={[styles.row, { gap: 2 }]}>
-    {[1, 2, 3, 4, 5].map((star) => (
+    {[1, 2, 3, 4, 5].map((s) => (
       <Ionicons
-        key={star}
-        name={star <= rating ? "star" : "star-outline"}
+        key={s}
+        name={s <= rating ? "star" : "star-outline"}
         size={14}
         color="#FFC107"
       />
@@ -32,57 +34,28 @@ const StarRating = memo(({ rating }: { rating: number }) => (
 const CommentCard = memo(({ item }: { item: any }) => (
   <View style={[styles.card, { marginBottom: 12, gap: 8 }]}>
     <View style={[styles.info, { alignItems: "center" }]}>
-      <View style={[styles.row, { alignItems: "center", gap: 8 }]}>
-        <View
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 19,
-            backgroundColor: "#F3EAFF",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="person" size={20} color="#6C4AB6" />
-        </View>
-        <View>
-          <Text style={styles.profileValue}>
-            {item.first_name} {item.last_name}
-          </Text>
-          <Text style={styles.profileLabel}>
-            {new Date(item.created_at).toLocaleDateString("ar-EG", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </Text>
-        </View>
-      </View>
+      <InfoRow
+        icon="person"
+        label={`${item.first_name} ${item.last_name}`}
+        value={formatDate(item.created_at)}
+        containerStyle={{ paddingVertical: 0, flex: 1 }}
+      />
       <StarRating rating={item.rating} />
     </View>
-    <Text style={{ fontSize: 14, color: "#555", lineHeight: 22 }}>
-      {item.comment}
-    </Text>
+    <Text style={styles.commentBody}>{item.comment}</Text>
   </View>
 ));
 
-const EmptyComponent = (
-  <View
-    style={{ justifyContent: "center", alignItems: "center", marginTop: "70%" }}
-  >
+const EmptyComponent = () => (
+  <View style={styles.emptyContainer}>
     <Ionicons name="chatbubble-outline" size={80} color="#DDD" />
     <Text style={styles.subtitle}>لا توجد تعليقات على هذه الصالة بعد</Text>
   </View>
 );
 
-const renderItem = ({ item }: { item: any }) => <CommentCard item={item} />;
-const keyExtractor = (item: any) => item.id.toString();
-
 export default function HallComments() {
-  const route = useRoute<any>();
-  const hallId = route.params?.hallId;
+  const { params } = useRoute<any>();
   const { refreshKey } = useRefresh();
-
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -90,7 +63,7 @@ export default function HallComments() {
   const fetchComments = useCallback(
     async (isRefresh = false) => {
       try {
-        const { data } = await getHallCommentsApi(hallId);
+        const { data } = await getHallCommentsApi(params?.hallId);
         setComments(data);
       } catch (err: any) {
         Toast.show({
@@ -101,7 +74,7 @@ export default function HallComments() {
         isRefresh ? setRefreshing(false) : setLoading(false);
       }
     },
-    [hallId],
+    [params?.hallId],
   );
 
   useEffect(() => {
@@ -109,19 +82,9 @@ export default function HallComments() {
     fetchComments();
   }, [fetchComments, refreshKey]);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchComments(true);
-  }, [fetchComments]);
-
   if (loading) {
     return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
+      <SafeAreaView style={[styles.container, styles.justifyCenter]}>
         <ActivityIndicator size="large" color="#6C4AB6" />
       </SafeAreaView>
     );
@@ -131,21 +94,23 @@ export default function HallComments() {
     <SafeAreaView style={styles.container}>
       <BackgroundDecoration />
       <BackButton />
-
       <FlatList
         data={comments}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => <CommentCard item={item} />}
         style={{ width: "90%", alignSelf: "center" }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchComments(true);
+            }}
             colors={["#6C4AB6"]}
           />
         }
-        ListEmptyComponent={EmptyComponent}
+        ListEmptyComponent={<EmptyComponent />}
       />
     </SafeAreaView>
   );

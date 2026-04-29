@@ -9,9 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../../styles";
 import { getAdminStats } from "../../Services/adminApi";
-import { NavigateTo } from "../../reusable func/navigateTo";
-import { useNavigation } from "@react-navigation/native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Tab } from "../hallOwnerscrs/hallOwner";
 import Profile from "../hallOwnerscrs/profile/profile";
 import Home from "./home";
@@ -19,7 +17,6 @@ import Notifications from "../hallOwnerscrs/notifications";
 import ManageServices from "./manageServices";
 
 export default function Admin() {
-  const navigation = useNavigation<any>();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -100,5 +97,4 @@ export default function Admin() {
       />
     </Tab.Navigator>
   );
-
 }

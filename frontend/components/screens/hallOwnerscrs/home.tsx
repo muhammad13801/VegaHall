@@ -16,6 +16,46 @@ import { NavigateTo } from "../../reusable func/navigateTo";
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const EmptyList = React.memo(() => (
+  <View style={{ alignItems: "center", marginTop: "70%" }}>
+    <Ionicons name="business-outline" size={80} color="#DDD" />
+    <Text style={styles.subtitle}>لا توجد صالات مضافة حالياً</Text>
+  </View>
+));
+
+const FooterList = React.memo(
+  ({
+    loadingMore,
+    hasMore,
+    count,
+  }: {
+    loadingMore: boolean;
+    hasMore: boolean;
+    count: number;
+  }) => {
+    if (loadingMore) {
+      return (
+        <ActivityIndicator color="#6C4AB6" style={{ marginVertical: 20 }} />
+      );
+    }
+    if (!hasMore && count > 0) {
+      return (
+        <Text
+          style={{
+            textAlign: "center",
+            color: "#AAA",
+            marginVertical: 20,
+            fontSize: 14,
+          }}
+        >
+          لا توجد صالات إضافية
+        </Text>
+      );
+    }
+    return null;
+  },
+);
+
 export default function Home() {
   const {
     items: halls,
@@ -61,7 +101,7 @@ export default function Home() {
           renderItem={({ item }) => (
             <HallCard
               item={item}
-              onPress={(id) => NavigateTo("HallDetail", { hallId: id })}
+              onPress={(id: number) => NavigateTo("HallDetail", { hallId: id })}
             />
           )}
           showsVerticalScrollIndicator={false}
@@ -74,31 +114,18 @@ export default function Home() {
               colors={["#6C4AB6"]}
             />
           }
-          ListEmptyComponent={
-            <View style={{ alignItems: "center", marginTop: "70%" }}>
-              <Ionicons name="business-outline" size={80} color="#DDD" />
-              <Text style={styles.subtitle}>لا توجد صالات مضافة حالياً</Text>
-            </View>
-          }
+          ListEmptyComponent={<EmptyList />}
           ListFooterComponent={
-            loadingMore ? (
-              <ActivityIndicator
-                color="#6C4AB6"
-                style={{ marginVertical: 20 }}
-              />
-            ) : !hasMore && halls.length > 0 ? (
-              <Text
-                style={{
-                  textAlign: "center",
-                  color: "#AAA",
-                  marginVertical: 20,
-                  fontSize: 14,
-                }}
-              >
-                لا توجد صالات إضافية
-              </Text>
-            ) : null
+            <FooterList
+              loadingMore={loadingMore}
+              hasMore={hasMore}
+              count={halls.length}
+            />
           }
+          removeClippedSubviews={true}
+          initialNumToRender={5}
+          windowSize={5}
+          maxToRenderPerBatch={5}
         />
       )}
     </SafeAreaView>

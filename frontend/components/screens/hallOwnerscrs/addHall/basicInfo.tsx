@@ -5,6 +5,7 @@ import { Input } from "../../../reusable func/input";
 import { styles } from "../../../styles";
 import { useHandleChange } from "../../../reusable func/useHandleChange";
 import { HallFormProps } from "../../../Validations/validateHall";
+import { Err } from "../../../reusable func/Err";
 
 export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
   const change = useHandleChange(setForm);
@@ -25,7 +26,7 @@ export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
         value={form.name}
         onChangeText={(text) => change("name", text)}
       />
-      {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+      <Err error={errors.name} />
 
       {/* capacity and price */}
       <View style={styles.row}>
@@ -45,9 +46,7 @@ export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
             onChangeText={(text) => change("capacity", text)}
             keyboardType="numeric"
           />
-          {errors.capacity && (
-            <Text style={styles.errorText}>{errors.capacity}</Text>
-          )}
+          <Err error={errors.capacity} />
         </View>
 
         <View style={styles.gapBetween} />
@@ -68,7 +67,7 @@ export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
             onChangeText={(text) => change("price", text)}
             keyboardType="numeric"
           />
-          {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
+          <Err error={errors.price} />
         </View>
       </View>
 
@@ -89,9 +88,7 @@ export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
         multiline
         style={styles.multilineInput}
       />
-      {errors.description && (
-        <Text style={styles.errorText}>{errors.description}</Text>
-      )}
+      <Err error={errors.description} />
     </View>
   );
 }

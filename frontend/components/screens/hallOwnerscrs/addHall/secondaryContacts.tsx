@@ -1,78 +1,58 @@
-import React, { useCallback, memo } from "react";
+import React, { memo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "../../../reusable func/input";
 import { styles } from "../../../styles";
 import { HallFormProps } from "../../../Validations/validateHall";
 import MaskInput from "react-native-mask-input";
-import { phoneMask } from "../../signUpScrs/signUp";
+import { Err } from "../../../reusable func/Err";
+import { phoneMask } from "../../userScrs/signUpScrs/signUp";
 
 const ContactCard = memo(
-  ({
-    contact,
-    index,
-    errors,
-    onRemove,
-    onUpdate,
-  }: {
-    contact: { firstName: string; lastName: string; phone: string };
-    index: number;
-    errors: any;
-    onRemove: (i: number) => void;
-    onUpdate: (i: number, field: string, value: string) => void;
-  }) => (
-    <View style={styles.secondaryContactCard}>
-      <View style={styles.info}>
-        <Text style={{ fontWeight: "bold", color: "#6C4AB6" }}>
-          جهة اتصال {index + 1}
-        </Text>
-        <TouchableOpacity onPress={() => onRemove(index)}>
-          <Ionicons name="remove-circle" size={20} color="#FF5A5A" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={[styles.row, { gap: 10 }]}>
-        <View style={{ flex: 1 }}>
-          <Input
-            placeholder="الاسم الأول"
-            value={contact.firstName}
-            onChangeText={(text) => onUpdate(index, "firstName", text)}
-          />
-          {errors[`contactFirstName_${index}`] && (
-            <Text style={styles.errorText}>
-              {errors[`contactFirstName_${index}`]}
-            </Text>
-          )}
+  ({ contact, index, errors, onRemove, onUpdate }: any) => {
+    return (
+      <View style={styles.secondaryContactCard}>
+        <View style={[styles.info, { marginBottom: 10 }]}>
+          <Text style={{ fontWeight: "bold", color: "#6C4AB6" }}>
+            جهة اتصال {index + 1}
+          </Text>
+          <TouchableOpacity onPress={() => onRemove(index)}>
+            <Ionicons name="remove-circle" size={22} color="#FF5A5A" />
+          </TouchableOpacity>
         </View>
-        <View style={{ flex: 1 }}>
-          <Input
-            placeholder="اسم العائلة"
-            value={contact.lastName}
-            onChangeText={(text) => onUpdate(index, "lastName", text)}
-          />
-          {errors[`contactLastName_${index}`] && (
-            <Text style={styles.errorText}>
-              {errors[`contactLastName_${index}`]}
-            </Text>
-          )}
-        </View>
-      </View>
 
-      <MaskInput
-        value={contact.phone}
-        onChangeText={(unmasked) => {
-          onUpdate(index, "phone", unmasked);
-        }}
-        mask={phoneMask}
-        keyboardType="phone-pad"
-        placeholderTextColor="#999"
-        style={[styles.input, { textAlign: "center", direction: "ltr" }]}
-      />
-      {errors[`contactPhone_${index}`] && (
-        <Text style={styles.errorText}>{errors[`contactPhone_${index}`]}</Text>
-      )}
-    </View>
-  ),
+        <View style={[styles.row, { gap: 10 }]}>
+          <View style={{ flex: 1 }}>
+            <Input
+              placeholder="الاسم الأول"
+              value={contact.firstName}
+              onChangeText={(t) => onUpdate(index, "firstName", t)}
+            />
+            <Err error={errors[`contactFirstName_${index}`]} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Input
+              placeholder="اسم العائلة"
+              value={contact.lastName}
+              onChangeText={(t) => onUpdate(index, "lastName", t)}
+            />
+            <Err error={errors[`contactLastName_${index}`]} />
+          </View>
+        </View>
+
+        <MaskInput
+          value={contact.phone}
+          onChangeText={(t) => onUpdate(index, "phone", t)}
+          mask={phoneMask}
+          keyboardType="phone-pad"
+          placeholder="+97ْX-5XX-XXX-XXX"
+          placeholderTextColor="#999"
+          style={[styles.input, { textAlign: "center", direction: "ltr" }]}
+        />
+        <Err error={errors[`contactPhone_${index}`]} />
+      </View>
+    );
+  },
 );
 
 export default function SecondaryContacts({
@@ -80,87 +60,56 @@ export default function SecondaryContacts({
   setForm,
   errors,
 }: HallFormProps) {
-  const addContact = useCallback(() => {
-    if ((form.secondaryContacts?.length || 0) >= 3) return;
-    setForm((prev) => ({
-      ...prev,
-      secondaryContacts: [
-        ...(prev.secondaryContacts || []),
-        { firstName: "", lastName: "", phone: "" },
-      ],
-    }));
-  }, [form.secondaryContacts?.length, setForm]);
+  const contacts = form.secondaryContacts || [];
 
-  const removeContact = useCallback(
-    (index: number) => {
-      setForm((prev) => ({
-        ...prev,
-        secondaryContacts: prev.secondaryContacts?.filter(
-          (_, i) => i !== index,
-        ),
-      }));
-    },
-    [setForm],
-  );
-
-  const updateContact = useCallback(
-    (index: number, field: string, value: string) => {
-      setForm((prev) => ({
-        ...prev,
-        secondaryContacts: prev.secondaryContacts?.map((c, i) =>
-          i === index ? { ...c, [field]: value } : c,
-        ),
-      }));
-    },
-    [setForm],
-  );
+  const update = (newContacts: any[]) =>
+    setForm((p) => ({ ...p, secondaryContacts: newContacts }));
+  const add = () =>
+    contacts.length < 3 &&
+    update([...contacts, { firstName: "", lastName: "", phone: "" }]);
+  const remove = (i: number) => update(contacts.filter((_, idx) => idx !== i));
+  const change = (i: number, f: string, v: string) =>
+    update(contacts.map((c, idx) => (idx === i ? { ...c, [f]: v } : c)));
 
   return (
     <View style={styles.secondarySection}>
-      <View style={styles.info}>
-        <View style={[styles.row, { alignItems: "center" }]}>
-          <Ionicons
-            name="call-outline"
-            size={18}
-            color={"#6C4AB6"}
-            style={styles.screenIcon}
-          />
-          <Text style={styles.label}>أشخاص آخرين للتواصل</Text>
-        </View>
+      <View style={[styles.row, { alignItems: "center", marginBottom: 10 }]}>
+        <Ionicons
+          name="call-outline"
+          size={18}
+          color="#6C4AB6"
+          style={styles.screenIcon}
+        />
+        <Text style={styles.label}>
+          اضافة أشخاص آخرين للتواصل
+          <Text style={{ color: "#777", fontSize: 13 }}> (اختياري)</Text>
+        </Text>
       </View>
 
-      <View style={styles.mediaPreviewContainer}>
-        {form.secondaryContacts?.map((contact, index) => (
-          <ContactCard
-            key={index}
-            contact={contact}
-            index={index}
-            errors={errors}
-            onRemove={removeContact}
-            onUpdate={updateContact}
-          />
-        ))}
+      {contacts.map((c, i) => (
+        <ContactCard
+          key={i}
+          contact={c}
+          index={i}
+          errors={errors}
+          onRemove={remove}
+          onUpdate={change}
+        />
+      ))}
 
-        {(form.secondaryContacts?.length || 0) < 3 && (
-          <TouchableOpacity
-            onPress={addContact}
-            style={[styles.secondaryActionButton, { marginTop: 0 }]}
-          >
-            <View style={styles.row}>
-              <Ionicons name="add-circle" size={20} color="#6C4AB6" />
-              <Text
-                style={{
-                  color: "#6C4AB6",
-                  fontWeight: "bold",
-                  marginRight: 5,
-                }}
-              >
-                إضافة شخص آخر
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      </View>
+      {contacts.length < 3 && (
+        <TouchableOpacity
+          onPress={add}
+          style={[styles.secondaryActionButton, { marginTop: 0 }]}
+        >
+          <View style={[styles.row, { alignItems: "center", gap: 5 }]}>
+            <Ionicons name="add-circle" size={20} color="#6C4AB6" />
+            <Text style={{ color: "#6C4AB6", fontWeight: "bold" }}>
+              إضافة شخص آخر
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

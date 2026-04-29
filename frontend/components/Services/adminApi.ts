@@ -28,7 +28,11 @@ export const approveHall = async (id: number) => {
   return api.post(`/admin/halls/${id}/approve`);
 };
 
-export const addHallService = async (hallId: number, name: string, price: number) => {
+export const addHallService = async (
+  hallId: number,
+  name: string,
+  price: number,
+) => {
   return api.post("/admin/halls/add-service", { hallId, name, price });
 };
 
@@ -36,7 +40,7 @@ export const addServiceToAllHalls = async (name: string, price: number) => {
   return api.post("/admin/halls/add-service-all", { name, price });
 };
 
-// ── Global Services ──────────────────────────────────────
+// الخدمات العامة
 export const getGlobalServices = async () => {
   return api.get("/admin/services");
 };
@@ -45,7 +49,7 @@ export const addGlobalService = async (name: string) => {
   return api.post("/admin/services/add", { name });
 };
 
-// ── Global Meal Types ─────────────────────────────────────
+// أنواع الوجبات العامة
 export const getGlobalMealTypes = async () => {
   return api.get("/admin/meals");
 };
@@ -54,7 +58,7 @@ export const addGlobalMealType = async (name: string) => {
   return api.post("/admin/meals/add", { name });
 };
 
-// ── Service Requests ─────────────────────────────────────
+// طلبات الخدمات
 export const getServiceRequests = async () => {
   return api.get("/admin/services/requests");
 };
@@ -67,7 +71,7 @@ export const rejectServiceRequest = async (id: number) => {
   return api.post(`/admin/services/requests/${id}/reject`);
 };
 
-// ── Meal Requests ─────────────────────────────────────────
+// طلبات الوجبات
 export const getMealRequests = async () => {
   return api.get("/admin/meals/requests");
 };

@@ -17,19 +17,16 @@ export default function PaymentHall() {
   const route = useRoute<any>();
   const hallForm = route.params?.form;
   const [loading, setLoading] = useState(false);
-
-  // Initialize Stripe Hook
   const { initPaymentSheet, presentPaymentSheet } = usePaymentSheet();
 
   const handlePay = async () => {
+    if (!hallForm)
+      return Toast.show({ type: "error", text1: "بيانات الصالة مفقودة" });
+
     setLoading(true);
     try {
-      if (!hallForm) throw new Error("بيانات الصالة مفقودة");
-
-      // Get PaymentIntent from backend
       const { data } = await payHallApi();
 
-      // Init Stripe sheet
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: data.paymentIntent,
         customerEphemeralKeySecret: data.ephemeralKey,
@@ -39,28 +36,17 @@ export default function PaymentHall() {
       });
       if (initError) throw new Error(initError.message);
 
-      // Present payment sheet
       const { error: presentError } = await presentPaymentSheet();
-      if (presentError) {
-        // User cancelled or card failed
-        Toast.show({
-          type: "error",
-          text1: presentError.message,
-        });
-        return;
-      }
+      if (presentError) throw new Error(presentError.message);
 
-      // Payment succeeded
-      const uploadImagesUrls = await Promise.all(
-        hallForm.images.map((img: string) => uploadToSupabase(img, "images")),
-      );
-      const uploadVideosUrls = hallForm.videos?.length
-        ? await Promise.all(
-            hallForm.videos.map((v: string) => uploadToSupabase(v, "videos")),
-          )
-        : [];
+      const uploadMedia = (uris: string[] = [], type: "images" | "videos") =>
+        Promise.all(uris.map((u) => uploadToSupabase(u, type)));
 
-      // Send everything to backend
+      const [uploadImagesUrls, uploadVideosUrls] = await Promise.all([
+        uploadMedia(hallForm.images, "images"),
+        uploadMedia(hallForm.videos, "videos"),
+      ]);
+
       const intentId = data.paymentIntent.split("_secret_")[0];
       const response = await confirmPaymentApi({
         paymentIntentId: intentId,
@@ -79,7 +65,7 @@ export default function PaymentHall() {
       Toast.show({
         type: "error",
         text1:
-          err.response?.data || "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقا",
+          err.message || err.response?.data || "فشل الدفع أو الاتصال بالخادم",
       });
     } finally {
       setLoading(false);

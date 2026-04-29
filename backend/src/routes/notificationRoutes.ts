@@ -3,7 +3,7 @@ import { sessionAuthenticate } from "../middleware/sessionMiddleware";
 import {
   getNotifications,
   savePushToken,
-} from "../controllers/notificationsController";
+} from "../controllers/userControllers/notificationsController";
 
 const router = Router();
 

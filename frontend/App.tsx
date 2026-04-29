@@ -1,12 +1,6 @@
-import Login from "./components/screens/login";
+import Login from "./components/screens/userScrs/signUpScrs/login";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import ForgotPassword from "./components/screens/forgotPasswordScrs/forgotPassword";
-import SignUp from "./components/screens/signUpScrs/signUp";
-import PasswordCode from "./components/screens/forgotPasswordScrs/passwordCode";
-import SetNewPassword from "./components/screens/forgotPasswordScrs/setNewPassword";
-import HallOwner from "./components/screens/hallOwnerscrs/hallOwner";
-import EmailCode from "./components/screens/signUpScrs/emailCode";
 import CustomerNavigator from "./components/screens/CustomerScrs/customerNavigator";
 import HallsResult from "./components/screens/CustomerScrs/hallsResult";
 import HallDetails from "./components/screens/CustomerScrs/hallDetails";
@@ -29,6 +23,13 @@ import HallDetail from "./components/screens/hallOwnerscrs/halldetails";
 import HallComments from "./components/screens/hallOwnerscrs/hallComments";
 import { RefreshProvider } from "./components/reusable func/refreshContext";
 import { I18nManager } from "react-native";
+import HallGallery from "./components/screens/hallOwnerscrs/hallGallery";
+import EmailCode from "./components/screens/userScrs/signUpScrs/emailCode";
+import ForgotPassword from "./components/screens/userScrs/signUpScrs/forgotPasswordScrs/forgotPassword";
+import SetNewPassword from "./components/screens/userScrs/signUpScrs/forgotPasswordScrs/setNewPassword";
+import SignUp from "./components/screens/userScrs/signUpScrs/signUp";
+import PasswordCode from "./components/screens/userScrs/signUpScrs/forgotPasswordScrs/passwordCode";
+import HallOwner from "./components/screens/hallOwnerscrs/hallOwner";
 
 const Stack = createNativeStackNavigator();
 
@@ -61,6 +62,7 @@ export default function App() {
             <Stack.Screen name="ManageHall" component={ManageHall} />
             <Stack.Screen name="HallDetail" component={HallDetail} />
             <Stack.Screen name="HallComments" component={HallComments} />
+            <Stack.Screen name="HallGallery" component={HallGallery} />
             <Stack.Screen name="PaymentHall" component={PaymentHall} />
             <Stack.Screen name="UpdatePassword" component={UpdatePassword} />
             <Stack.Screen name="UpdateName" component={UpdateName} />
@@ -78,4 +80,3 @@ export default function App() {
     </RefreshProvider>
   );
 }
-

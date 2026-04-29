@@ -1,13 +1,13 @@
 {
   "expo": {
     "name": "Vega Hall",
-    "slug": "vegaHall",
+    "slug": "vega-hall",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/vega-hall-icon.png",
+    "icon": "./assets/vega-icon-1024.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/vega-hall-icon-android.png",
+      "image": "./assets/vega-icon-1252.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,41 +16,39 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/vega-icon2.png",
+        "foregroundImage": "./assets/vega-icon-1024.png",
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.muhammad_abujheihsa.vegaHall"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/vega-icon-1024.png"
     },
     "plugins": [
-        "@react-native-community/datetimepicker",
-
-        [
-          "@stripe/stripe-react-native",
-          {
-            "merchantIdentifier": "merchant.com.vegahall",
-            "enableGooglePay": false
-          }
-        ],
-
-        [
-          "react-native-maps",
-          {
-            "androidGoogleMapsApiKey": "AIzaSyAEItCjF9zYSYAnIJixdzFiOLdJ3XYwLzA",
-            "iosGoogleMapsApiKey": "AIzaSyAEItCjF9zYSYAnIJixdzFiOLdJ3XYwLzA"
-          }
-        ],
-
-        "expo-video",
-        "expo-font"
+      "@react-native-community/datetimepicker",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.vegahall",
+          "enableGooglePay": false
+        }
       ],
+      [
+        "react-native-maps",
+        {
+          "androidGoogleMapsApiKey": "AIzaSyAEItCjF9zYSYAnIJixdzFiOLdJ3XYwLzA",
+          "iosGoogleMapsApiKey": "AIzaSyAEItCjF9zYSYAnIJixdzFiOLdJ3XYwLzA"
+        }
+      ],
+      "expo-video",
+      "expo-font"
+    ],
     "extra": {
       "eas": {
-        "projectId": "e956bfde-bb9c-4f6f-b2ab-386bb9e468b3"
+        "projectId": "e9425b1d-22ba-444f-b522-27e6786a6f66"
       }
-    }
+    },
+    "owner": "muhammad-abujheishas-organization"
   }
 }

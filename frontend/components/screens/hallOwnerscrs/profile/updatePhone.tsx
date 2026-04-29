@@ -10,8 +10,9 @@ import Toast from "react-native-toast-message";
 import { NavigateAndReset } from "../../../reusable func/navigateTo";
 import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
 import { updatePhoneApi } from "../../../Services/userApi";
-import { phoneMask } from "../../signUpScrs/signUp";
 import MaskInput from "react-native-mask-input";
+import { Err } from "../../../reusable func/Err";
+import { phoneMask } from "../../userScrs/signUpScrs/signUp";
 
 export default function UpdatePhone() {
   const [phone, setPhone] = useState<string>("");
@@ -47,25 +48,23 @@ export default function UpdatePhone() {
       <BackButton />
 
       <KeyboardAwareScreen>
+        <Ionicons
+          name="call-outline"
+          size={40}
+          style={styles.screenIcon}
+        ></Ionicons>
         <Text style={styles.title}>تعديل رقم الهاتف</Text>
         <View style={styles.card}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Ionicons
-              name="call-outline"
-              size={24}
-              style={[styles.screenIcon, { marginLeft: 5 }]}
-            />
-            <Text style={styles.label}>رقم الهاتف</Text>
-          </View>
           <MaskInput
             value={phone}
             onChangeText={setPhone}
             mask={phoneMask}
             keyboardType="phone-pad"
+            placeholder="+97X-5XX-XXX-XXX"
             placeholderTextColor="#999"
             style={[styles.input, { textAlign: "center", direction: "ltr" }]}
           />
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          <Err error={error} />
 
           <View style={{ height: 20 }} />
 

@@ -1,23 +1,29 @@
 import { Router } from "express";
 import { sessionAuthenticate } from "../middleware/sessionMiddleware";
-import { charge, confirmPayment } from "../controllers/hallPaymentController";
-import { ownerHalls } from "../controllers/ownerHallsController";
-import { getHall, updateHall } from "../controllers/manageHallController";
-import { getHallComments } from "../controllers/hallCommentsController";
+import { getMealTypes } from "../controllers/hallOwnerControllers/getMealTypesController";
+import { getServices } from "../controllers/hallOwnerControllers/getServicesController";
+import { getHallComments } from "../controllers/hallOwnerControllers/hallCommentsController";
+import {
+  charge,
+  confirmPayment,
+} from "../controllers/hallOwnerControllers/hallPaymentController";
 import {
   getOwnerBookings,
-  ownerCancelBooking,
-  customerCancelResponse,
   proposeReschedule,
   respondReschedule,
   customerCancelBooking,
-} from "../controllers/manageBookingsController";
-import { getServices } from "../controllers/getServicesController";
-import { getMealTypes } from "../controllers/getMealTypesController";
+  customerCancelResponse,
+  ownerCancelBooking,
+} from "../controllers/hallOwnerControllers/manageBookingsController";
+import {
+  getHall,
+  updateHall,
+} from "../controllers/hallOwnerControllers/manageHallController";
+import { ownerHalls } from "../controllers/hallOwnerControllers/ownerHallsController";
 import {
   requestMeal,
   requestService,
-} from "../controllers/serviceRequestsController";
+} from "../controllers/hallOwnerControllers/serviceRequestsController";
 
 const router = Router();
 

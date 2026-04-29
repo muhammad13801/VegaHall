@@ -12,7 +12,7 @@ export const getNotificationsApi = (page = 1, limit = 10) =>
 export const savePushTokenApi = (token: string) =>
   api.patch("/notifications/token", { token });
 
-export async function registerPushToken() {
+/*export async function registerPushToken() {
   try {
     if (!Device.isDevice)
       return console.log("Push notifications require a real device");
@@ -57,4 +57,4 @@ export async function registerPushToken() {
   } catch (error) {
     console.log("registerPushToken error:", error);
   }
-}
+}*/
