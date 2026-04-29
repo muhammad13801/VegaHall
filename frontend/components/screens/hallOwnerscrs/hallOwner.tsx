@@ -1,3 +1,4 @@
+import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import Profile from "./profile/profile";
@@ -5,9 +6,31 @@ import Notifications from "./notifications";
 import ManageBookings from "./manageBookings";
 import Home from "./home";
 
-export const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator();
 
-export default function HallOwnerTabs() {
+const TABS = [
+  { name: "Home", component: Home, title: "الرئيسية", icon: "home-outline" },
+  {
+    name: "Notifications",
+    component: Notifications,
+    title: "الاشعارات",
+    icon: "notifications-outline",
+  },
+  {
+    name: "ManageBookings",
+    component: ManageBookings,
+    title: "ادارة الحجوزات",
+    icon: "calendar-outline",
+  },
+  {
+    name: "Profile",
+    component: Profile,
+    title: "حسابي",
+    icon: "person-outline",
+  },
+];
+
+export default function HallOwner() {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -17,49 +40,19 @@ export default function HallOwnerTabs() {
         tabBarLabelStyle: { fontSize: 14 },
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={Home}
-        options={{
-          title: "الرئيسية",
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Notifications"
-        component={Notifications}
-        options={{
-          title: "الاشعارات",
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="notifications-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="ManageBookings"
-        component={ManageBookings}
-        options={{
-          title: "ادارة الحجوزات",
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Profile"
-        component={Profile}
-        options={{
-          title: "حسابي",
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
-      />
+      {TABS.map((tab) => (
+        <Tab.Screen
+          key={tab.name}
+          name={tab.name}
+          component={tab.component}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ size, color }) => (
+              <Ionicons name={tab.icon as any} size={size} color={color} />
+            ),
+          }}
+        />
+      ))}
     </Tab.Navigator>
   );
 }

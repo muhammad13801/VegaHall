@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/sessionMiddleware";
 import sql from "../db";
 import { insertNotification } from "./notificationsController";
+import { HallService } from "./manageHallController";
 import refundPayment from "../utils/refundPayment";
 
 interface Booking {

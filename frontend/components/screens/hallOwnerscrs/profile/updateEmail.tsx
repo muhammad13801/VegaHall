@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useHandleChange } from "../../../reusable func/useHandleChange";
 import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
 import { checkEmailApi, updateEmailApi } from "../../../Services/userApi";
+import { Err } from "../../../reusable func/Err";
 
 export default function UpdateEmail() {
   const [form, setForm] = useState<Partial<AuthData>>({ email: "" });
@@ -73,28 +74,22 @@ export default function UpdateEmail() {
       <BackgroundDecoration />
 
       <BackButton />
-
       <KeyboardAwareScreen>
+        <Ionicons
+          name="mail-outline"
+          size={40}
+          style={styles.screenIcon}
+        ></Ionicons>
         <Text style={styles.title}>تعديل البريد الإلكتروني</Text>
         <View style={styles.card}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Ionicons
-              name="mail-outline"
-              size={24}
-              style={[styles.screenIcon, { marginLeft: 5 }]}
-            />
-            <Text style={styles.label}>البريد الإلكتروني</Text>
-          </View>
           <Input
             style={styles.input}
-            placeholder="البريد الإلكتروني"
+            placeholder="ادخل البريد الإلكتروني الجديد"
             value={form.email}
             onChangeText={(val) => change("email", val)}
             editable={!result}
           />
-          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-
-          <View style={{ height: 20 }} />
+          <Err error={errors.email} />
 
           {result && (
             <>

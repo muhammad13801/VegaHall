@@ -11,6 +11,7 @@ import Toast from "react-native-toast-message";
 import { useEffect, useState } from "react";
 import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
 import { getProfileApi, logoutApi } from "../../../Services/userApi";
+import { InfoRow } from "../../../reusable func/infoRow";
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
@@ -58,27 +59,6 @@ export default function Profile() {
     ]);
   };
 
-  const InfoRow = ({
-    icon,
-    label,
-    value,
-  }: {
-    icon: any;
-    label: string;
-    value: string;
-  }) => (
-    <View style={styles.profileInfoRow}>
-      <View style={styles.profileInfoIcon}>
-        <Ionicons name={icon} size={24} color="#6C4AB6" />
-      </View>
-      <View style={styles.profileTextContainer}>
-        <Text style={styles.profileLabel}>{label}</Text>
-        <Text style={styles.profileValue}>{value}</Text>
-      </View>
-      <Ionicons name="chevron-back-outline" size={20} color="#CCC" />
-    </View>
-  );
-
   const fullName = user ? `${user.first_name} ${user.last_name}` : "---";
   const roleLabel =
     user?.role === "owner"
@@ -103,6 +83,7 @@ export default function Profile() {
         </View>
 
         <TouchableOpacity
+          style={styles.info}
           onPress={() =>
             NavigateTo("UpdateName", {
               first_name: user?.first_name,
@@ -114,23 +95,35 @@ export default function Profile() {
             icon="person-outline"
             label="الاسم الكامل"
             value={fullName}
+            containerStyle={{ flex: 1 }}
           />
+          <Ionicons name="chevron-back-outline" size={20} color="#CCC" />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => NavigateTo("UpdateEmail")}>
+        <TouchableOpacity
+          style={styles.info}
+          onPress={() => NavigateTo("UpdateEmail")}
+        >
           <InfoRow
             icon="mail-outline"
             label="البريد الإلكتروني"
             value={user?.email || "---"}
+            containerStyle={{ flex: 1 }}
           />
+          <Ionicons name="chevron-back-outline" size={20} color="#CCC" />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => NavigateTo("UpdatePhone")}>
+        <TouchableOpacity
+          style={styles.info}
+          onPress={() => NavigateTo("UpdatePhone")}
+        >
           <InfoRow
             icon="call-outline"
             label="رقم الهاتف"
             value={user?.phone_number || "---"}
+            containerStyle={{ flex: 1 }}
           />
+          <Ionicons name="chevron-back-outline" size={20} color="#CCC" />
         </TouchableOpacity>
 
         <View style={{ height: 20 }} />
@@ -159,7 +152,7 @@ export default function Profile() {
               color="#6C4AB6"
               style={styles.screenIcon}
             />
-            <Text style={[styles.actionButtonText, { color: "#6C4AB6" }]}>
+            <Text style={[styles.actionText, { fontSize: 16, width: "30%" }]}>
               تغيير كلمة المرور
             </Text>
           </View>
@@ -178,7 +171,7 @@ export default function Profile() {
             <Ionicons
               name="log-out-outline"
               size={20}
-              style={[styles.screenIcon, { marginLeft: 6, color: "#D9534F" }]}
+              style={[styles.screenIcon, { color: "#D9534F" }]}
             />
             <Text style={[styles.actionButtonText, { color: "#D9534F" }]}>
               تسجيل الخروج

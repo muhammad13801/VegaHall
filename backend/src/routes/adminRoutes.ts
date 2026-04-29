@@ -19,7 +19,7 @@ import {
   approveMealRequest,
   rejectMealRequest,
   addGlobalMealType,
-} from "../controllers/adminController";
+} from "../controllers/adminControllers/adminController";
 import { sessionAuthenticate } from "../middleware/sessionMiddleware";
 
 const router = Router();

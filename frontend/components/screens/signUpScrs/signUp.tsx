@@ -199,7 +199,7 @@ export default function SignUp() {
                 change("phoneNumber", unmasked);
               }}
               mask={phoneMask}
-              keyboardType="phone-pad"
+              keyboardType="numeric"
               placeholderTextColor="#999"
               style={[
                 styles.input,

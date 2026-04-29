@@ -1,7 +1,7 @@
 import { Response } from "express";
-import sql from "../db";
-import { AuthRequest } from "../middleware/sessionMiddleware";
-import { insertNotification } from "./notificationsController";
+import sql from "../../db";
+import { AuthRequest } from "../../middleware/sessionMiddleware";
+import { insertNotification } from "../userControllers/notificationsController";
 
 export const getStats = async (req: AuthRequest, res: Response) => {
   try {
@@ -35,13 +35,17 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         ) as owner_rating
       FROM users u
       WHERE 1=1
-      ${search ? sql`AND (u.first_name ILIKE ${'%' + search + '%'} OR u.last_name ILIKE ${'%' + search + '%'} OR u.email ILIKE ${'%' + search + '%'})` : sql``}
-      ${rating ? sql`AND (
+      ${search ? sql`AND (u.first_name ILIKE ${"%" + search + "%"} OR u.last_name ILIKE ${"%" + search + "%"} OR u.email ILIKE ${"%" + search + "%"})` : sql``}
+      ${
+        rating
+          ? sql`AND (
         SELECT AVG(r.rating) 
         FROM ratings r 
         JOIN halls h ON r.hall_id = h.id 
         WHERE h.owner_id = u.id
-      ) >= ${Number(rating)}` : sql``}
+      ) >= ${Number(rating)}`
+          : sql``
+      }
       ORDER BY u.id DESC
     `;
 
@@ -139,7 +143,7 @@ export const addServiceToHall = async (req: AuthRequest, res: Response) => {
     // Find or create service ID by name
     let service = await sql`
       SELECT id FROM services WHERE name = ${name}
-    `.then(res => res[0]);
+    `.then((res) => res[0]);
 
     if (!service) {
       const [newService] = await sql`
@@ -179,9 +183,12 @@ export const addServiceToAllHalls = async (req: AuthRequest, res: Response) => {
 
     await sql.begin(async (tx: any) => {
       // 1. Find or create service
-      let service = await tx`SELECT id FROM services WHERE name = ${name}`.then((res: any) => res[0]);
+      let service = await tx`SELECT id FROM services WHERE name = ${name}`.then(
+        (res: any) => res[0],
+      );
       if (!service) {
-        const [newService] = await tx`INSERT INTO services (name) VALUES (${name}) RETURNING id`;
+        const [newService] =
+          await tx`INSERT INTO services (name) VALUES (${name}) RETURNING id`;
         service = newService;
       }
 
@@ -236,7 +243,7 @@ export const getAdminHalls = async (req: AuthRequest, res: Response) => {
       FROM halls h
       JOIN users u ON h.owner_id = u.id
       WHERE 1=1
-      ${search ? sql`AND (h.hall_name ILIKE ${'%' + search + '%'} OR u.first_name ILIKE ${'%' + search + '%'} OR u.last_name ILIKE ${'%' + search + '%'})` : sql``}
+      ${search ? sql`AND (h.hall_name ILIKE ${"%" + search + "%"} OR u.first_name ILIKE ${"%" + search + "%"} OR u.last_name ILIKE ${"%" + search + "%"})` : sql``}
       ${rating ? sql`AND (SELECT AVG(rating) FROM ratings WHERE hall_id = h.id) >= ${Number(rating)}` : sql``}
       ORDER BY h.id DESC
     `;
@@ -276,7 +283,10 @@ export const getServiceRequests = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const approveServiceRequest = async (req: AuthRequest, res: Response) => {
+export const approveServiceRequest = async (
+  req: AuthRequest,
+  res: Response,
+) => {
   try {
     const id = Number(req.params.id);
     if (!id) return res.status(400).send("❌ معرف الطلب غير صالح");

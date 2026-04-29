@@ -12,6 +12,8 @@ import { UserData, validateName } from "../../../Validations/validateUser";
 import { useHandleChange } from "../../../reusable func/useHandleChange";
 import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
 import { updateNameApi } from "../../../Services/userApi";
+import { Err } from "../../../reusable func/Err";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function UpdateName() {
   const route = useRoute<any>();
@@ -61,18 +63,20 @@ export default function UpdateName() {
       <BackButton />
 
       <KeyboardAwareScreen>
+        <Ionicons
+          name="person-outline"
+          size={40}
+          style={styles.screenIcon}
+        ></Ionicons>
         <Text style={styles.title}>تعديل الاسم</Text>
         <View style={styles.card}>
-          <Text style={styles.label}>الاسم الأول</Text>
           <Input
             style={styles.input}
             placeholder="الاسم الأول"
             value={form.firstName}
             onChangeText={(val) => change("firstName", val)}
           />
-          {errors.firstName && (
-            <Text style={styles.errorText}>{errors.firstName}</Text>
-          )}
+          <Err error={errors.firstName} />
 
           <Text style={styles.label}>اسم العائلة</Text>
           <Input
@@ -81,9 +85,7 @@ export default function UpdateName() {
             value={form.lastName}
             onChangeText={(val) => change("lastName", val)}
           />
-          {errors.lastName && (
-            <Text style={styles.errorText}>{errors.lastName}</Text>
-          )}
+          <Err error={errors.lastName} />
 
           <View style={{ height: 20 }} />
 

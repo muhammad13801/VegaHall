@@ -1,4 +1,4 @@
-import { stripe } from "../controllers/hallPaymentController";
+import { stripe } from "../controllers/hallOwnerControllers/hallPaymentController";
 
 async function refundPayment(paymentIntentId: string) {
   const refund = await stripe.refunds.create({

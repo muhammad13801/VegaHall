@@ -16,6 +16,7 @@ import PasswordInput from "../../../reusable func/passwordInput";
 import { useHandleChange } from "../../../reusable func/useHandleChange";
 import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
 import { changePasswordApi } from "../../../Services/userApi";
+import { Err } from "../../../reusable func/Err";
 
 export default function UpdatePassword() {
   const [form, setForm] = useState<Partial<AuthData>>({
@@ -82,18 +83,14 @@ export default function UpdatePassword() {
             setPassword={setOldPassword}
             placeholder="كلمة المرور الحالية"
           />
-          {errors.oldPassword && (
-            <Text style={styles.errorText}>{errors.oldPassword}</Text>
-          )}
+          <Err error={errors.oldPassword} />
 
           <PasswordInput
             password={form.password!}
             setPassword={(val) => change("password", val)}
             placeholder={"كلمة المرور الجديدة"}
           />
-          {errors.password && (
-            <Text style={styles.errorText}>{errors.password}</Text>
-          )}
+          <Err error={errors.password} />
 
           <View style={styles.passwordHintBox}>
             <Text style={styles.passwordHintTitle}>
@@ -112,9 +109,7 @@ export default function UpdatePassword() {
             setPassword={(text) => change("confirmPassword", text)}
             placeholder={"تاكيد كلمة المرور الجديدة"}
           />
-          {errors.confirmPassword && (
-            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-          )}
+          <Err error={errors.confirmPassword} />
 
           <TouchableOpacity
             style={[styles.actionButton, { flexDirection: "row" }]}

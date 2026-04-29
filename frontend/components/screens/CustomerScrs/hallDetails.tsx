@@ -1,9 +1,29 @@
 import { useState, useEffect } from "react";
-import { Text,TouchableOpacity,View,ScrollView,StatusBar,Dimensions,FlatList,NativeSyntheticEvent,NativeScrollEvent,Linking,ImageBackground,Image,ActivityIndicator,RefreshControl,} from "react-native";
-import {Ionicons } from "@expo/vector-icons";
-import {SafeAreaView } from "react-native-safe-area-context";
-import {NavigateTo } from "../../reusable func/navigateTo";
-import {getHallByIdApi,getHallRatingsApi,getFavoritesApi,toggleFavoriteApi} from "../../Services/customerApi";
+import {
+  Text,
+  TouchableOpacity,
+  View,
+  ScrollView,
+  StatusBar,
+  Dimensions,
+  FlatList,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  Linking,
+  ImageBackground,
+  Image,
+  ActivityIndicator,
+  RefreshControl,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NavigateTo } from "../../reusable func/navigateTo";
+import {
+  getHallByIdApi,
+  getHallRatingsApi,
+  getFavoritesApi,
+  toggleFavoriteApi,
+} from "../../Services/customerApi";
 import { useRefresh } from "../../reusable func/refreshContext";
 import { VideoCard } from "../../reusable func/videoCard";
 import { styles } from "../../styles";
@@ -23,7 +43,9 @@ const SectionCard = ({
   children: React.ReactNode;
 }) => (
   <View style={[styles.card, { marginBottom: 16 }]}>
-    <View style={[styles.row, { alignItems: "center", gap: 8, marginBottom: 14 }]}>
+    <View
+      style={[styles.row, { alignItems: "center", gap: 8, marginBottom: 14 }]}
+    >
       <View
         style={{
           width: 32,
@@ -52,7 +74,9 @@ const InfoRow = ({
   label: string;
   value: string;
 }) => (
-  <View style={[styles.row, { alignItems: "center", gap: 10, marginBottom: 12 }]}>
+  <View
+    style={[styles.row, { alignItems: "center", gap: 10, marginBottom: 12 }]}
+  >
     <Ionicons name={icon as any} size={16} color="#6C4AB6" />
     <Text style={styles.profileLabel}>{label}</Text>
     <Text style={[styles.profileValue, { flex: 1 }]}>{value}</Text>
@@ -182,10 +206,12 @@ export default function HallDetails({ route }: any) {
           },
         ]
       : []),
-    ...(hall.secondary_contacts || hall.secondaryContacts || []).map((c: any) => ({
-      name: `${c.first_name || c.name || ""} ${c.last_name || ""}`.trim(),
-      phone: c.phone_number,
-    })),
+    ...(hall.secondary_contacts || hall.secondaryContacts || []).map(
+      (c: any) => ({
+        name: `${c.first_name || c.name || ""} ${c.last_name || ""}`.trim(),
+        phone: c.phone_number,
+      }),
+    ),
   ].filter((contact) => contact.phone);
 
   return (
@@ -219,7 +245,11 @@ export default function HallDetails({ route }: any) {
               onScroll={onGalleryScroll}
               scrollEventThrottle={16}
               style={{ direction: "ltr" }}
-              renderItem={({ item }: { item: { type: string; uri: string } }) =>
+              renderItem={({
+                item,
+              }: {
+                item: { type: string; uri: string };
+              }) =>
                 item.type === "image" ? (
                   <View style={{ width: SCREEN_WIDTH, aspectRatio: 16 / 9 }}>
                     <ImageBackground
@@ -282,7 +312,11 @@ export default function HallDetails({ route }: any) {
               }}
             >
               <Ionicons
-                name={media[activeSlide]?.type === "video" ? "videocam" : "image-outline"}
+                name={
+                  media[activeSlide]?.type === "video"
+                    ? "videocam"
+                    : "image-outline"
+                }
                 size={13}
                 color="#fff"
               />
@@ -354,7 +388,9 @@ export default function HallDetails({ route }: any) {
           }}
         >
           <View style={[styles.card, { marginBottom: 16 }]}>
-            <View style={[styles.info, { alignItems: "center", marginBottom: 10 }]}>
+            <View
+              style={[styles.info, { alignItems: "center", marginBottom: 10 }]}
+            >
               <Text style={[styles.title, { fontSize: 22, flex: 1 }]}>
                 {hall.hall_name || hall.name}
               </Text>
@@ -374,9 +410,8 @@ export default function HallDetails({ route }: any) {
             >
               {renderStars(Number(hall.average_rating || hall.rating || 0))}
               <Text style={[styles.profileLabel, { marginRight: 4 }]}>
-                {Number(hall.average_rating || hall.rating || 0).toFixed(1)}
-                {" "}
-                ({hall.reviews_count || hall.reviewsCount || 0} تقييم)
+                {Number(hall.average_rating || hall.rating || 0).toFixed(1)} (
+                {hall.reviews_count || hall.reviewsCount || 0} تقييم)
               </Text>
             </View>
 
@@ -399,7 +434,7 @@ export default function HallDetails({ route }: any) {
               onPress={() => {
                 const query = hall.location || `${hall.city} ${hall.address}`;
                 Linking.openURL(
-                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
                 );
               }}
               activeOpacity={0.75}
@@ -437,7 +472,7 @@ export default function HallDetails({ route }: any) {
                 ]}
                 onPress={() =>
                   Linking.openURL(
-                    `https://www.google.com/maps/search/?api=1&query=${hall.location}`
+                    `https://www.google.com/maps/search/?api=1&query=${hall.location}`,
                   )
                 }
               >
@@ -454,7 +489,8 @@ export default function HallDetails({ route }: any) {
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                 {services.map((svc: any, i: number) => {
                   const svcName = typeof svc === "string" ? svc : svc.name;
-                  const svcPrice = typeof svc === "object" && svc.price ? svc.price : 0;
+                  const svcPrice =
+                    typeof svc === "object" && svc.price ? svc.price : 0;
 
                   return (
                     <View key={i} style={styles.items}>
@@ -473,7 +509,10 @@ export default function HallDetails({ route }: any) {
           )}
 
           {mealOptions.length > 0 && (
-            <SectionCard title="خيارات الطعام والوجبات" icon="restaurant-outline">
+            <SectionCard
+              title="خيارات الطعام والوجبات"
+              icon="restaurant-outline"
+            >
               {mealOptions.map((meal: any, i: number) => (
                 <View key={i} style={[styles.info, { marginBottom: 8 }]}>
                   <View style={[styles.row, { alignItems: "center", gap: 6 }]}>
@@ -543,7 +582,13 @@ export default function HallDetails({ route }: any) {
 
           <SectionCard title="آراء الزبائن" icon="chatbubble-outline">
             {reviews.length === 0 ? (
-              <Text style={{ textAlign: "center", color: "#999", marginVertical: 10 }}>
+              <Text
+                style={{
+                  textAlign: "center",
+                  color: "#999",
+                  marginVertical: 10,
+                }}
+              >
                 لا توجد تقييمات بعد
               </Text>
             ) : (
@@ -558,7 +603,9 @@ export default function HallDetails({ route }: any) {
                   }}
                 >
                   <View style={[styles.info, { marginBottom: 6 }]}>
-                    <View style={[styles.row, { alignItems: "center", gap: 8 }]}>
+                    <View
+                      style={[styles.row, { alignItems: "center", gap: 8 }]}
+                    >
                       <View
                         style={[
                           styles.profileInfoIcon,
@@ -570,7 +617,11 @@ export default function HallDetails({ route }: any) {
                           },
                         ]}
                       >
-                        <Ionicons name="person-outline" size={18} color="#6C4AB6" />
+                        <Ionicons
+                          name="person-outline"
+                          size={18}
+                          color="#6C4AB6"
+                        />
                       </View>
                       <Text style={styles.profileValue}>
                         {review.user_name || "مستخدم"}
@@ -582,7 +633,12 @@ export default function HallDetails({ route }: any) {
                     </Text>
                   </View>
 
-                  <View style={[styles.row, { alignItems: "center", gap: 3, marginBottom: 6 }]}>
+                  <View
+                    style={[
+                      styles.row,
+                      { alignItems: "center", gap: 3, marginBottom: 6 },
+                    ]}
+                  >
                     {renderStars(review.rating)}
                   </View>
 

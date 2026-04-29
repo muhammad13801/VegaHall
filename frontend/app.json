@@ -4,10 +4,10 @@
     "slug": "vega-hall",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/vega-hall-icon.png",
+    "icon": "./assets/vega-icon-1024.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/vega-hall-icon-android.png",
+      "image": "./assets/vega-icon-1252.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,14 +16,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/vega-icon2.png",
+        "foregroundImage": "./assets/vega-icon-1024.png",
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.muhammad_abujheihsa.vegaHall"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/vega-icon-1024.png"
     },
     "plugins": [
       "@react-native-community/datetimepicker",

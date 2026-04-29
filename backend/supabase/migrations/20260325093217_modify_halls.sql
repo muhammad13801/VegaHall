@@ -1,0 +1,12 @@
+ALTER TABLE public.halls
+ALTER COLUMN city TYPE varchar(30),
+ALTER COLUMN city SET NOT NULL,
+ALTER COLUMN city SET DEFAULT '',
+
+ALTER COLUMN capacity TYPE integer,
+ALTER COLUMN capacity SET NOT NULL,
+ALTER COLUMN capacity SET DEFAULT 0,
+
+ALTER COLUMN description TYPE text,
+ALTER COLUMN description SET NOT NULL,
+ALTER COLUMN description SET DEFAULT '';

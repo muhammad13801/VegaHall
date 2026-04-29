@@ -58,7 +58,6 @@ export const confirmBookingPayment = async (req: AuthRequest, res: Response) => 
       bookingDate,
       guestCount,
       services,
-      meals,
       totalCost
     } = req.body;
 
@@ -92,42 +91,6 @@ export const confirmBookingPayment = async (req: AuthRequest, res: Response) => 
         RETURNING id
       `;
       const bookingId = newBooking.id;
-
-      // Insert selected services
-      if (services && Array.isArray(services)) {
-        for (const serviceName of services) {
-          const [svc] = await tx`
-            SELECT s.id, hs.price 
-            FROM services s
-            JOIN hall_services hs ON hs.service_id = s.id
-            WHERE s.name = ${serviceName} AND hs.hall_id = ${hallId}
-          `;
-          if (svc) {
-            await tx`
-              INSERT INTO booking_services (booking_id, service_id, price)
-              VALUES (${bookingId}, ${svc.id}, ${svc.price})
-            `;
-          }
-        }
-      }
-
-      // Insert selected meals
-      if (meals && Array.isArray(meals)) {
-        for (const mealName of meals) {
-          const [meal] = await tx`
-            SELECT mt.id, mo.price_per_person
-            FROM meal_types mt
-            JOIN meal_options mo ON mo.meal_type_id = mt.id
-            WHERE mt.name = ${mealName} AND mo.hall_id = ${hallId}
-          `;
-          if (meal) {
-            await tx`
-              INSERT INTO booking_meals (booking_id, meal_type_id, price_per_person)
-              VALUES (${bookingId}, ${meal.id}, ${meal.price_per_person})
-            `;
-          }
-        }
-      }
 
       // Record the payment
       await tx`

@@ -63,18 +63,16 @@ export default function AddHall() {
           <SecondaryContacts form={form} setForm={setForm} errors={errors} />
 
           {/* next button */}
-          <View style={{ marginTop: 20 }}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleNext}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.row, { alignItems: "center", gap: 5 }]}>
-                <Text style={styles.actionButtonText}>المتابعة للدفع</Text>
-                <Ionicons name="arrow-back" size={20} color="#fff" />
-              </View>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleNext}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.row, { alignItems: "center", gap: 5 }]}>
+              <Text style={styles.actionButtonText}>المتابعة للدفع</Text>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+            </View>
+          </TouchableOpacity>
         </View>
       </KeyboardAwareScreen>
     </SafeAreaView>

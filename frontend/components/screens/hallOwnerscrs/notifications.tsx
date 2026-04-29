@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import {
   View,
   Text,
@@ -19,37 +20,86 @@ interface Notification {
   content: string;
   notification_type: string;
   created_at: string;
-  first_name?: string;
-  last_name?: string;
 }
 
-// Returns icon name + color based on notification_type
-const getNotificationStyle = (type: string) => {
-  switch (type) {
-    case "booking":
-      return { icon: "calendar" as const, color: "#22C55E", bg: "#F0FDF4" };
-    case "cancel":
-      return { icon: "close-circle" as const, color: "#EF4444", bg: "#FEF2F2" };
-    case "service":
-      return { icon: "sparkles" as const, color: "#6C4AB6", bg: "#F3EAFF" };
-    case "reschedule":
-      return {
-        icon: "calendar-outline" as const,
-        color: "#F59E0B",
-        bg: "#FFFBEB",
-      };
-    default:
-      return {
-        icon: "notifications-outline" as const,
-        color: "#6C4AB6",
-        bg: "#F3EAFF",
-      };
-  }
+const NOTIFICATION_STYLES: Record<
+  string,
+  { icon: any; color: string; bg: string }
+> = {
+  booking: { icon: "calendar", color: "#22C55E", bg: "#F0FDF4" },
+
+  meal_approved: { icon: "checkmark-circle", color: "#22C55E", bg: "#F0FDF4" },
+  meal_rejected: { icon: "close-circle", color: "#EF4444", bg: "#FEF2F2" },
+
+  service_approved: { icon: "checkmark-done", color: "#22C55E", bg: "#F0FDF4" },
+  service_rejected: { icon: "close-circle", color: "#EF4444", bg: "#FEF2F2" },
+
+  reschedule_request: { icon: "time-outline", color: "#F59E0B", bg: "#FFFBEB" },
+  reschedule_reject: { icon: "close-circle", color: "#EF4444", bg: "#FEF2F2" },
+
+  default: { icon: "notifications-outline", color: "#6C4AB6", bg: "#F3EAFF" },
 };
+const NotificationCard = memo(({ item }: { item: Notification }) => {
+  const style =
+    NOTIFICATION_STYLES[item.notification_type] || NOTIFICATION_STYLES.default;
+  return (
+    <View style={styles.card}>
+      <View style={[styles.row, { alignItems: "center" }]}>
+        <View
+          style={[
+            styles.profileAvatarSmall,
+            {
+              backgroundColor: style.bg,
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+            },
+          ]}
+        >
+          <Ionicons name={style.icon} size={24} color={style.color} />
+        </View>
+        <View style={styles.gapBetween} />
+        <View>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "bold",
+              color: "#333",
+            }}
+          >
+            {item.title}
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              color: "#AAA",
+              marginTop: 2,
+            }}
+          >
+            {formatDate(item.created_at)}
+          </Text>
+        </View>
+      </View>
+      <Text
+        style={[
+          styles.subtitle,
+          {
+            fontSize: 15,
+            marginTop: 12,
+            lineHeight: 20,
+            color: "#555",
+          },
+        ]}
+      >
+        {item.content}
+      </Text>
+    </View>
+  );
+});
 
 export default function Notifications() {
   const {
-    items: notifications,
+    items,
     loading,
     loadingMore,
     refreshing,
@@ -61,7 +111,7 @@ export default function Notifications() {
     limit: 10,
   });
 
-  if (loading && notifications.length === 0) {
+  if (loading && items.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
         <ActivityIndicator size="large" color="#6C4AB6" />
@@ -72,11 +122,10 @@ export default function Notifications() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
-
       <FlatList
-        data={notifications as Notification[]}
+        data={items as Notification[]}
         keyExtractor={(item) => item.id.toString()}
-        style={[{ width: "90%" }]}
+        style={{ width: "90%" }}
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
@@ -88,7 +137,7 @@ export default function Notifications() {
           />
         }
         ListEmptyComponent={
-          <View style={{ alignItems: "center", marginTop: "60%" }}>
+          <View style={styles.emptyContainer}>
             <Ionicons name="notifications-off-outline" size={80} color="#DDD" />
             <Text style={styles.subtitle}>لا توجد اشعارات</Text>
           </View>
@@ -96,7 +145,7 @@ export default function Notifications() {
         ListFooterComponent={
           loadingMore ? (
             <ActivityIndicator color="#6C4AB6" style={{ marginVertical: 20 }} />
-          ) : !hasMore && notifications.length > 0 ? (
+          ) : !hasMore && items.length > 0 ? (
             <Text
               style={{
                 textAlign: "center",
@@ -109,56 +158,7 @@ export default function Notifications() {
             </Text>
           ) : null
         }
-        renderItem={({ item }) => {
-          const { icon, color } = getNotificationStyle(item.notification_type);
-          return (
-            <View style={styles.card}>
-              {/* Icon badge */}
-              <View style={styles.row}>
-                <Ionicons name={icon} size={24} color={color} />
-
-                <View style={styles.gapBetween} />
-
-                <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                  {item.title}
-                </Text>
-              </View>
-
-              {/* Content */}
-
-              <Text style={[styles.subtitle, { fontSize: 16, marginTop: 10 }]}>
-                {item.content}
-              </Text>
-
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#F1F2F6",
-                  marginTop: 10,
-                }}
-              />
-
-              {/* Date */}
-              <View
-                style={[
-                  styles.row,
-                  { marginTop: 10, gap: 5, alignItems: "center" },
-                ]}
-              >
-                <Ionicons
-                  name="time-outline"
-                  size={12}
-                  color="#AAA"
-                  style={{ gap: 5 }}
-                />
-
-                <Text style={{ fontSize: 12, color: "#AAA" }}>
-                  {formatDate(item.created_at)}
-                </Text>
-              </View>
-            </View>
-          );
-        }}
+        renderItem={({ item }) => <NotificationCard item={item} />}
       />
     </SafeAreaView>
   );

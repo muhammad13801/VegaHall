@@ -199,17 +199,54 @@ export const styles = StyleSheet.create({
   },
 
   profileLabel: {
-    fontSize: 13,
-    color: "#888",
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "600",
     marginBottom: 2,
   },
 
   profileValue: {
-    fontSize: 16,
-    color: "#333",
-    fontWeight: "600",
+    fontSize: 14,
+    color: "#888",
     direction: "ltr",
     textAlign: "right",
+  },
+
+  profileSecondaryAction: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#6C4AB6",
+  },
+
+  profileDeleteAction: {
+    backgroundColor: "#FFE5E5",
+    borderWidth: 0,
+  },
+
+  profileActionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  profileAvatarSmall: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#F3EAFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  commentBody: {
+    fontSize: 14,
+    color: "#555",
+  },
+
+  emptyContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: "70%",
   },
 
   items: {
