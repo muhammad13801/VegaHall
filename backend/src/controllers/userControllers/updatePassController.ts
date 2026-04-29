@@ -1,9 +1,9 @@
 import type { Response } from "express";
-import sql from "../../db.ts";
+import sql from "../../db.js";
 import bcrypt from "bcrypt";
-import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
-import type { UserTable } from "../../services/authService.ts";
-import { comparePassword } from "./loginController.ts";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.js";
+import type { UserTable } from "../../services/authService.js";
+import { comparePassword } from "./loginController.js";
 
 export const updatePassword = async (req: AuthRequest, res: Response) => {
   try {

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import sql from "../../db.ts";
+import sql from "../../db.js";
 
 export const getMealTypes = async (req: Request, res: Response) => {
   try {

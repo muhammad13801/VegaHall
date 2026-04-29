@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import sql from "../../db.ts";
-import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
+import sql from "../../db.js";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.js";
 import cron from "node-cron";
-import { insertNotification } from "../userControllers/notificationsController.ts";
+import { insertNotification } from "../userControllers/notificationsController.js";
 
 export const getHallRatings = async (req: Request, res: Response) => {
   try {

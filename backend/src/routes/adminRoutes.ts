@@ -19,8 +19,8 @@ import {
   approveMealRequest,
   rejectMealRequest,
   addGlobalMealType,
-} from "../controllers/adminControllers/adminController.ts";
-import { sessionAuthenticate } from "../middleware/sessionMiddleware.ts";
+} from "../controllers/adminControllers/adminController.js";
+import { sessionAuthenticate } from "../middleware/sessionMiddleware.js";
 
 const router = Router();
 

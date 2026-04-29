@@ -1,4 +1,4 @@
-// src/server.ts
+// src/server.js
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
@@ -6,14 +6,14 @@ import cors from "cors";
 // Load .env before sending data
 dotenv.config();
 
-import authRoutes from "./routes/auth.ts";
-import userRoutes from "./routes/userRoutes.ts";
-import hallRoutes from "./routes/hallRoutes.ts";
-import uploadRoutes from "./routes/uploadRoutes.ts";
-import notificationRoutes from "./routes/notificationRoutes.ts";
-import customerRoutes from "./routes/customerRoutes.ts";
-import appStateRoutes from "./routes/appStateRoutes.ts";
-import adminRoutes from "./routes/adminRoutes.ts";
+import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/userRoutes.js";
+import hallRoutes from "./routes/hallRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import customerRoutes from "./routes/customerRoutes.js";
+import appStateRoutes from "./routes/appStateRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 app.use(cors());

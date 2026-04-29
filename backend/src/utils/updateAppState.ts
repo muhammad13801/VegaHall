@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import sql from "../db.ts";
+import sql from "../db.js";
 
 export const getAppState = async (req: Request, res: Response) => {
   try {

@@ -1,8 +1,8 @@
 import type { Response } from "express";
-import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
-import sql from "../../db.ts";
-import { insertNotification } from "../userControllers/notificationsController.ts";
-import refundPayment from "../../utils/refundPayment.ts";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.js";
+import sql from "../../db.js";
+import { insertNotification } from "../userControllers/notificationsController.js";
+import refundPayment from "../../utils/refundPayment.js";
 
 interface Booking {
   id: number;

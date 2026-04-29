@@ -1,6 +1,6 @@
 import type { Response } from "express";
-import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
-import sql from "../../db.ts";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.js";
+import sql from "../../db.js";
 
 interface Comment {
   id: number;

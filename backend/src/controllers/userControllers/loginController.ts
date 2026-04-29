@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
-import sql from "../../db.ts";
-import type { UserTable } from "../../services/authService.ts";
+import sql from "../../db.js";
+import type { UserTable } from "../../services/authService.js";
 
 export const comparePassword = async (password: string, hash: string) => {
   return await bcrypt.compare(password, hash);

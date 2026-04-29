@@ -3,13 +3,13 @@ import {
   register,
   resendCode,
   verifyRegister,
-} from "../controllers/userControllers/signUpController.ts";
+} from "../controllers/userControllers/signUpController.js";
 import {
   sendResetCode,
   verifyResetPassword,
   updateNewPassword,
-} from "../controllers/userControllers/passController.ts";
-import { login } from "../controllers/userControllers/loginController.ts";
+} from "../controllers/userControllers/passController.js";
+import { login } from "../controllers/userControllers/loginController.js";
 
 const router = Router();
 

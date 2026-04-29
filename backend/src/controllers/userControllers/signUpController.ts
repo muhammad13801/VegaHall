@@ -1,14 +1,14 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import sql from "../../db.ts";
-import { sendVerificationCode } from "../../utils/email.ts";
+import sql from "../../db.js";
+import { sendVerificationCode } from "../../utils/email.js";
 import {
   checkPending,
   checkUserAvailability,
   generateCode,
   processVerification,
-} from "../../services/authService.ts";
-import { handleVerificationError } from "../../utils/handleVerificationError.ts";
+} from "../../services/authService.js";
+import { handleVerificationError } from "../../utils/handleVerificationError.js";
 
 /* ================= REGISTER ================= */
 
