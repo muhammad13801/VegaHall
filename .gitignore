@@ -10,6 +10,5 @@ frontend/build/
 frontend/.expo/
 frontend/android/
 frontend/ios/
-frontend/.env
-backend/.env
 .vscode/
+.env
