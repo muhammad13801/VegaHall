@@ -1,8 +1,8 @@
-import { Response } from "express";
-import { AuthRequest } from "../../middleware/sessionMiddleware";
-import sql from "../../db";
-import { Expo, ExpoPushMessage } from "expo-server-sdk";
-import { updateAppState } from "../../utils/updateAppState";
+import type { Response } from "express";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
+import sql from "../../db.ts";
+import { Expo, type ExpoPushMessage } from "expo-server-sdk";
+import { updateAppState } from "../../utils/updateAppState.ts";
 
 export interface Notification {
   id: number;

@@ -1,5 +1,5 @@
-import sql from "../../db";
-import { Request, Response } from "express";
+import sql from "../../db.ts";
+import type { Request, Response } from "express";
 
 export const getServices = async (req: Request, res: Response) => {
   try {

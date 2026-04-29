@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { supabase } from "../services/supabaseClient";
+import { supabase } from "../services/supabaseClient.ts";
 import {
-  AuthRequest,
+  type AuthRequest,
   sessionAuthenticate,
-} from "../middleware/sessionMiddleware";
+} from "../middleware/sessionMiddleware.ts";
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAppState } from "../utils/updateAppState";
+import { getAppState } from "../utils/updateAppState.ts";
 
 const router = Router();
 

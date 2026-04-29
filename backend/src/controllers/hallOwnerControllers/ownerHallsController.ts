@@ -1,6 +1,6 @@
-import { Response } from "express";
-import sql from "../../db";
-import { AuthRequest } from "../../middleware/sessionMiddleware";
+import type { Response } from "express";
+import sql from "../../db.ts";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
 
 export interface Hall {
   id: number;

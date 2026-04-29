@@ -1,7 +1,7 @@
-import { Response } from "express";
-import { AuthRequest } from "../../middleware/sessionMiddleware";
-import sql from "../../db";
-import { insertNotification } from "../userControllers/notificationsController";
+import type { Response } from "express";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
+import sql from "../../db.ts";
+import { insertNotification } from "../userControllers/notificationsController.ts";
 
 export const requestService = async (req: AuthRequest, res: Response) => {
   try {

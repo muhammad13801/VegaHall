@@ -1,7 +1,7 @@
-import { Response } from "express";
-import { UserTable } from "../../services/authService";
-import { AuthRequest } from "../../middleware/sessionMiddleware";
-import sql from "../../db";
+import type { Response } from "express";
+import type { UserTable } from "../../services/authService.ts";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
+import sql from "../../db.ts";
 
 export const updateName = async (req: AuthRequest, res: Response) => {
   try {

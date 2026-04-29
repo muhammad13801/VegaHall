@@ -1,7 +1,7 @@
-import { Response } from "express";
-import sql from "../../db";
-import { AuthRequest } from "../../middleware/sessionMiddleware";
-import { UserTable } from "../../services/authService";
+import type { Response } from "express";
+import sql from "../../db.ts";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
+import type { UserTable } from "../../services/authService.ts";
 
 export const getProfile = async (req: AuthRequest, res: Response) => {
   try {

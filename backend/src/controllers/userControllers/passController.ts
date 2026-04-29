@@ -1,15 +1,15 @@
-import { Request, Response } from "express";
-import sql from "../../db";
+import type { Request, Response } from "express";
+import sql from "../../db.ts";
 import bcrypt from "bcrypt";
-import { sendVerificationCode } from "../../utils/email";
+import { sendVerificationCode } from "../../utils/email.ts";
 import {
   emailExists,
   checkPending,
-  UserTable,
   generateCode,
   processVerification,
-} from "../../services/authService";
-import { handleVerificationError } from "../../utils/handleVerificationError";
+  type UserTable,
+} from "../../services/authService.ts";
+import { handleVerificationError } from "../../utils/handleVerificationError.ts";
 
 export const sendResetCode = async (req: Request, res: Response) => {
   try {

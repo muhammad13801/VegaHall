@@ -1,5 +1,5 @@
-import { Response } from "express";
-import { VerificationResult } from "../services/authService";
+import type { Response } from "express";
+import type { VerificationResult } from "../services/authService.ts";
 
 export const handleVerificationError = (
   res: Response,

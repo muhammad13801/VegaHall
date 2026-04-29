@@ -1,7 +1,7 @@
-import { Response } from "express";
-import sql from "../../db";
-import { AuthRequest } from "../../middleware/sessionMiddleware";
-import { insertNotification } from "../userControllers/notificationsController";
+import type { Response } from "express";
+import sql from "../../db.ts";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
+import { insertNotification } from "../userControllers/notificationsController.ts";
 
 export const getBookings = async (req: AuthRequest, res: Response) => {
   const userId = req.userId;

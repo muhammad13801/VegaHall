@@ -3,28 +3,28 @@ import {
   getHallById,
   searchHalls,
   getBusyDates,
-} from "../controllers/customerControllers/hallsController";
+} from "../controllers/customerControllers/hallsController.ts";
 import {
   getFavorites,
   toggleFavorite,
-} from "../controllers/customerControllers/favoritesController";
+} from "../controllers/customerControllers/favoritesController.ts";
 import {
   getBookings,
   createBooking,
   cancelBooking,
   requestReschedule,
-} from "../controllers/customerControllers/bookingsController";
-import { respondReschedule } from "../controllers/hallOwnerControllers/manageBookingsController";
+} from "../controllers/customerControllers/bookingsController.ts";
+import { respondReschedule } from "../controllers/hallOwnerControllers/manageBookingsController.ts";
 import {
   getHallRatings,
   createRating,
-} from "../controllers/customerControllers/ratingsController";
+} from "../controllers/customerControllers/ratingsController.ts";
 import { Router } from "express";
-import { sessionAuthenticate } from "../middleware/sessionMiddleware";
+import { sessionAuthenticate } from "../middleware/sessionMiddleware.ts";
 import {
   chargeBooking,
   confirmBookingPayment,
-} from "../controllers/customerControllers/bookingPaymentController";
+} from "../controllers/customerControllers/bookingPaymentController.ts";
 
 const router = Router();
 

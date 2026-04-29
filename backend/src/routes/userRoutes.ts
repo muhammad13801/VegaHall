@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { sessionAuthenticate } from "../middleware/sessionMiddleware";
-import { updatePassword } from "../controllers/userControllers/updatePassController";
-import { logout } from "../controllers/userControllers/logoutController";
-import { getProfile } from "../controllers/userControllers/profileController";
+import { sessionAuthenticate } from "../middleware/sessionMiddleware.ts";
+import { updatePassword } from "../controllers/userControllers/updatePassController.ts";
+import { logout } from "../controllers/userControllers/logoutController.ts";
+import { getProfile } from "../controllers/userControllers/profileController.ts";
 import {
   checkEmail,
   updateEmail,
-} from "../controllers/userControllers/updateEmailController";
-import { updateName } from "../controllers/userControllers/updateNameController";
-import { updatePhone } from "../controllers/userControllers/updatePhoneController";
+} from "../controllers/userControllers/updateEmailController.ts";
+import { updateName } from "../controllers/userControllers/updateNameController.ts";
+import { updatePhone } from "../controllers/userControllers/updatePhoneController.ts";
 
 const router = Router();
 

@@ -12,7 +12,7 @@
   },
   "license": "ISC",
   "author": "Muhammad",
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",

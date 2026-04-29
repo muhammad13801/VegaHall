@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { sessionAuthenticate } from "../middleware/sessionMiddleware";
+import { sessionAuthenticate } from "../middleware/sessionMiddleware.ts";
 import {
   getNotifications,
   savePushToken,
-} from "../controllers/userControllers/notificationsController";
+} from "../controllers/userControllers/notificationsController.ts";
 
 const router = Router();
 

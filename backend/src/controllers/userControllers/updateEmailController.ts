@@ -1,12 +1,12 @@
-import { Response } from "express";
-import { AuthRequest } from "../../middleware/sessionMiddleware";
-import sql from "../../db";
+import type { Response } from "express";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
+import sql from "../../db.ts";
 import {
   emailExists,
   generateCode,
-  UserTable,
-} from "../../services/authService";
-import { sendVerificationCode } from "../../utils/email";
+  type UserTable,
+} from "../../services/authService.ts";
+import { sendVerificationCode } from "../../utils/email.ts";
 
 export const checkEmail = async (req: AuthRequest, res: Response) => {
   try {

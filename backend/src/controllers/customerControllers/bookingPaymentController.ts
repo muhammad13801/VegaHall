@@ -1,8 +1,8 @@
-import { Response } from "express";
-import { AuthRequest } from "../../middleware/sessionMiddleware";
+import type { Response } from "express";
+import type { AuthRequest } from "../../middleware/sessionMiddleware.ts";
 import Stripe from "stripe";
-import sql from "../../db";
-import { insertNotification } from "../userControllers/notificationsController";
+import sql from "../../db.ts";
+import { insertNotification } from "../userControllers/notificationsController.ts";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-02-25.clover",

@@ -6,14 +6,14 @@ import cors from "cors";
 // Load .env before sending data
 dotenv.config();
 
-import authRoutes from "./routes/auth";
-import userRoutes from "./routes/userRoutes";
-import hallRoutes from "./routes/hallRoutes";
-import uploadRoutes from "./routes/uploadRoutes";
-import notificationRoutes from "./routes/notificationRoutes";
-import customerRoutes from "./routes/customerRoutes";
-import appStateRoutes from "./routes/appStateRoutes";
-import adminRoutes from "./routes/adminRoutes";
+import authRoutes from "./routes/auth.ts";
+import userRoutes from "./routes/userRoutes.ts";
+import hallRoutes from "./routes/hallRoutes.ts";
+import uploadRoutes from "./routes/uploadRoutes.ts";
+import notificationRoutes from "./routes/notificationRoutes.ts";
+import customerRoutes from "./routes/customerRoutes.ts";
+import appStateRoutes from "./routes/appStateRoutes.ts";
+import adminRoutes from "./routes/adminRoutes.ts";
 
 const app = express();
 app.use(cors());
@@ -30,6 +30,11 @@ app.use("/app-state", appStateRoutes);
 
 app.use("/customer", customerRoutes);
 app.use("/admin", adminRoutes);
+
+// Health check route
+app.get("/", (req, res) => {
+  res.json({ message: "Backend is running!" });
+});
 
 // Export the app for Vercel
 export default app;
