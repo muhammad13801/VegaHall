@@ -71,6 +71,10 @@ export const rejectServiceRequest = async (id: number) => {
   return api.post(`/admin/services/requests/${id}/reject`);
 };
 
+export const renameServiceRequest = async (id: number, name: string) => {
+  return api.patch(`/admin/services/requests/${id}/rename`, { name });
+};
+
 // طلبات الوجبات
 export const getMealRequests = async () => {
   return api.get("/admin/meals/requests");
@@ -82,4 +86,8 @@ export const approveMealRequest = async (id: number) => {
 
 export const rejectMealRequest = async (id: number) => {
   return api.post(`/admin/meals/requests/${id}/reject`);
+};
+
+export const renameMealRequest = async (id: number, name: string) => {
+  return api.patch(`/admin/meals/requests/${id}/rename`, { name });
 };

@@ -5,10 +5,9 @@ import {
     View,
     ScrollView,
     TextInput,
-    StatusBar,
-    Alert,
+    
 } from "react-native";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { goBack } from "../../reusable func/navigateTo";
 import { styles as s } from "./ibrahimStyles";
@@ -21,16 +20,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const RATING_LABELS = ["", "سيء جداً 😞", "سيء 😕", "جيد 🙂", "جيد جداً 😊", "ممتاز 🤩"];
 
-const QUICK_TAGS = [
-    "الخدمة ممتازة",
-    "نظافة عالية",
-    "طعام لذيذ",
-    "ديكور رائع",
-    "سعر مناسب",
-    "تنظيم ممتاز",
-    "موقع مميز",
-    "فريق متعاون",
-];
 
 export default function RateHall({ route }: any) {
     const hallName: string = route?.params?.hallName || "";
@@ -40,14 +29,7 @@ export default function RateHall({ route }: any) {
 
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState("");
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
-
-    const toggleTag = (tag: string) => {
-        setSelectedTags((prev) =>
-            prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-        );
-    };
 
     const isValid = rating > 0;
 
@@ -55,14 +37,11 @@ export default function RateHall({ route }: any) {
         if (!hallId || !bookingId) return;
         setLoading(true);
         try {
-            const tagsText = selectedTags.length > 0 ? selectedTags.join("، ") + ". " : "";
-            const fullComment = tagsText + comment;
-
             await createRatingApi({
                 hallId,
                 bookingId,
                 rating,
-                comment: fullComment
+                comment: comment
             });
 
             await AsyncStorage.setItem(`rated_booking_${bookingId}`, "true");
@@ -144,26 +123,6 @@ export default function RateHall({ route }: any) {
                     )}
                 </View>
 
-                {/* Quick Tags Section */}
-                <View style={s.card}>
-                    <Text style={s.label}>ما الذي أعجبك؟</Text>
-                    <View style={s.quickTagsRow}>
-                        {QUICK_TAGS.map((tag) => {
-                            const isActive = selectedTags.includes(tag);
-                            return (
-                                <TouchableOpacity
-                                    key={tag}
-                                    style={[s.quickTag, isActive && s.checkboxBoxActive]}
-                                    onPress={() => toggleTag(tag)}
-                                >
-                                    <Text style={[s.quickTagText, isActive && s.serviceChipTextActive]}>
-                                        {tag}
-                                    </Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-                </View>
 
                 {/* Comment Section */}
                 <View style={s.card}>

@@ -232,7 +232,7 @@ export const HallCard = memo(
                 <Ionicons
                   key={s}
                   name={
-                    s <= Math.round(item.avg_rating || 0)
+                    s <= Math.round(item.average_rating || item.avg_rating || 0)
                       ? "star"
                       : "star-outline"
                   }
@@ -241,7 +241,7 @@ export const HallCard = memo(
                 />
               ))}
               <Text style={{ fontSize: 12, color: "#666", marginLeft: 4 }}>
-                {Number(item.avg_rating || 0).toFixed(1)}
+                {Number(item.average_rating || item.avg_rating || 0).toFixed(1)}
               </Text>
             </View>
             <TouchableOpacity
@@ -250,7 +250,7 @@ export const HallCard = memo(
             >
               <Ionicons name="chatbubble-outline" size={14} color="#6C4AB6" />
               <Text style={styles.itemText}>
-                التعليقات ({item.comment_count || 0})
+                التعليقات ({item.reviews_count || item.comment_count || 0})
               </Text>
             </TouchableOpacity>
           </View>

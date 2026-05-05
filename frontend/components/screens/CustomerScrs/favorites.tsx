@@ -1,7 +1,6 @@
 import { View, Text, ScrollView, ActivityIndicator, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-
 import { getFavoritesApi, toggleFavoriteApi } from "../../Services/customerApi";
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
 import { useRefresh } from "../../reusable func/refreshContext";

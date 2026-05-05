@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, ActivityIndicator } from "react-native";
 import { styles } from "../../styles";
 import { getAdminStats } from "../../Services/adminApi";
 import { Ionicons } from "@expo/vector-icons";

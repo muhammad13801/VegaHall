@@ -11,7 +11,11 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { goBack, NavigateTo } from "../../reusable func/navigateTo";
-import { searchApi, getFavoritesApi, toggleFavoriteApi } from "../../Services/customerApi";
+import {
+  searchApi,
+  getFavoritesApi,
+  toggleFavoriteApi,
+} from "../../Services/customerApi";
 import { useRefresh } from "../../reusable func/refreshContext";
 import { HallCard } from "../hallOwnerscrs/hallCard";
 import { styles as s } from "./ibrahimStyles";
@@ -44,7 +48,7 @@ export default function HallsResult({ route }: any) {
       return sorted.sort(
         (a, b) =>
           (b.average_rating || b.avg_rating || 0) -
-          (a.average_rating || a.avg_rating || 0)
+          (a.average_rating || a.avg_rating || 0),
       );
     }
 
@@ -75,7 +79,6 @@ export default function HallsResult({ route }: any) {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-
     try {
       await fetchFavorites();
       await fetchHalls();
@@ -126,6 +129,7 @@ export default function HallsResult({ route }: any) {
     <SafeAreaView style={styles.container}>
       <BackgroundDecoration />
 
+      {/* Header */}
       <View
         style={[
           styles.info,
@@ -146,6 +150,7 @@ export default function HallsResult({ route }: any) {
         </View>
       </View>
 
+      {/* Sort */}
       <View style={s.sortContainer}>
         <Text style={s.ctaLabel}>ترتيب حسب:</Text>
 
@@ -172,6 +177,7 @@ export default function HallsResult({ route }: any) {
         </View>
       </View>
 
+      {/* Content */}
       {loading && halls.length === 0 ? (
         <ActivityIndicator
           size="large"

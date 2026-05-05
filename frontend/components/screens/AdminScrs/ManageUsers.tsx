@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../../styles";
 import { getAllUsers, updateUserStatus } from "../../Services/adminApi";
@@ -22,9 +23,8 @@ export default function ManageUsers() {
     try {
       const { data } = await getAllUsers();
       setUsers(data);
-    } catch (error) {
-      console.error(error);
-      Alert.alert("خطأ", "فشل في جلب قائمة المستخدمين");
+    } catch (err: any) {
+      Toast.show({ type: "error", text1: err.response?.data || "فشل في جلب قائمة المستخدمين" });
     } finally {
       setLoading(false);
     }
@@ -34,9 +34,10 @@ export default function ManageUsers() {
     fetchUsers();
   }, []);
 
-  const handleToggleStatus = async (userId: number, currentStatus: string) => {
-    const newStatus = currentStatus === "Active" ? "Frozen" : "Active";
-    const actionLabel = newStatus === "Active" ? "تفعيل" : "تجميد";
+  const handleToggleStatus = (userId: number, currentStatus: string) => {
+    const isActive = currentStatus?.toLowerCase() === "active";
+    const newStatus = isActive ? "suspended" : "active";
+    const actionLabel = newStatus === "active" ? "تفعيل" : "تجميد";
 
     Alert.alert(
       "تأكيد الاختيار",
@@ -47,58 +48,35 @@ export default function ManageUsers() {
           text: "موافق",
           onPress: async () => {
             try {
-              await updateUserStatus(userId, newStatus);
+              const { data } = await updateUserStatus(userId, newStatus);
               setUsers((prev) =>
-                prev.map((u) =>
-                  u.id === userId ? { ...u, status: newStatus } : u,
-                ),
+                prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u))
               );
-            } catch (error) {
-              Alert.alert("خطأ", "فشل في تحديث حالة المستخدم");
+              Toast.show({ type: "success", text1: data || "تم تحديث حالة المستخدم" });
+            } catch (err: any) {
+              Toast.show({ type: "error", text1: err.response?.data || "فشل في تحديث حالة المستخدم" });
             }
           },
         },
-      ],
+      ]
     );
   };
 
-  // [معدّل - كان AI] كان arrow function inline — حوّلناه لصيغة منفصلة مثل المالك
   const renderUser = ({ item }: { item: any }) => (
     <View style={styles.card}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <View style={{ flex: 1 }}>
           <Text style={styles.cardText} numberOfLines={1}>
             {item.first_name} {item.last_name}
           </Text>
-          <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>
-            {item.email}
-          </Text>
+          <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>{item.email}</Text>
           <View style={{ flexDirection: "row", marginTop: 5 }}>
             <View style={[styles.items, { marginLeft: 0, marginRight: 5 }]}>
               <Text style={styles.itemText}>{item.role}</Text>
             </View>
-            <View
-              style={[
-                styles.items,
-                {
-                  backgroundColor:
-                    item.status === "Active" ? "#E8F5E9" : "#FFEBEE",
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.itemText,
-                  { color: item.status === "Active" ? "#2E7D32" : "#C62828" },
-                ]}
-              >
-                {item.status === "Active" ? "نشط" : "مجمد"}
+            <View style={[styles.items, { backgroundColor: item.status?.toLowerCase() === "active" ? "#E8F5E9" : "#FFEBEE" }]}>
+              <Text style={[styles.itemText, { color: item.status?.toLowerCase() === "active" ? "#2E7D32" : "#C62828" }]}>
+                {item.status?.toLowerCase() === "active" ? "نشط" : "مجمد"}
               </Text>
             </View>
           </View>
@@ -109,9 +87,9 @@ export default function ManageUsers() {
           style={{ padding: 10 }}
         >
           <MaterialIcons
-            name={item.status === "Active" ? "block" : "check-circle"}
+            name={item.status?.toLowerCase() === "active" ? "block" : "check-circle"}
             size={28}
-            color={item.status === "Active" ? "#C62828" : "#2E7D32"}
+            color={item.status?.toLowerCase() === "active" ? "#C62828" : "#2E7D32"}
           />
         </TouchableOpacity>
       </View>

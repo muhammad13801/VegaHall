@@ -5,7 +5,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { usePaymentSheet } from "@stripe/stripe-react-native";
 import Toast from "react-native-toast-message";
-
 import { NavigateTo } from "../../reusable func/navigateTo";
 import { chargeBookingApi, confirmBookingPaymentApi } from "../../Services/customerApi";
 import { styles as s } from "./ibrahimStyles";

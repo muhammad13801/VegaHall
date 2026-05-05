@@ -5,9 +5,9 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   TextInput,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../../styles";
 import { getAdminHalls, approveHall } from "../../Services/adminApi";
@@ -25,9 +25,8 @@ export default function ManageHalls() {
     try {
       const { data } = await getAdminHalls(searchName, searchRating);
       setHalls(data);
-    } catch (error) {
-      console.error(error);
-      Alert.alert("خطأ", "فشل في جلب قائمة القاعات");
+    } catch (err: any) {
+      Toast.show({ type: "error", text1: err.response?.data || "فشل في جلب قائمة القاعات" });
     } finally {
       setLoading(false);
     }
@@ -41,15 +40,13 @@ export default function ManageHalls() {
     return () => clearTimeout(timer);
   }, [searchName, searchRating]);
 
-  // [معدّل - كان AI] delayDebounceFn → timer
-
   const handleApprove = async (hallId: number) => {
     try {
-      await approveHall(hallId);
-      Alert.alert("تم", "تمت الموافقة على القاعة بنجاح");
+      const { data } = await approveHall(hallId);
+      Toast.show({ type: "success", text1: data || "تمت الموافقة على القاعة بنجاح" });
       fetchHalls();
-    } catch (error) {
-      Alert.alert("خطأ", "فشل في الموافقة على القاعة");
+    } catch (err: any) {
+      Toast.show({ type: "error", text1: err.response?.data || "فشل في الموافقة على القاعة" });
     }
   };
 
@@ -58,53 +55,16 @@ export default function ManageHalls() {
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         <View style={{ flex: 1 }}>
           <Text style={styles.cardText}>{item.hall_name}</Text>
-          <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>
-            {item.city} - {item.location}
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              marginTop: 5,
-              justifyContent: "flex-end",
-            }}
-          >
-            <View
-              style={[
-                styles.items,
-                {
-                  backgroundColor:
-                    item.status?.toLowerCase() === "active"
-                      ? "#E8F5E9"
-                      : "#FFF3E0",
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.itemText,
-                  {
-                    color:
-                      item.status?.toLowerCase() === "active"
-                        ? "#2E7D32"
-                        : "#EF6C00",
-                  },
-                ]}
-              >
-                {item.status?.toLowerCase() === "active"
-                  ? "نشطة"
-                  : "قيد الانتظار"}
+          <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>{item.city} - {item.location}</Text>
+          <View style={{ flexDirection: "row", marginTop: 5, justifyContent: "flex-end" }}>
+            <View style={[styles.items, { backgroundColor: item.status?.toLowerCase() === "active" ? "#E8F5E9" : "#FFF3E0" }]}>
+              <Text style={[styles.itemText, { color: item.status?.toLowerCase() === "active" ? "#2E7D32" : "#EF6C00" }]}>
+                {item.status?.toLowerCase() === "active" ? "نشطة" : "قيد الانتظار"}
               </Text>
             </View>
             {item.avg_rating > 0 && (
-              <View
-                style={[
-                  styles.items,
-                  { marginLeft: 5, backgroundColor: "#FFFDE7" },
-                ]}
-              >
-                <Text style={[styles.itemText, { color: "#FBC02D" }]}>
-                  ⭐ {item.avg_rating}
-                </Text>
+              <View style={[styles.items, { marginLeft: 5, backgroundColor: "#FFFDE7" }]}>
+                <Text style={[styles.itemText, { color: "#FBC02D" }]}>⭐ {item.avg_rating}</Text>
               </View>
             )}
           </View>
@@ -125,12 +85,7 @@ export default function ManageHalls() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
-      <View
-        style={[
-          styles.info,
-          { width: "90%", alignSelf: "center", marginBottom: 15 },
-        ]}
-      >
+      <View style={[styles.info, { width: "90%", alignSelf: "center", marginBottom: 15 }]}>
         <Text style={styles.title}>إدارة القاعات</Text>
         <BackButton />
       </View>
@@ -154,11 +109,7 @@ export default function ManageHalls() {
       </View>
 
       {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#6C4AB6"
-          style={{ marginTop: 50 }}
-        />
+        <ActivityIndicator size="large" color="#6C4AB6" style={{ marginTop: 50 }} />
       ) : (
         <FlatList
           data={halls}

@@ -8,6 +8,7 @@ import {
   Alert,
   TextInput,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../../styles";
 import { getAllUsers, updateUserStatus } from "../../Services/adminApi";
@@ -25,9 +26,8 @@ export default function Home() {
       setLoading(true);
       const { data } = await getAllUsers(searchName);
       setUsers(data);
-    } catch (error) {
-      console.error(error);
-      Alert.alert("خطأ", "فشل في جلب البيانات");
+    } catch (err: any) {
+      Toast.show({ type: "error", text1: err.response?.data || "فشل في جلب البيانات" });
     } finally {
       setLoading(false);
     }
@@ -40,8 +40,7 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchName]);
 
-  // [معدّل - كان AI] تغيير اسم المتغير من delayDebounceFn → timer وتبسيط الكتابة
-  const handleToggleStatus = async (userId: number, currentStatus: string) => {
+  const handleToggleStatus = (userId: number, currentStatus: string) => {
     const isActive = currentStatus?.toLowerCase() === "active";
     const newStatus = isActive ? "suspended" : "active";
     const actionLabel = newStatus === "active" ? "تفعيل" : "إلغاء التفعيل";
@@ -55,76 +54,43 @@ export default function Home() {
           text: "موافق",
           onPress: async () => {
             try {
-              await updateUserStatus(userId, newStatus);
+              const { data } = await updateUserStatus(userId, newStatus);
               setUsers((prev) =>
-                prev.map((u) =>
-                  u.id === userId ? { ...u, status: newStatus } : u,
-                ),
+                prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u))
               );
-            } catch (error) {
-              Alert.alert("خطأ", "فشل في تحديث حالة المستخدم");
+              Toast.show({ type: "success", text1: data || "تم تحديث حالة المستخدم" });
+            } catch (err: any) {
+              Toast.show({ type: "error", text1: err.response?.data || "فشل في تحديث حالة المستخدم" });
             }
           },
         },
-      ],
+      ]
     );
   };
 
-  // [معدّل - كان AI] isCurrentlyActive → isActive، statusText → actionLabel
   const renderUser = ({ item }: { item: any }) => {
     const isActive = item.status?.toLowerCase() === "active";
 
     return (
       <View style={styles.card}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <View style={{ flex: 1 }}>
             <Text style={styles.cardText} numberOfLines={1}>
               {item.first_name} {item.last_name}
             </Text>
-            <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>
-              {item.email}
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                marginTop: 5,
-                alignItems: "center",
-              }}
-            >
+            <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>{item.email}</Text>
+            <View style={{ flexDirection: "row", marginTop: 5, alignItems: "center" }}>
               <View style={[styles.items, { marginLeft: 0, marginRight: 5 }]}>
-                <Text style={styles.itemText}>
-                  {item.role === "owner" ? "Hall Owner" : item.role}
-                </Text>
+                <Text style={styles.itemText}>{item.role === "owner" ? "Hall Owner" : item.role}</Text>
               </View>
-              <View
-                style={[
-                  styles.items,
-                  {
-                    backgroundColor: isActive ? "#E8F5E9" : "#FFEBEE",
-                    marginRight: 5,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.itemText,
-                    { color: isActive ? "#2E7D32" : "#C62828" },
-                  ]}
-                >
+              <View style={[styles.items, { backgroundColor: isActive ? "#E8F5E9" : "#FFEBEE", marginRight: 5 }]}>
+                <Text style={[styles.itemText, { color: isActive ? "#2E7D32" : "#C62828" }]}>
                   {isActive ? "نشط" : "مجمد"}
                 </Text>
               </View>
               {Number(item.owner_rating) > 0 && (
                 <View style={[styles.items, { backgroundColor: "#FFFDE7" }]}>
-                  <Text style={[styles.itemText, { color: "#FBC02D" }]}>
-                    ⭐ {item.owner_rating}
-                  </Text>
+                  <Text style={[styles.itemText, { color: "#FBC02D" }]}>⭐ {item.owner_rating}</Text>
                 </View>
               )}
             </View>
@@ -148,15 +114,8 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
-      <View
-        style={[
-          styles.info,
-          { width: "95%", alignSelf: "center", justifyContent: "center" },
-        ]}
-      >
-        <Text style={[styles.title, { textAlign: "center", width: "100%" }]}>
-          إدارة المستخدمين
-        </Text>
+      <View style={[styles.info, { width: "95%", alignSelf: "center", justifyContent: "center" }]}>
+        <Text style={[styles.title, { textAlign: "center", width: "100%" }]}>إدارة المستخدمين</Text>
       </View>
 
       <View style={{ width: "90%", marginTop: 15 }}>
@@ -170,11 +129,7 @@ export default function Home() {
       </View>
 
       {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#6C4AB6"
-          style={{ flex: 1, marginTop: 20 }}
-        />
+        <ActivityIndicator size="large" color="#6C4AB6" style={{ flex: 1, marginTop: 20 }} />
       ) : (
         <FlatList
           data={users}
