@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -8,12 +8,65 @@ import {
   Alert,
   TextInput,
 } from "react-native";
-import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styles } from "../../styles";
-import { getAllUsers, updateUserStatus } from "../../Services/adminApi";
 import { MaterialIcons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
+import { styles } from "../../styles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
+import { getAllUsers, updateUserStatus } from "../../Services/adminApi";
+import { useEffect, useState } from "react";
+
+// بطاقة المستخدم — مفصولة عشان أوضح وأسهل تعديل
+const UserCard = ({ item, onToggle }: { item: any; onToggle: () => void }) => {
+  const isActive = item.status?.toLowerCase() === "active";
+
+  return (
+    <View style={styles.card}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <View style={{ flex: 1 }}>
+          {/* الاسم الكامل */}
+          <Text style={styles.cardText} numberOfLines={1}>
+            {item.first_name} {item.last_name}
+          </Text>
+          <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>{item.email}</Text>
+
+          {/* الدور + الحالة + التقييم */}
+          <View style={{ flexDirection: "row", marginTop: 5, alignItems: "center" }}>
+            <View style={[styles.items, { marginLeft: 0, marginRight: 5 }]}>
+              <Text style={styles.itemText}>
+                {item.role === "owner" ? "Hall Owner" : item.role}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.items,
+                { backgroundColor: isActive ? "#E8F5E9" : "#FFEBEE", marginRight: 5 },
+              ]}
+            >
+              <Text style={[styles.itemText, { color: isActive ? "#2E7D32" : "#C62828" }]}>
+                {isActive ? "نشط" : "مجمد"}
+              </Text>
+            </View>
+            {Number(item.owner_rating) > 0 && (
+              <View style={[styles.items, { backgroundColor: "#FFFDE7" }]}>
+                <Text style={[styles.itemText, { color: "#FBC02D" }]}>⭐ {item.owner_rating}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* زر التفعيل/الإيقاف */}
+        <TouchableOpacity onPress={onToggle} style={{ padding: 10 }}>
+          <MaterialIcons
+            name={isActive ? "block" : "check-circle"}
+            size={28}
+            color={isActive ? "#C62828" : "#2E7D32"}
+          />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
 
 export default function Home() {
   const [users, setUsers] = useState<any[]>([]);
@@ -40,6 +93,7 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchName]);
 
+  // تأكيد قبل تغيير حالة الحساب
   const handleToggleStatus = (userId: number, currentStatus: string) => {
     const isActive = currentStatus?.toLowerCase() === "active";
     const newStatus = isActive ? "suspended" : "active";
@@ -60,7 +114,10 @@ export default function Home() {
               );
               Toast.show({ type: "success", text1: data || "تم تحديث حالة المستخدم" });
             } catch (err: any) {
-              Toast.show({ type: "error", text1: err.response?.data || "فشل في تحديث حالة المستخدم" });
+              Toast.show({
+                type: "error",
+                text1: err.response?.data || "فشل في تحديث حالة المستخدم",
+              });
             }
           },
         },
@@ -68,56 +125,15 @@ export default function Home() {
     );
   };
 
-  const renderUser = ({ item }: { item: any }) => {
-    const isActive = item.status?.toLowerCase() === "active";
-
-    return (
-      <View style={styles.card}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardText} numberOfLines={1}>
-              {item.first_name} {item.last_name}
-            </Text>
-            <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>{item.email}</Text>
-            <View style={{ flexDirection: "row", marginTop: 5, alignItems: "center" }}>
-              <View style={[styles.items, { marginLeft: 0, marginRight: 5 }]}>
-                <Text style={styles.itemText}>{item.role === "owner" ? "Hall Owner" : item.role}</Text>
-              </View>
-              <View style={[styles.items, { backgroundColor: isActive ? "#E8F5E9" : "#FFEBEE", marginRight: 5 }]}>
-                <Text style={[styles.itemText, { color: isActive ? "#2E7D32" : "#C62828" }]}>
-                  {isActive ? "نشط" : "مجمد"}
-                </Text>
-              </View>
-              {Number(item.owner_rating) > 0 && (
-                <View style={[styles.items, { backgroundColor: "#FFFDE7" }]}>
-                  <Text style={[styles.itemText, { color: "#FBC02D" }]}>⭐ {item.owner_rating}</Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => handleToggleStatus(item.id, item.status)}
-            style={{ padding: 10 }}
-          >
-            <MaterialIcons
-              name={isActive ? "block" : "check-circle"}
-              size={28}
-              color={isActive ? "#C62828" : "#2E7D32"}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
+
       <View style={[styles.info, { width: "95%", alignSelf: "center", justifyContent: "center" }]}>
         <Text style={[styles.title, { textAlign: "center", width: "100%" }]}>إدارة المستخدمين</Text>
       </View>
 
+      {/* حقل البحث */}
       <View style={{ width: "90%", marginTop: 15 }}>
         <TextInput
           style={styles.input}
@@ -134,7 +150,12 @@ export default function Home() {
         <FlatList
           data={users}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={renderUser}
+          renderItem={({ item }) => (
+            <UserCard
+              item={item}
+              onToggle={() => handleToggleStatus(item.id, item.status)}
+            />
+          )}
           contentContainerStyle={{ padding: 20 }}
           style={{ width: "100%" }}
           ListEmptyComponent={

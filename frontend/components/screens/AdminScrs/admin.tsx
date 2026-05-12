@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, ActivityIndicator } from "react-native";
 import { styles } from "../../styles";
 import { getAdminStats } from "../../Services/adminApi";
@@ -6,8 +6,32 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tab } from "../hallOwnerscrs/hallOwner";
 import Profile from "../hallOwnerscrs/profile/profile";
 import Home from "./home";
-import Notifications from "../hallOwnerscrs/notifications";
+import Notifications from "./notifications";
 import ManageServices from "./manageServices";
+import { useEffect, useState } from "react";
+
+// تعريف التابات هنا بره الكمبوننت عشان ما تتعاد كل رندر
+const ADMIN_TABS = [
+  { name: "Home", component: Home, title: "الرئيسية", icon: "home-outline" },
+  {
+    name: "Notifications",
+    component: Notifications,
+    title: "الاشعارات",
+    icon: "notifications-outline",
+  },
+  {
+    name: "ManageServices",
+    component: ManageServices,
+    title: "ادارة الخدمات",
+    icon: "list-outline",
+  },
+  {
+    name: "Profile",
+    component: Profile,
+    title: "حسابي",
+    icon: "person-outline",
+  },
+];
 
 export default function Admin() {
   const [stats, setStats] = useState<any>(null);
@@ -45,49 +69,19 @@ export default function Admin() {
         tabBarLabelStyle: { fontSize: 14 },
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={Home}
-        options={{
-          title: "الرئيسية",
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Notifications"
-        component={Notifications}
-        options={{
-          title: "الاشعارات",
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="notifications-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="ManageServices"
-        component={ManageServices}
-        options={{
-          title: "ادارة الخدمات",
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="list-outline" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Profile"
-        component={Profile}
-        options={{
-          title: "حسابي",
-          tabBarIcon: ({ size, color }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
-      />
+      {ADMIN_TABS.map((tab) => (
+        <Tab.Screen
+          key={tab.name}
+          name={tab.name}
+          component={tab.component}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ size, color }) => (
+              <Ionicons name={tab.icon as any} size={size} color={color} />
+            ),
+          }}
+        />
+      ))}
     </Tab.Navigator>
   );
 }

@@ -35,7 +35,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         ) as owner_rating
       FROM users u
       WHERE 1=1
-      ${search ? sql`AND (u.first_name ILIKE ${"%" + search + "%"} OR u.last_name ILIKE ${"%" + search + "%"} OR u.email ILIKE ${"%" + search + "%"})` : sql``}
+      ${search ? sql`AND (u.first_name || ' ' || u.last_name ILIKE ${"%%" + search + "%%"} OR u.email ILIKE ${"%%" + search + "%%"})` : sql``}
       ${
         rating
           ? sql`AND (
@@ -243,7 +243,7 @@ export const getAdminHalls = async (req: AuthRequest, res: Response) => {
       FROM halls h
       JOIN users u ON h.owner_id = u.id
       WHERE 1=1
-      ${search ? sql`AND (h.hall_name ILIKE ${"%" + search + "%"} OR u.first_name ILIKE ${"%" + search + "%"} OR u.last_name ILIKE ${"%" + search + "%"})` : sql``}
+      ${search ? sql`AND (h.hall_name ILIKE ${"%%" + search + "%%"} OR u.first_name || ' ' || u.last_name ILIKE ${"%%" + search + "%%"})` : sql``}
       ${rating ? sql`AND (SELECT AVG(rating) FROM ratings WHERE hall_id = h.id) >= ${Number(rating)}` : sql``}
       ORDER BY h.id DESC
     `;

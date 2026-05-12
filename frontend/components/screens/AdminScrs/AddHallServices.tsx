@@ -8,13 +8,13 @@ import {
   Modal,
   FlatList,
 } from "react-native";
-import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { styles } from "../../styles";
-import { getAllHallsSimple, addHallService } from "../../Services/adminApi";
+import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import BackButton from "../../reusable func/backButton";
 import { Input } from "../../reusable func/input";
-import { MaterialIcons } from "@expo/vector-icons";
+import { getAllHallsSimple, addHallService } from "../../Services/adminApi";
 
 export default function AddHallServices() {
   const [halls, setHalls] = useState<any[]>([]);
@@ -53,8 +53,15 @@ export default function AddHallServices() {
 
     try {
       setSubmitting(true);
-      const { data } = await addHallService(selectedHall.id, serviceName, Number(servicePrice) || 0);
-      Toast.show({ type: "success", text1: data || `تم إضافة خدمة "${serviceName}" لقاعة "${selectedHall.hall_name}"` });
+      const { data } = await addHallService(
+        selectedHall.id,
+        serviceName,
+        Number(servicePrice) || 0
+      );
+      Toast.show({
+        type: "success",
+        text1: data || `تم إضافة خدمة "${serviceName}" لقاعة "${selectedHall.hall_name}"`,
+      });
       setServiceName("");
       setServicePrice("");
       setSelectedHall(null);
@@ -67,6 +74,8 @@ export default function AddHallServices() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: "#FDFBFF" }]}>
+      <BackgroundDecoration />
+
       <View style={{ width: "100%", paddingHorizontal: 20, paddingTop: 10 }}>
         <BackButton />
         <Text style={[styles.title, { marginTop: 10 }]}>إضافة خدمات للقاعة</Text>
@@ -76,6 +85,8 @@ export default function AddHallServices() {
       <ScrollView contentContainerStyle={{ padding: 20 }} style={{ width: "100%" }}>
         <View style={styles.card}>
           <Text style={[styles.label, { marginBottom: 10 }]}>اختر القاعة:</Text>
+
+          {/* زر اختيار القاعة يفتح المودال */}
           <TouchableOpacity
             style={[styles.input, { justifyContent: "center" }]}
             onPress={() => setShowModal(true)}
@@ -85,21 +96,14 @@ export default function AddHallServices() {
             </Text>
           </TouchableOpacity>
 
-          <Text style={[styles.label, { marginTop: 10, marginBottom: 10 }]}>اسم الخدمة (مثلاً: تصوير فيديو):</Text>
+          <Text style={[styles.label, { marginTop: 10, marginBottom: 10 }]}>
+            اسم الخدمة (مثلاً: تصوير فيديو):
+          </Text>
           <Input
             placeholder="أدخل اسم الخدمة"
             value={serviceName}
             onChangeText={setServiceName}
           />
-
-          <Text style={[styles.label, { marginTop: 10, marginBottom: 10 }]}>السعر (اختياري - 0 يعني مجانية):</Text>
-          <Input
-            placeholder="أدخل السعر بالدينار"
-            value={servicePrice}
-            onChangeText={setServicePrice}
-            keyboardType="numeric"
-          />
-
           <TouchableOpacity
             style={[styles.actionButton, submitting && { opacity: 0.7 }]}
             onPress={handleAddService}
@@ -119,23 +123,30 @@ export default function AddHallServices() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>اختر قاعة</Text>
-            <FlatList
-              data={halls}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.cityItem}
-                  onPress={() => {
-                    setSelectedHall(item);
-                    setShowModal(false);
-                  }}
-                >
-                  <Text style={styles.cityText}>{item.hall_name}</Text>
-                </TouchableOpacity>
-              )}
-              initialNumToRender={10}
-            />
-            <TouchableOpacity style={styles.secondaryActionButton} onPress={() => setShowModal(false)}>
+            {loadingHalls ? (
+              <ActivityIndicator color="#6C4AB6" style={{ marginVertical: 20 }} />
+            ) : (
+              <FlatList
+                data={halls}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.cityItem}
+                    onPress={() => {
+                      setSelectedHall(item);
+                      setShowModal(false);
+                    }}
+                  >
+                    <Text style={styles.cityText}>{item.hall_name}</Text>
+                  </TouchableOpacity>
+                )}
+                initialNumToRender={10}
+              />
+            )}
+            <TouchableOpacity
+              style={styles.secondaryActionButton}
+              onPress={() => setShowModal(false)}
+            >
               <Text style={[styles.actionButtonText, { color: "#6C4AB6" }]}>إغلاق</Text>
             </TouchableOpacity>
           </View>

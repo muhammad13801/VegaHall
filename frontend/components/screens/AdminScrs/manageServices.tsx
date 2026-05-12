@@ -626,7 +626,6 @@ export default function ManageServices() {
               </View>
             ) : (
               <>
-                {/* طلبات الخدمات */}
                 {serviceRequests.length > 0 && (
                   <View style={{ marginBottom: 8 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 12 }}>
@@ -638,8 +637,6 @@ export default function ManageServices() {
                     {serviceRequests.map((item) => renderRequestCard(item, "service"))}
                   </View>
                 )}
-
-                {/* طلبات الوجبات */}
                 {mealRequests.length > 0 && (
                   <View>
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 12, marginTop: 8 }}>
@@ -657,8 +654,6 @@ export default function ManageServices() {
         )}
 
       </ScrollView>
-
-      {/* مودال تحرير اسم الطلب */}
       <Modal visible={editModal} transparent animationType="slide">
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" }}>
           <KeyboardAwareScrollView
@@ -675,7 +670,7 @@ export default function ManageServices() {
             keyboardOpeningTime={0}
             showsVerticalScrollIndicator={false}
           >
-            {/* العنوان */}
+
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <TouchableOpacity onPress={() => setEditModal(false)}>
                 <MaterialIcons name="close" size={24} color="#999" />
@@ -684,8 +679,6 @@ export default function ManageServices() {
                 تعديل اسم الطلب
               </Text>
             </View>
-
-            {/* حقل الكتابة */}
             <Text style={{ textAlign: "right", color: "#555", marginBottom: 6, fontSize: 13 }}>
               اكتب الاسم بالشكل الصحيح:
             </Text>
@@ -699,8 +692,6 @@ export default function ManageServices() {
               placeholder="ادخل الاسم الصحيح..."
               autoFocus
             />
-
-            {/* فلترة — هل الاسم موجود في الخدمات أو الوجبات؟ */}
             {editedName.trim().length > 1 && (() => {
               const q = editedName.trim().toLowerCase();
               const matchedServices = services.filter(s => s.name.toLowerCase().includes(q));
@@ -771,8 +762,6 @@ export default function ManageServices() {
                 </View>
               );
             })()}
-
-            {/* زر الحفظ */}
             <TouchableOpacity
               onPress={handleSaveEdit}
               disabled={savingEdit}

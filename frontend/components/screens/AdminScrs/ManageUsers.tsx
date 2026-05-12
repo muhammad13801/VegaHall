@@ -9,11 +9,59 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styles } from "../../styles";
-import { getAllUsers, updateUserStatus } from "../../Services/adminApi";
-import BackButton from "../../reusable func/backButton";
 import { MaterialIcons } from "@expo/vector-icons";
+import { styles } from "../../styles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
+import BackButton from "../../reusable func/backButton";
+import { getAllUsers, updateUserStatus } from "../../Services/adminApi";
+
+// بطاقة المستخدم — مفصولة بره عشان أنظف
+const UserCard = ({
+  item,
+  onToggle,
+}: {
+  item: any;
+  onToggle: () => void;
+}) => {
+  const isActive = item.status?.toLowerCase() === "active";
+
+  return (
+    <View style={styles.card}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardText} numberOfLines={1}>
+            {item.first_name} {item.last_name}
+          </Text>
+          <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>{item.email}</Text>
+          <View style={{ flexDirection: "row", marginTop: 5 }}>
+            <View style={[styles.items, { marginLeft: 0, marginRight: 5 }]}>
+              <Text style={styles.itemText}>{item.role}</Text>
+            </View>
+            <View
+              style={[
+                styles.items,
+                { backgroundColor: isActive ? "#E8F5E9" : "#FFEBEE" },
+              ]}
+            >
+              <Text style={[styles.itemText, { color: isActive ? "#2E7D32" : "#C62828" }]}>
+                {isActive ? "نشط" : "مجمد"}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* زر التفعيل/التجميد */}
+        <TouchableOpacity onPress={onToggle} style={{ padding: 10 }}>
+          <MaterialIcons
+            name={isActive ? "block" : "check-circle"}
+            size={28}
+            color={isActive ? "#C62828" : "#2E7D32"}
+          />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
 
 export default function ManageUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -62,40 +110,6 @@ export default function ManageUsers() {
     );
   };
 
-  const renderUser = ({ item }: { item: any }) => (
-    <View style={styles.card}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardText} numberOfLines={1}>
-            {item.first_name} {item.last_name}
-          </Text>
-          <Text style={{ color: "#666", fontSize: 13, textAlign: "right" }}>{item.email}</Text>
-          <View style={{ flexDirection: "row", marginTop: 5 }}>
-            <View style={[styles.items, { marginLeft: 0, marginRight: 5 }]}>
-              <Text style={styles.itemText}>{item.role}</Text>
-            </View>
-            <View style={[styles.items, { backgroundColor: item.status?.toLowerCase() === "active" ? "#E8F5E9" : "#FFEBEE" }]}>
-              <Text style={[styles.itemText, { color: item.status?.toLowerCase() === "active" ? "#2E7D32" : "#C62828" }]}>
-                {item.status?.toLowerCase() === "active" ? "نشط" : "مجمد"}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => handleToggleStatus(item.id, item.status)}
-          style={{ padding: 10 }}
-        >
-          <MaterialIcons
-            name={item.status?.toLowerCase() === "active" ? "block" : "check-circle"}
-            size={28}
-            color={item.status?.toLowerCase() === "active" ? "#C62828" : "#2E7D32"}
-          />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
@@ -110,7 +124,9 @@ export default function ManageUsers() {
         <FlatList
           data={users}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={renderUser}
+          renderItem={({ item }) => (
+            <UserCard item={item} onToggle={() => handleToggleStatus(item.id, item.status)} />
+          )}
           contentContainerStyle={{ padding: 20 }}
           style={{ width: "100%" }}
           ListEmptyComponent={
