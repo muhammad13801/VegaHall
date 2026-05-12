@@ -436,7 +436,7 @@ export default function ManageServices() {
           <View>
             {/* فورم الإضافة */}
             <View style={[styles.card, { padding: 20, marginBottom: 16 }]}>
-              <Text style={[styles.cardText, { textAlign: "left", marginBottom: 12 }]}>
+              <Text style={[styles.cardText, { textAlign: "left", marginBottom: 12, width: "100%" }]}>
                 إضافة خدمة جديدة للنظام
               </Text>
               <Text style={{ textAlign: "left", color: "#666", marginBottom: 6 }}>
@@ -467,24 +467,14 @@ export default function ManageServices() {
 
             {/* قائمة الخدمات قابلة للطي */}
             <View style={[styles.card, { padding: 20 }]}>
-              <TouchableOpacity
-                onPress={() => setShowServices(v => !v)}
-                style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); fetchServices(); }}>
-                    <MaterialIcons name="refresh" size={20} color="#6C4AB6" />
-                  </TouchableOpacity>
-                  <MaterialIcons
-                    name={showServices ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-                    size={22}
-                    color="#6C4AB6"
-                  />
-                </View>
-                <Text style={[styles.cardText, { textAlign: "right" }]}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <Text style={styles.cardText}>
                   الخدمات الموجودة ({services.length})
                 </Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); fetchServices(); }}>
+                  <MaterialIcons name="refresh" size={20} color="#6C4AB6" />
+                </TouchableOpacity>
+              </View>
 
               {showServices && (
                 <View style={{ marginTop: 12 }}>
@@ -507,10 +497,10 @@ export default function ManageServices() {
                           marginBottom: 8,
                         }}
                       >
-                        <MaterialIcons name="check-circle" size={18} color="#6C4AB6" style={{ marginLeft: 8 }} />
-                        <Text style={{ flex: 1, textAlign: "right", color: "#333", fontSize: 14 }}>
+                        <Text style={{ flex: 1, color: "#333", fontSize: 14 }}>
                           {item.name}
                         </Text>
+                        <MaterialIcons name="star" size={18} color="#6C4AB6" style={{ marginLeft: 8 }} />
                       </View>
                     ))
                   )}
@@ -525,7 +515,7 @@ export default function ManageServices() {
           <View>
             {/* فورم الإضافة */}
             <View style={[styles.card, { padding: 20, marginBottom: 16 }]}>
-              <Text style={[styles.cardText, { textAlign: "left", marginBottom: 12 }]}>
+              <Text style={[styles.cardText, { textAlign: "left", marginBottom: 12, width: "100%" }]}>
                 إضافة وجبة جديدة للنظام
               </Text>
               <Text style={{ textAlign: "left", color: "#666", marginBottom: 6 }}>
@@ -556,24 +546,14 @@ export default function ManageServices() {
 
             {/* قائمة الوجبات قابلة للطي */}
             <View style={[styles.card, { padding: 20 }]}>
-              <TouchableOpacity
-                onPress={() => setShowMeals(v => !v)}
-                style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); fetchMeals(); }}>
-                    <MaterialIcons name="refresh" size={20} color="#6C4AB6" />
-                  </TouchableOpacity>
-                  <MaterialIcons
-                    name={showMeals ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-                    size={22}
-                    color="#6C4AB6"
-                  />
-                </View>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                 <Text style={[styles.cardText, { textAlign: "right" }]}>
                   الوجبات الموجودة ({meals.length})
                 </Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); fetchMeals(); }}>
+                  <MaterialIcons name="refresh" size={20} color="#6C4AB6" />
+                </TouchableOpacity>
+              </View>
 
               {showMeals && (
                 <View style={{ marginTop: 12 }}>
@@ -596,10 +576,10 @@ export default function ManageServices() {
                           marginBottom: 8,
                         }}
                       >
-                        <MaterialIcons name="restaurant" size={18} color="#6C4AB6" style={{ marginLeft: 8 }} />
-                        <Text style={{ flex: 1, textAlign: "right", color: "#333", fontSize: 14 }}>
+                        <Text style={{ flex: 1, color: "#333", fontSize: 14 }}>
                           {item.name}
                         </Text>
+                        <MaterialIcons name="restaurant" size={18} color="#6C4AB6" style={{ marginLeft: 8 }} />
                       </View>
                     ))
                   )}

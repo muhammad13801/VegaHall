@@ -72,6 +72,11 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
       SET status = ${normalizedStatus}
       WHERE id = ${id}
     `;
+
+    if (normalizedStatus === "suspended") {
+      await sql`DELETE FROM sessions WHERE user_id = ${id}`;
+    }
+
     res.send(`✔️ تم تحديث حالة المستخدم إلى ${normalizedStatus}`);
   } catch (err) {
     console.error(err);

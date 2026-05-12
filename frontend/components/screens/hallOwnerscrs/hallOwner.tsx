@@ -8,6 +8,7 @@ import ManageBookings from "./manageBookings";
 import Home from "./home";
 import { useRealtimeUpdates } from "../../reusable func/useRealtimeUpdate";
 import { supabase } from "../../Services/supabaseClient";
+import { useRefresh } from "../../reusable func/refreshContext";
 
 export const Tab = createBottomTabNavigator();
 
@@ -35,8 +36,8 @@ const TABS = [
 
 export default function HallOwner() {
   const [userId, setUserId] = useState<string>("");
+  const { triggerRefresh } = useRefresh();
   const [notificationBadge, setNotificationBadge] = useState(0);
-  const [bookingBadge, setBookingBadge] = useState(0);
 
   // Get userId from AsyncStorage on mount
   useEffect(() => {
@@ -57,8 +58,10 @@ export default function HallOwner() {
   // Setup realtime listeners once userId is available
   useRealtimeUpdates({
     userId,
-    onNotificationsChange: setNotificationBadge,
-    onBookingsChange: setBookingBadge,
+    onNotificationsChange: (count) => {
+      setNotificationBadge(count);
+      triggerRefresh();
+    },
   });
   return (
     <Tab.Navigator
@@ -83,9 +86,7 @@ export default function HallOwner() {
             tabBarBadge:
               tab.name === "Notifications"
                 ? notificationBadge || undefined
-                : tab.name === "ManageBookings"
-                  ? bookingBadge || undefined
-                  : undefined,
+                : undefined,
 
             tabBarBadgeStyle: {
               backgroundColor: "#DC2626",
@@ -95,46 +96,23 @@ export default function HallOwner() {
             },
           }}
           listeners={
-            tab.name === "ManageBookings"
+            tab.name === "Notifications"
               ? {
-                  focus: async () => {
-                    const userId = await AsyncStorage.getItem("userId");
-                    if (!userId) return;
+                focus: async () => {
+                  const userId = await AsyncStorage.getItem("userId");
+                  if (!userId) return;
 
-                    const { data: halls } = await supabase
-                      .from("halls")
-                      .select("id")
-                      .eq("owner_id", Number(userId));
+                  await supabase
+                    .from("notifications")
+                    .update({ is_read: true })
+                    .eq("user_id", Number(userId))
+                    .eq("is_read", false);
 
-                    const hallIds = halls?.map((h) => h.id) || [];
-
-                    await supabase
-                      .from("bookings")
-                      .update({ is_read: true })
-                      .in("hall_id", hallIds)
-                      .eq("is_read", false);
-
-                    // optional: instantly clear badge
-                    setBookingBadge(0);
-                  },
-                }
-              : tab.name === "Notifications"
-                ? {
-                    focus: async () => {
-                      const userId = await AsyncStorage.getItem("userId");
-                      if (!userId) return;
-
-                      await supabase
-                        .from("notifications")
-                        .update({ is_read: true })
-                        .eq("user_id", Number(userId))
-                        .eq("is_read", false);
-
-                      // optional: instantly clear badge
-                      setNotificationBadge(0);
-                    },
-                  }
-                : undefined
+                  // optional: instantly clear badge
+                  setNotificationBadge(0);
+                },
+              }
+              : undefined
           }
         />
       ))}

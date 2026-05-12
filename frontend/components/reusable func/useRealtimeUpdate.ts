@@ -4,59 +4,31 @@ import { useRef, useCallback } from "react";
 import { supabase } from "../Services/supabaseClient";
 
 interface UseRealtimeUpdatesProps {
-  userId: string;
-  userRole: "owner" | "customer";
-  onNotificationsChange: (count: number) => void;
-  onBookingsChange: (count: number) => void;
+  userId?: string;
+  onNotificationsChange?: (count: number) => void;
 }
 
 export const useRealtimeUpdates = ({
   userId,
-  userRole,
   onNotificationsChange,
-  onBookingsChange,
 }: UseRealtimeUpdatesProps) => {
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const hallIdsRef = useRef<number[]>([]);
-
-  const fetchHallIds = async () => {
-    const { data } = await supabase
-      .from("halls")
-      .select("id")
-      .eq("owner_id", Number(userId));
-
-    hallIdsRef.current = data?.map((h) => h.id) || [];
-  };
 
   const fetchNotificationCount = async () => {
-    const { count } = await supabase
+    if (!userId || !onNotificationsChange) return;
+
+    const { count, error } = await supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("user_id", Number(userId))
       .eq("is_read", false);
 
-    onNotificationsChange(count || 0);
-  };
-
-  const fetchBookingCount = async () => {
-    let query = supabase
-      .from("bookings")
-      .select("id", { count: "exact", head: true })
-      .eq("is_read", false);
-
-    if (userRole === "owner") {
-      // Owner: bookings for their halls
-      query = query.in(
-        "hall_id",
-        hallIdsRef.current.length > 0 ? hallIdsRef.current : [0],
-      );
-    } else {
-      // Customer: their own bookings
-      query = query.eq("customer_id", Number(userId));
+    if (error) {
+      console.log("fetchNotificationCount error:", error);
+      return;
     }
 
-    const { count } = await query;
-    onBookingsChange(count || 0);
+    onNotificationsChange(count || 0);
   };
 
   useFocusEffect(
@@ -66,70 +38,46 @@ export const useRealtimeUpdates = ({
       let isActive = true;
 
       const setupRealtime = async () => {
-        // Clean up existing channel
-        if (channelRef.current) {
-          await supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-          await new Promise((r) => setTimeout(r, 50));
+        try {
+          // cleanup old channel first
+          if (channelRef.current) {
+            await supabase.removeChannel(channelRef.current);
+            channelRef.current = null;
+          }
+
+          // prevents race conditions
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          if (!isActive) return;
+
+          // unique channel name
+          const channel = supabase.channel(
+            `notifications-${userId}-${Date.now()}`,
+          );
+
+          // realtime notifications listener
+          channel.on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "notifications",
+              filter: `user_id=eq.${userId}`,
+            },
+            async () => {
+              if (!isActive) return;
+
+              await fetchNotificationCount();
+            },
+          );
+
+          channelRef.current = channel;
+
+          // initial fetch
+          await fetchNotificationCount();
+        } catch (err) {
+          console.log("setupRealtime error:", err);
         }
-
-        if (!isActive) return;
-
-        // Fetch hall IDs only for owners
-        if (userRole === "owner") {
-          await fetchHallIds();
-        }
-
-        if (!isActive) return;
-
-        const channel = supabase.channel(`user-updates-${userId}`);
-
-        // Notifications listener (same for both roles)
-        channel.on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "notifications",
-            filter: `user_id=eq.${userId}`,
-          },
-          () => {
-            fetchNotificationCount();
-          },
-        );
-
-        // Bookings listener
-        channel.on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "bookings",
-          },
-          (payload: any) => {
-            if (userRole === "owner") {
-              // Owner: check if booking belongs to their halls
-              const hallId = payload.new?.hall_id || payload.old?.hall_id;
-              if (hallIdsRef.current.includes(hallId)) {
-                fetchBookingCount();
-              }
-            } else {
-              // Customer: check if booking belongs to them
-              const customerId =
-                payload.new?.customer_id || payload.old?.customer_id;
-              if (customerId === Number(userId)) {
-                fetchBookingCount();
-              }
-            }
-          },
-        );
-
-        channel.subscribe();
-        channelRef.current = channel;
-
-        // Initial fetch
-        fetchNotificationCount();
-        fetchBookingCount();
       };
 
       setupRealtime();
@@ -137,11 +85,15 @@ export const useRealtimeUpdates = ({
       return () => {
         isActive = false;
 
-        if (channelRef.current) {
-          supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        }
+        const cleanup = async () => {
+          if (channelRef.current) {
+            await supabase.removeChannel(channelRef.current);
+            channelRef.current = null;
+          }
+        };
+
+        cleanup();
       };
-    }, [userId, userRole]),
+    }, [userId]),
   );
 };
