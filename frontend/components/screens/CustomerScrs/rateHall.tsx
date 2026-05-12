@@ -5,7 +5,11 @@ import {
   View,
   ScrollView,
   TextInput,
+  ActivityIndicator,
+  Dimensions,
 } from "react-native";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { goBack } from "../../reusable func/navigateTo";
@@ -65,12 +69,7 @@ export default function RateHall({ route }: any) {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
-      <View style={[styles.info, { width: "90%", alignSelf: "center", marginTop: 30, alignItems: 'center' }]}>
-        <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>تقييم الصالة</Text>
-        <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
-          <BackButton />
-        </View>
-      </View>
+      <BackButton />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.listContainer}
@@ -128,17 +127,31 @@ export default function RateHall({ route }: any) {
 
         {/* زر الإرسال */}
         <TouchableOpacity
-          style={[s.primaryButton, (!isValid || loading) && s.primaryButtonDisabled, { marginTop: 10 }]}
-          activeOpacity={0.8}
+          style={[
+            styles.actionButton,
+            styles.row,
+            (!isValid || loading) ? { backgroundColor: "#DDD" } : { backgroundColor: "#6C4AB6" },
+            {
+              width: SCREEN_WIDTH * 0.9,
+              maxWidth: 400,
+              alignSelf: "center",
+              marginTop: 10,
+              marginBottom: 40,
+              gap: 8,
+            },
+          ]}
+          activeOpacity={0.85}
           onPress={handleSubmit}
           disabled={!isValid || loading}
         >
           {loading ? (
-            <Feather name="loader" size={20} color="#FFF" />
+            <ActivityIndicator color="#FFF" size="small" />
           ) : (
             <Feather name="send" size={20} color="#FFF" />
           )}
-          <Text style={s.primaryButtonText}>{loading ? "جاري الإرسال.." : "إرسال التقييم"}</Text>
+          <Text style={styles.actionButtonText}>
+            {loading ? "جاري الإرسال.." : "إرسال التقييم"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

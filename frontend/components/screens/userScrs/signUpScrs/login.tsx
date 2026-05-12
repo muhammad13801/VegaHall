@@ -16,7 +16,7 @@ import { useHandleChange } from "../../../reusable func/useHandleChange";
 import { styles } from "../../../styles";
 import { AuthData, validateAuth } from "../../../Validations/validateAuth";
 import { login } from "../../../Services/authApi";
-//import { registerPushToken } from "../../../Services/notificationApi";
+import { registerPushToken } from "../../../Services/notificationApi";
 
 export default function Login() {
   const [form, setForm] = useState<Partial<AuthData>>({
@@ -40,7 +40,7 @@ export default function Login() {
       await AsyncStorage.setItem("sessionId", data.sessionId);
       await AsyncStorage.setItem("userId", data.userId.toString());
 
-      //await registerPushToken();
+      await registerPushToken();
 
       Toast.show({ type: "success", text1: data.message });
 

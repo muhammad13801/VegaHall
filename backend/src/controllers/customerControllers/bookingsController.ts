@@ -111,9 +111,10 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
 
   try {
     const [booking] = await sql`
-      SELECT b.*, h.owner_id, h.hall_name 
+      SELECT b.*, h.owner_id, h.hall_name, u.first_name, u.last_name
       FROM bookings b
       JOIN halls h ON h.id = b.hall_id
+      JOIN users u ON u.id = b.customer_id
       WHERE b.id = ${id} AND b.customer_id = ${userId}
     `;
 
@@ -122,14 +123,14 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
       return res.status(400).send("❌ الحجز ملغي بالفعل");
 
     await sql`
-      UPDATE bookings SET status = 'customer_cancelled' WHERE id = ${id}
+      UPDATE bookings SET status = 'customer_cancelled', is_read = false WHERE id = ${id}
     `;
 
     // Notify the hall owner
     await insertNotification(
       booking.owner_id,
       "إلغاء حجز",
-      `قام العميل بإلغاء حجز في صالة ${booking.hall_name}. يرجى مراجعة إدارة الحجوزات.`,
+      `قام ${booking.first_name} ${booking.last_name} بالغاء حجز صالتك (${booking.hall_name}) يرجى مراجعة "الحجوزات"`,
       "customer_cancel",
     );
 
@@ -170,13 +171,13 @@ export const requestReschedule = async (req: AuthRequest, res: Response) => {
     const newDateFormatted = formatDate(proposed_date);
 
     await sql`
-      UPDATE bookings SET booking_date = ${proposed_date} WHERE id = ${id}
+      UPDATE bookings SET booking_date = ${proposed_date}, is_read = false WHERE id = ${id}
     `;
 
     await insertNotification(
       booking.owner_id,
       "تعديل موعد حجز",
-      `قام ${booking.first_name} ${booking.last_name} بتغيير موعد حجز قاعتك من تاريخ ${oldDateFormatted} الى الموعد الجديد وهو: ${newDateFormatted} للمزيد من التفاصيل الرجاء الاطلاع على الحجوزات`,
+      `قام ${booking.first_name} ${booking.last_name} بتغيير موعد حجز صالتك (${booking.hall_name}) من تاريخ ${oldDateFormatted} الى ${newDateFormatted} للمزيد من التفاصيل الرجاء الاطلاع على "الحجوزات"`,
       "reschedule_request",
     );
 
