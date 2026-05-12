@@ -385,6 +385,12 @@ export const customerCancelResponse = async (
       refund ? "refund_approved" : "refund_rejected",
     );
 
+    await sql`
+      UPDATE bookings
+      SET status = 'customer_cancelled_resolved'
+      WHERE id = ${id}
+    `;
+
     res.send(refund ? "✔️ تم قبول استرجاع المبلغ" : "✔️ تم رفض استرجاع المبلغ");
   } catch (err) {
     console.error(err);

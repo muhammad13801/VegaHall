@@ -92,7 +92,7 @@ export const getBusyDates = async (req: AuthRequest, res: Response) => {
 
 export const searchHalls = async (req: AuthRequest, res: Response) => {
   try {
-    const { query, city, service, minPrice, maxPrice, date } = req.body;
+    const { query, cities, city, service, minPrice, maxPrice, date } = req.body;
 
     let conditions = [];
 
@@ -102,8 +102,10 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
       );
     }
 
-    if (city) {
-      conditions.push(sql`h.city = ${city}`);
+    // Support both cities (array) and city (string) for backward compatibility
+    const cityList = cities && Array.isArray(cities) && cities.length > 0 ? cities : city ? [city] : [];
+    if (cityList.length > 0) {
+      conditions.push(sql`h.city IN ${sql(cityList)}`);
     }
 
     if (service) {

@@ -175,15 +175,7 @@ const BookingCard = ({
           border="#FFD54F"
         />
       )}
-      {item.status === "customer_cancelled" && (
-        <NoticeBox
-          icon="information-circle-outline"
-          text="العميل ألغى الحجز"
-          color="#F97316"
-          bg="#FFF7ED"
-          border="#FDBA74"
-        />
-      )}
+
 
       {svcs.length > 0 && (
         <View style={{ marginBottom: 12 }}>

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, ActivityIndicator, StatusBar } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { getFavoritesApi, toggleFavoriteApi } from "../../Services/customerApi";
@@ -8,7 +8,6 @@ import { NavigateTo } from "../../reusable func/navigateTo";
 import { HallCard } from "../hallOwnerscrs/hallCard";
 import { styles as s, styles } from "./ibrahimStyles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
-import BackButton from "../../reusable func/backButton";
 
 export default function Favorites() {
   const { triggerRefresh } = useRefresh();
@@ -28,8 +27,8 @@ export default function Favorites() {
     try {
       await toggleFavoriteApi(hallId);
       triggerRefresh();
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
+    } catch (err) { // [معدّل - كان error]
+      console.error("Error toggling favorite:", err);
     }
   };
 
@@ -93,29 +92,18 @@ export default function Favorites() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar barStyle="light-content" backgroundColor="#5B3A9E" />
       <BackgroundDecoration />
-
       <View
         style={[
           styles.info,
           {
             width: "90%",
             alignSelf: "center",
-            marginTop: 30,
             alignItems: "center",
           },
         ]}
       >
-        <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>
-          المفضلة
-        </Text>
-
-        <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
-          <BackButton />
-        </View>
       </View>
-
       <View style={{ flex: 1 }}>{renderContent()}</View>
     </SafeAreaView>
   );

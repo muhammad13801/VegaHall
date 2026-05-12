@@ -2,7 +2,6 @@ import type { Response } from "express";
 import type { AuthRequest } from "../../middleware/sessionMiddleware.js";
 import sql from "../../db.js";
 import { Expo, type ExpoPushMessage } from "expo-server-sdk";
-import { updateAppState } from "../../utils/updateAppState.js";
 
 export interface Notification {
   id: number;
@@ -67,7 +66,6 @@ export const insertNotification = async (
     INSERT INTO notifications (user_id, title, content, notification_type, channel, sent)
     VALUES (${userId}, ${title}, ${content}, ${notificationType}, 'app', true)
   `;
-  await updateAppState();
 
   // 2. Get user's push token
   const [user] = await sql<{ expo_push_token: string | null }[]>`

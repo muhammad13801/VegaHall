@@ -67,7 +67,7 @@ export default function HallsResult({ route }: any) {
   const fetchHalls = async () => {
     const res = await searchApi({
       query: params.query || "",
-      city: params.city || "",
+      cities: params.cities || [],
       service: params.services?.[0],
       minPrice: params.minPrice || "",
       maxPrice: params.maxPrice || "",
@@ -82,8 +82,8 @@ export default function HallsResult({ route }: any) {
     try {
       await fetchFavorites();
       await fetchHalls();
-    } catch (error) {
-      console.error("Search failed:", error);
+    } catch (err) { // [معدّل - كان error]
+      console.error("Search failed:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -109,8 +109,8 @@ export default function HallsResult({ route }: any) {
 
       await toggleFavoriteApi(hallId);
       triggerRefresh();
-    } catch (error) {
-      console.error("Toggle favorite error:", error);
+    } catch (err) { // [معدّل]
+      console.error("Toggle favorite error:", err);
       loadData();
     }
   };
@@ -126,7 +126,7 @@ export default function HallsResult({ route }: any) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { justifyContent: "flex-start" }]}>
       <BackgroundDecoration />
 
       {/* Header */}

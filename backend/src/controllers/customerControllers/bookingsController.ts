@@ -29,10 +29,12 @@ export const getBookings = async (req: AuthRequest, res: Response) => {
         b.proposed_date,
         (SELECT amount FROM customer_payments WHERE booking_id = b.id LIMIT 1) as total_cost,
         (SELECT amount FROM customer_payments WHERE booking_id = b.id LIMIT 1) as totalCost,
+        (SELECT type FROM customer_payments WHERE booking_id = b.id LIMIT 1) as payment_type,
         COALESCE(
           (SELECT json_agg(url) FROM media WHERE hall_id = h.id AND type = 'image'),
           '[]'::json
-        ) as hall_images
+        ) as hall_images,
+        EXISTS(SELECT 1 FROM ratings r WHERE r.booking_id = b.id) as is_rated
       FROM bookings b
       JOIN halls h ON b.hall_id = h.id
       WHERE b.customer_id = ${userId}
@@ -157,23 +159,15 @@ export const requestReschedule = async (req: AuthRequest, res: Response) => {
 
     if (!booking) return res.status(404).send("❌ الحجز غير موجود");
 
-    const oldDateFormatted = new Date(booking.booking_date).toLocaleDateString(
-      "ar-EG",
-      {
+    const formatDate = (date: any) =>
+      new Date(date).toLocaleDateString("ar-IL-u-nu-latn", {
         year: "numeric",
-        month: "long",
-        day: "numeric",
-      },
-    );
+        month: "2-digit",
+        day: "2-digit",
+      });
 
-    const newDateFormatted = new Date(proposed_date).toLocaleDateString(
-      "ar-EG",
-      {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      },
-    );
+    const oldDateFormatted = formatDate(booking.booking_date);
+    const newDateFormatted = formatDate(proposed_date);
 
     await sql`
       UPDATE bookings SET booking_date = ${proposed_date} WHERE id = ${id}
@@ -182,7 +176,7 @@ export const requestReschedule = async (req: AuthRequest, res: Response) => {
     await insertNotification(
       booking.owner_id,
       "تعديل موعد حجز",
-      `قام ${booking.first_name} ${booking.last_name} بتغيير موعد حجز قاعتك من تاريخ ${oldDateFormatted} الى الموعد الجديد وهو: ${newDateFormatted} للمزيد من التفاصيل الرجاء الاطلاع على "ادارة الحجوزات"`,
+      `قام ${booking.first_name} ${booking.last_name} بتغيير موعد حجز قاعتك من تاريخ ${oldDateFormatted} الى الموعد الجديد وهو: ${newDateFormatted} للمزيد من التفاصيل الرجاء الاطلاع على الحجوزات`,
       "reschedule_request",
     );
 

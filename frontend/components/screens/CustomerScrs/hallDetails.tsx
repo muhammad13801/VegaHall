@@ -11,6 +11,7 @@ import {
   ImageBackground,
   RefreshControl,
   Linking,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,56 +57,56 @@ export default function HallDetails({ route }: any) {
       const favRes = await getFavoritesApi(1, 100);
       const userFavIds = new Set<number>(favRes.data.map((f: any) => f.id));
       setIsFav(userFavIds.has(hall.id));
-    } catch (error: any) {
-      console.error("Failed to fetch hall details:", error);
+    } catch (err: any) { // [معدّل - كان error]
+      console.error("Failed to fetch hall details:", err);
       Toast.show({
         type: "error",
-        text1: error.response?.data || "فشل تحميل تفاصيل الصالة",
+        text1: err.response?.data || "فشل تحميل تفاصيل الصالة",
       });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
-
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchDetails();
   };
-
   useEffect(() => {
     fetchDetails();
   }, [initialHall?.id]);
-
   const handleToggleFavorite = async () => {
     if (!hall?.id) return;
-
     try {
       setIsFav(!isFav);
       await toggleFavoriteApi(hall.id);
       triggerRefresh();
-    } catch (error) {
-      console.error("Failed to toggle favorite:", error);
+    } catch (err) { // [معدّل]
+      console.error("Failed to toggle favorite:", err);
       setIsFav(isFav);
     }
   };
-
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `تفقد هذه القاعة المميزة: ${hall.hall_name} في ${hall.city || hall.hall_location || ""}\nيمكنك حجزها الآن عبر تطبيق فيجا هول!`,
+      });
+    } catch (err) { // [معدّل]
+      console.error("Error sharing:", err);
+    }
+  };
   const media = useMemo(() => {
     if (!hall) return [];
-
     const images = (hall.images || []).map((uri: string) => ({
       type: "image",
       uri,
     }));
-
     const videos = (hall.videos || []).map((uri: string) => ({
       type: "video",
       uri,
     }));
-
     return [...images, ...videos];
   }, [hall]);
-
   const onScroll = useCallback((e: any) => {
     setActiveIndex(Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH));
   }, []);
@@ -132,7 +133,6 @@ export default function HallDetails({ route }: any) {
       ),
     [],
   );
-
   const renderStars = (rating: number) =>
     [1, 2, 3, 4, 5].map((s) => (
       <Ionicons
@@ -142,7 +142,6 @@ export default function HallDetails({ route }: any) {
         color="#FFC107"
       />
     ));
-
   if (!hall && loading) {
     return (
       <SafeAreaView
@@ -158,7 +157,6 @@ export default function HallDetails({ route }: any) {
       </SafeAreaView>
     );
   }
-
   if (!hall) {
     return (
       <SafeAreaView
@@ -171,10 +169,8 @@ export default function HallDetails({ route }: any) {
       </SafeAreaView>
     );
   }
-
   const services = hall.services || [];
   const mealOptions = hall.meal_options || hall.mealOptions || [];
-
   const contacts = [
     ...(hall.owner_phone
       ? [
@@ -193,14 +189,11 @@ export default function HallDetails({ route }: any) {
       }),
     ),
   ].filter((contact) => contact.phone);
-
   const rating = Number(hall.average_rating || hall.rating || 0);
-
   return (
     <SafeAreaView style={styles.container}>
       <BackgroundDecoration />
       <BackButton />
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -226,7 +219,6 @@ export default function HallDetails({ route }: any) {
                 keyExtractor={(_, i) => i.toString()}
                 style={{ direction: "ltr" }}
               />
-
               <TouchableOpacity
                 style={{
                   position: "absolute",
@@ -249,7 +241,6 @@ export default function HallDetails({ route }: any) {
                   المعرض
                 </Text>
               </TouchableOpacity>
-
               <View
                 style={{
                   position: "absolute",
@@ -277,7 +268,6 @@ export default function HallDetails({ route }: any) {
                   {activeIndex + 1} / {media.length}
                 </Text>
               </View>
-
               <View
                 style={{
                   position: "absolute",
@@ -304,7 +294,6 @@ export default function HallDetails({ route }: any) {
                     color={isFav ? "#E74C3C" : "#FFF"}
                   />
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   style={{
                     width: 36,
@@ -314,6 +303,7 @@ export default function HallDetails({ route }: any) {
                     alignItems: "center",
                     justifyContent: "center",
                   }}
+                  onPress={handleShare}
                 >
                   <Ionicons name="share-social-outline" size={20} color="#FFF" />
                 </TouchableOpacity>
@@ -333,7 +323,6 @@ export default function HallDetails({ route }: any) {
             </View>
           )}
         </View>
-
         <View style={{ padding: 15, alignItems: "center" }}>
           <View style={{ marginBottom: 15, alignItems: "center" }}>
             <Text
@@ -349,7 +338,6 @@ export default function HallDetails({ route }: any) {
             >
               {hall.hall_name || hall.name}
             </Text>
-
             <View
               style={{ flexDirection: "row", gap: 15, alignItems: "center" }}
             >
@@ -368,9 +356,7 @@ export default function HallDetails({ route }: any) {
                   {rating.toFixed(1)}
                 </Text>
               </View>
-
               <View style={{ width: 1, height: 14, backgroundColor: "#DDD" }} />
-
               <View
                 style={[
                   styles.items,
@@ -389,7 +375,6 @@ export default function HallDetails({ route }: any) {
                 </Text>
               </View>
             </View>
-
             {hall.description && (
               <Text
                 style={{
@@ -405,7 +390,6 @@ export default function HallDetails({ route }: any) {
               </Text>
             )}
           </View>
-
           <View style={[styles.card, { padding: 15 }]}>
             <TouchableOpacity
               onPress={() => {
@@ -426,7 +410,6 @@ export default function HallDetails({ route }: any) {
                 }`}
               />
             </TouchableOpacity>
-
             <View style={styles.row}>
               <InfoRow
                 icon="people-outline"
@@ -434,7 +417,6 @@ export default function HallDetails({ route }: any) {
                 value={`${hall.capacity || 0} شخص`}
                 containerStyle={{ width: "50%" }}
               />
-
               <InfoRow
                 icon="cash-outline"
                 label="السعر الأساسي"
@@ -442,32 +424,7 @@ export default function HallDetails({ route }: any) {
                 valueStyle={{ color: "#6C4AB6" }}
               />
             </View>
-
-            {hall.location && (
-              <TouchableOpacity
-                style={[
-                  styles.secondaryActionButton,
-                  styles.row,
-                  {
-                    marginTop: 10,
-                    gap: 8,
-                    width: "98%",
-                  },
-                ]}
-                onPress={() =>
-                  Linking.openURL(
-                    `https://www.google.com/maps/search/?api=1&query=${hall.location}`,
-                  )
-                }
-              >
-                <Ionicons name="map-outline" size={18} color="#6C4AB6" />
-                <Text style={[styles.actionText, { fontSize: 15 }]}>
-                  عرض الخريطة
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
-
           {services.length > 0 && (
             <View style={[styles.card, { padding: 15 }]}>
               <InfoRow
@@ -475,13 +432,11 @@ export default function HallDetails({ route }: any) {
                 icon="star-outline"
                 containerStyle={{ paddingVertical: 0 }}
               />
-
               <View style={[styles.row, { flexWrap: "wrap" }]}>
                 {services.map((svc: any, i: number) => {
                   const svcName = typeof svc === "string" ? svc : svc.name;
                   const svcPrice =
                     typeof svc === "object" && svc.price ? svc.price : 0;
-
                   return (
                     <InfoRow
                       key={i}
@@ -498,7 +453,6 @@ export default function HallDetails({ route }: any) {
               </View>
             </View>
           )}
-
           {mealOptions.length > 0 && (
             <View style={[styles.card, { padding: 15 }]}>
               <InfoRow
@@ -506,7 +460,6 @@ export default function HallDetails({ route }: any) {
                 icon="restaurant-outline"
                 containerStyle={{ paddingVertical: 0 }}
               />
-
               <View style={[styles.row, { flexWrap: "wrap" }]}>
                 {mealOptions.map((meal: any, i: number) => (
                   <InfoRow
@@ -523,14 +476,12 @@ export default function HallDetails({ route }: any) {
               </View>
             </View>
           )}
-
           <View style={[styles.card, { padding: 15 }]}>
             <InfoRow
               icon="call-outline"
               label="جهات الاتصال"
               containerStyle={{ paddingVertical: 0, marginBottom: 10 }}
             />
-
             {contacts.length === 0 ? (
               <Text style={[styles.profileLabel, { textAlign: "center" }]}>
                 لا توجد جهات اتصال
@@ -551,14 +502,12 @@ export default function HallDetails({ route }: any) {
               ))
             )}
           </View>
-
-          <View style={[styles.card, { padding: 15, width: "100%" }]}>
+          <View style={[styles.card, { padding: 15 }]}>
             <InfoRow
               icon="chatbubble-outline"
               label="آراء الزبائن"
-              containerStyle={{ paddingVertical: 0, marginBottom: 10 }}
+              containerStyle={{ paddingVertical: 0, marginBottom: 2 }}
             />
-
             {reviews.length === 0 ? (
               <Text
                 style={{
@@ -570,67 +519,26 @@ export default function HallDetails({ route }: any) {
                 لا توجد تقييمات بعد
               </Text>
             ) : (
-              reviews.map((review: any) => (
-                <View
-                  key={review.id}
-                  style={{
-                    paddingBottom: 12,
-                    marginBottom: 12,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#EEE",
-                    width: "100%",
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      marginBottom: 6,
-                      width: "100%",
-                    }}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <Ionicons
-                        name="person-outline"
-                        size={18}
-                        color="#6C4AB6"
-                      />
-                      <Text style={styles.profileValue}>
-                        {review.user_name || "مستخدم"}
-                      </Text>
-                    </View>
-
-                   </View>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      color: "#666",
-                      lineHeight: 21,
-                      textAlign: "left",
-                      width: "100%",
-                    }}
-                  >
-                    {review.comment || ""}
-                  </Text>
-                </View>
+              reviews.map((review: any, index: number) => (
+                <InfoRow
+                  key={`${review.id}-${index}`}
+                  icon="person"
+                  label={review.user_name || "مستخدم"}
+                  value={review.comment || ""}
+                  hideBorder={index === reviews.length - 1}
+                  containerStyle={{ alignItems: "flex-start", paddingVertical: 5 }}
+                  iconStyle={{ marginTop: 5 }}
+                />
               ))
             )}
           </View>
-
           <TouchableOpacity
             style={[
               styles.actionButton,
               styles.row,
               {
                 gap: 8,
-                width: "98%",
+                width: "96%",
                 marginBottom: 20,
               },
             ]}
@@ -638,7 +546,7 @@ export default function HallDetails({ route }: any) {
             onPress={() => NavigateTo("BookingRequest", { hall })}
           >
             <Ionicons name="calendar-outline" size={20} color="#FFF" />
-            <Text style={styles.actionButtonText}>احجز الآن</Text>
+            <Text style={[styles.actionButtonText]}>احجز الآن</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

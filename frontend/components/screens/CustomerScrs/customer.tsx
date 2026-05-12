@@ -11,7 +11,6 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-
 import { NavigateTo } from "../../reusable func/navigateTo";
 import { FilterBox } from "../../reusable func/filterBox";
 import {
@@ -24,6 +23,8 @@ import { useRefresh } from "../../reusable func/refreshContext";
 import { HallCard } from "../hallOwnerscrs/hallCard";
 import { styles as s } from "./ibrahimStyles";
 import { PALESTINE_CITIES } from "../../Validations/validateHall";
+import { formatDate } from "../../reusable func/formatDate";
+import { Input } from "../../reusable func/input";
 
 const ALL_SERVICES = [
   "مساحة خارجية",
@@ -44,7 +45,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
   const [halls, setHalls] = useState<any[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
-  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
@@ -59,9 +60,9 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
     try {
       const favRes = await getFavoritesApi(1, 100);
       setFavoriteIds(new Set(favRes.data.map((fav: any) => fav.id)));
-    } catch (error: any) {
-      if (error.response?.status !== 401) {
-        console.error("Error fetching favorites:", error);
+    } catch (err: any) { // [معدّل - كان error]
+      if (err.response?.status !== 401) {
+        console.error("Error fetching favorites:", err);
       }
     }
   };
@@ -73,8 +74,8 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
         : await getHallsApi();
 
       setHalls(res.data);
-    } catch (error) {
-      console.error("Error fetching halls:", error);
+    } catch (err) { // [معدّل]
+      console.error("Error fetching halls:", err);
     }
   };
 
@@ -97,12 +98,12 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
 
   const handleSearch = (
     overrideServices?: string[],
-    overrideCity?: string,
+    overrideCities?: string[],
     overrideMinPrice?: string,
     overrideMaxPrice?: string,
     overrideDate?: Date | null
   ) => {
-    const finalCity = overrideCity !== undefined ? overrideCity : selectedCity;
+    const finalCities = overrideCities !== undefined ? overrideCities : selectedCities;
     const finalServices =
       overrideServices !== undefined ? overrideServices : selectedServices;
 
@@ -117,7 +118,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
 
     NavigateTo("HallsResult", {
       query,
-      city: finalCity,
+      cities: finalCities,
       date: finalDate,
       services: finalServices,
       minPrice: overrideMinPrice !== undefined ? overrideMinPrice : minPrice,
@@ -135,8 +136,8 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
 
       await toggleFavoriteApi(hallId);
       triggerRefresh();
-    } catch (error) {
-      console.error("Toggle favorite error:", error);
+    } catch (err) { // [معدّل]
+      console.error("Toggle favorite error:", err);
       fetchHallsAndFavorites();
     }
   };
@@ -151,13 +152,12 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
       : [...selectedServices, service];
 
     setSelectedServices(newServices);
-    handleSearch(newServices);
   };
 
   const handleCitySelect = (city: string) => {
-    const newCity = selectedCity === city ? "" : city;
-    setSelectedCity(newCity);
-    handleSearch(undefined, newCity);
+    setSelectedCities((prev) =>
+      prev.includes(city) ? prev.filter((c) => c !== city) : [...prev, city]
+    );
   };
 
   const resetPriceFilter = () => {
@@ -172,7 +172,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
         const isActive =
           type === "services"
             ? selectedServices.includes(item)
-            : selectedCity === item;
+            : selectedCities.includes(item);
 
         return (
           <TouchableOpacity
@@ -220,7 +220,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
                 <Feather name="search" size={20} color="#FFF" />
               </TouchableOpacity>
 
-              <TextInput
+              <Input
                 style={s.searchInput}
                 placeholder="ابحث عن اسم الصالة..."
                 placeholderTextColor="#999"
@@ -249,7 +249,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
 
           <FilterBox
             title="التاريخ"
-            value={selectedDate ? selectedDate.toLocaleDateString("en-GB") : "الكل"}
+            value={selectedDate ? formatDate(selectedDate.toISOString()) : "الكل"}
             isOpen={dateModalVis}
             onPress={() => {
               setOpenFilter(null);
@@ -259,7 +259,11 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
 
           <FilterBox
             title="المدينة"
-            value={selectedCity || "الكل"}
+            value={
+              selectedCities.length > 0
+                ? `${selectedCities.length} مدن`
+                : "الكل"
+            }
             isOpen={openFilter === "city"}
             onPress={() => toggleFilter("city")}
           />
@@ -288,6 +292,40 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
               openFilter === "services" ? ALL_SERVICES : PALESTINE_CITIES,
               openFilter
             )}
+
+            <View style={{ flexDirection: "row-reverse", gap: 12, marginTop: 16 }}>
+              <TouchableOpacity
+                style={[s.primaryButton, { flex: 2, height: 48 }]}
+                onPress={() => {
+                  handleSearch();
+                  setOpenFilter(null);
+                }}
+              >
+                <Text style={s.primaryButtonText}>فلترة</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "#DDD",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={() => {
+                  if (openFilter === "services") {
+                    setSelectedServices([]);
+                  } else {
+                    setSelectedCities([]);
+                  }
+                  setOpenFilter(null);
+                }}
+              >
+                <Text style={{ color: "#666", fontSize: 15 }}>حذف</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -312,7 +350,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
                 >
                   أعلى سعر
                 </Text>
-                <TextInput
+                <Input
                   style={s.input}
                   placeholder="إلى"
                   placeholderTextColor="#999"
@@ -333,7 +371,7 @@ export default function Customer({ onOpenDrawer }: { onOpenDrawer?: () => void }
                 >
                   أدنى سعر
                 </Text>
-                <TextInput
+                <Input
                   style={s.input}
                   placeholder="من"
                   placeholderTextColor="#999"

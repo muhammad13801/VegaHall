@@ -19,6 +19,7 @@ interface InfoRowProps {
   iconSize?: number;
   iconBackgroundColor?: string;
   containerStyle?: StyleProp<ViewStyle>;
+  iconStyle?: StyleProp<ViewStyle>;
   valueStyle?: StyleProp<TextStyle>;
   labelStyle?: StyleProp<TextStyle>;
   hideBorder?: boolean;
@@ -34,6 +35,7 @@ export const InfoRow = ({
   iconSize = 20,
   iconBackgroundColor = "#F3EAFF",
   containerStyle,
+  iconStyle,
   valueStyle,
   labelStyle,
   hideBorder = true,
@@ -63,6 +65,7 @@ export const InfoRow = ({
               alignItems: "center",
               justifyContent: "center",
             },
+            iconStyle,
           ]}
         >
           <Ionicons name={icon as any} size={iconSize} color={iconColor} />

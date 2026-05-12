@@ -12,7 +12,6 @@ import hallRoutes from "./routes/hallRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
-import appStateRoutes from "./routes/appStateRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
@@ -26,7 +25,6 @@ app.use("/user", userRoutes);
 app.use("/halls", hallRoutes);
 app.use("/upload", uploadRoutes);
 app.use("/notifications", notificationRoutes);
-app.use("/app-state", appStateRoutes);
 
 app.use("/customer", customerRoutes);
 app.use("/admin", adminRoutes);

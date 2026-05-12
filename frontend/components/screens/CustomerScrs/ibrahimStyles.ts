@@ -158,19 +158,24 @@ currency: {
 },
 
    // ─── Search Bar ───
-searchCard: {
-  width: "90%",
-  alignSelf: "center",
-  marginTop: 14,
-  marginBottom: 8,
-  backgroundColor: "#FFF",
-  borderRadius: 16,
-  padding: 8,
-  elevation: 4,
-},
+  searchCard: {
+    width: "94%",
+    alignSelf: "center",
+    marginTop: 15,
+    marginBottom: 10,
+    backgroundColor: "#FFF",
+    borderRadius: 18,
+    padding: 6,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
+    height: 52,
   },
   searchInput: {
     flex: 1,
@@ -179,13 +184,16 @@ searchCard: {
     fontWeight: "500",
     color: "#333",
     textAlign: "right",
-    paddingEnd: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    marginBottom: 0,
+    textAlignVertical: "center",
   },
-
   searchBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     backgroundColor: "#6C4AB6",
     justifyContent: "center",
     alignItems: "center",
@@ -220,7 +228,7 @@ searchCard: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
-    backgroundColor: "#F7F8FC",
+    backgroundColor: "transparent",
   },
 
   sortOptions: {
@@ -252,8 +260,8 @@ searchCard: {
 
   // ─── Filters & Dropdowns ───
   filtersScrollContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 25,
+    paddingVertical: 4,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -320,15 +328,13 @@ searchCard: {
 
   listContainer: {
     padding: 16,
-    paddingBottom: 100,
     alignItems: "center",
   },
 
   verticalListContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
     paddingBottom: 40,
     direction: "rtl",
+    alignItems: "center",
   },
   emptyContainer: {
     alignItems: "center",

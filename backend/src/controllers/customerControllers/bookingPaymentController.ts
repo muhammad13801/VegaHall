@@ -93,7 +93,14 @@ export const confirmBookingPayment = async (
         SELECT first_name, last_name FROM users WHERE id = ${userId}
       `;
       const userName = user ? `${user.first_name} ${user.last_name}` : "عميل";
-      const formattedDate = new Date(bookingDate).toISOString().split('T')[0];
+      const formattedDate = new Date(bookingDate).toLocaleDateString(
+        "ar-IL-u-nu-latn",
+        {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        },
+      );
 
       // Insert the booking
       const [newBooking] = await tx`
@@ -146,8 +153,13 @@ export const confirmBookingPayment = async (
       `;
 
       // Notify the hall owner
-      const notificationContent = `قام ${userName} بحجز صالتك (${hall.hall_name}) بتاريخ ${formattedDate} للمزيد من المعلومات الاطلاع على ادارة الحجوزات`;
-      await insertNotification(ownerId, 'حجز جديد', notificationContent, 'booking');
+      const notificationContent = `قام ${userName} بحجز صالتك (${hall.hall_name}) بتاريخ ${formattedDate} للمزيد من المعلومات الاطلاع على الحجوزات`;
+      await insertNotification(
+        ownerId,
+        "حجز جديد",
+        notificationContent,
+        "booking",
+      );
     });
 
     return res.status(200).send("✔️ تم تأكيد الدفع وحجز الصالة بنجاح");

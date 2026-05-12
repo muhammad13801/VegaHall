@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Text, TouchableOpacity, View, ScrollView } from "react-native";
+import { Text, TouchableOpacity, View, ScrollView} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigateTo } from "../../reusable func/navigateTo";
@@ -8,6 +8,8 @@ import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import BackButton from "../../reusable func/backButton";
 import BookingCalendarModal from "../../reusable func/Bookingcalendarmodal";
 import { getBusyDatesApi } from "../../Services/customerApi";
+import { formatDate } from "../../reusable func/formatDate";
+import { Input } from "../../reusable func/input";
 
 const CostRow = ({ label, value, bold = false }: any) => (
   <View style={s.summaryRow}>
@@ -38,6 +40,17 @@ export default function BookingRequest({ route }: any) {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedMeals, setSelectedMeals] = useState<string[]>([]);
 
+  const btnStyle = {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#E8DEFF",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderWidth: 1,
+    borderColor: "#D6C4FF",
+  };
+
   useEffect(() => {
     if (hall?.id) loadBusyDates();
   }, [hall?.id]);
@@ -49,8 +62,8 @@ export default function BookingRequest({ route }: any) {
         d.split("T")[0]
       );
       setBusyDates(formatted);
-    } catch (error) {
-      console.error("Error loading busy dates:", error);
+    } catch (err) { // [معدّل - كان error]
+      console.error("Error loading busy dates:", err);
     }
   };
 
@@ -70,13 +83,7 @@ export default function BookingRequest({ route }: any) {
     );
   };
 
-  const formatDate = (d: Date) =>
-    d.toLocaleDateString("ar-EG", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  // Reusable formatDate used instead
 
   const services = hall.services || [];
   const meals = (hall as any).meal_options || [];
@@ -123,26 +130,7 @@ export default function BookingRequest({ route }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <BackgroundDecoration />
-
-      <View
-        style={[
-          styles.info,
-          {
-            width: "90%",
-            alignSelf: "center",
-            marginTop: 30,
-            alignItems: "center",
-          },
-        ]}
-      >
-        <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>
-          طلب حجز
-        </Text>
-
-        <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
-          <BackButton />
-        </View>
-      </View>
+      <BackButton />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -163,7 +151,7 @@ export default function BookingRequest({ route }: any) {
                 textAlignVertical: "center",
               }}
             >
-              {hasDate ? formatDate(date) : "اختر تاريخ المناسبة"}
+              {hasDate ? formatDate(date.toISOString()) : "اختر تاريخ المناسبة"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -183,46 +171,27 @@ export default function BookingRequest({ route }: any) {
           >
             <Text style={{ color: "#666" }}>الحد الأقصى: {hall.capacity}</Text>
 
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <TouchableOpacity
                 onPress={() => setGuestCount(Math.max(10, guestCount - 10))}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "#E8DEFF",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                style={btnStyle}
               >
-                <Feather name="minus" size={18} color="#6C4AB6" />
+                <Feather name="minus" size={20} color="#6C4AB6" />
               </TouchableOpacity>
 
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  minWidth: 40,
-                  textAlign: "center",
-                }}
-              >
-                {guestCount}
-              </Text>
+              <Input
+                style={{ fontSize: 18, fontWeight: "bold", textAlign: "center", width: 80, height: 40, marginBottom: 0 }}
+                keyboardType="numeric"
+                value={String(guestCount)}
+                onChangeText={t => setGuestCount(Math.min(parseInt(t.replace(/\D/g, "")) || 0, hall.capacity))}
+                maxLength={String(hall.capacity).length}
+              />
 
               <TouchableOpacity
-                onPress={() =>
-                  setGuestCount(Math.min(hall.capacity, guestCount + 10))
-                }
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "#E8DEFF",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                onPress={() => setGuestCount(Math.min(hall.capacity, guestCount + 10))}
+                style={btnStyle}
               >
-                <Feather name="plus" size={18} color="#6C4AB6" />
+                <Feather name="plus" size={20} color="#6C4AB6" />
               </TouchableOpacity>
             </View>
           </View>
@@ -236,7 +205,7 @@ export default function BookingRequest({ route }: any) {
               style={{
                 flexDirection: "row",
                 flexWrap: "wrap",
-                justifyContent: "flex-end",
+                justifyContent: "flex-start",
                 gap: 8,
               }}
             >
@@ -259,7 +228,7 @@ export default function BookingRequest({ route }: any) {
             style={{
               flexDirection: "row",
               flexWrap: "wrap",
-              justifyContent: "flex-end",
+              justifyContent: "flex-start",
               gap: 8,
             }}
           >
@@ -359,16 +328,16 @@ export default function BookingRequest({ route }: any) {
           </View>
         </View>
 
-        <View style={{ width: "90%" }}>
+        <View style={{ width: "98%" }}>
           <TouchableOpacity
             style={[styles.actionButton, !isValid && { backgroundColor: "#DDD" }]}
             onPress={handleConfirm}
             disabled={!isValid}
             activeOpacity={0.8}
           >
-            <View style={[styles.row, { alignItems: "center", gap: 5 }]}>
-              <Feather name="check-circle" size={20} color="#FFF" />
-              <Text style={styles.actionButtonText}>تأكيد الحجز</Text>
+            <View style={styles.row}>
+              <Feather name="check-circle" size={20} style={[styles.screenIcon, {color:"#FFF"}]}/>
+              <Text style={styles.actionButtonText}>{"تأكيد الحجز "}</Text>
             </View>
           </TouchableOpacity>
         </View>

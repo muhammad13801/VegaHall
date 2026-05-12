@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,8 +11,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import { NavigateTo } from "../../reusable func/navigateTo";
 import {
   getBookingsApi,
@@ -24,7 +22,7 @@ import {
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
 import BookingCalendarModal from "../../reusable func/Bookingcalendarmodal";
 import { useRefresh } from "../../reusable func/refreshContext";
-import BackButton from "../../reusable func/backButton";
+import { formatDate } from "../../reusable func/formatDate";
 import { styles } from "../../styles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import { InfoRow } from "../../reusable func/infoRow";
@@ -32,8 +30,10 @@ import { InfoRow } from "../../reusable func/infoRow";
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   confirmed: { label: "مؤكد", color: "#22C55E" },
   customer_cancelled: { label: "ملغي من قبلك", color: "#EF4444" },
+  customer_cancelled_resolved: { label: "ملغي من قبلك", color: "#EF4444" },
   owner_cancelled: { label: "ملغي من الصالة", color: "#EF4444" },
   owner_rescheduled: { label: "تعديل مقترح", color: "#6C4AB6" },
+  refunded: { label: "تم استرجاع المبلغ", color: "#22C55E" }, // [معدّل]
 };
 
 const NoticeBox = ({ icon, text, color, bg, border }: any) => (
@@ -80,102 +80,104 @@ const ActionBtn = ({ label, color, bg, onPress, border = false }: any) => (
     <Text style={[styles.actionButtonText, { color }]}>{label}</Text>
   </TouchableOpacity>
 );
-
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-GB");
-};
-
-const parseArray = (value: any) => {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
-
-  try {
-    return JSON.parse(value);
-  } catch {
-    return [];
-  }
-};
-
 const BookingCard = ({
-  booking,
-  ratedBookings,
+  item, // [معدّل - كان booking]
   actionLoading,
   onCancel,
   onOpenReschedule,
   onRescheduleResponse,
 }: any) => {
-  const statusCfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.confirmed;
+  // [معدّل - كان isRefunded + statusCfg مفصولين]
+  const isRefunded =
+    (item.status === "customer_cancelled_resolved" ||
+      item.status === "owner_cancelled") &&
+    item.payment_type === "refund";
 
-  const bDate = new Date(booking.booking_date || booking.date);
+  const cfg =
+    STATUS_CONFIG[isRefunded ? "refunded" : item.status] ||
+    STATUS_CONFIG.confirmed;
+
+  const bDate = new Date(item.booking_date || item.date);
   bDate.setHours(0, 0, 0, 0);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const isPastDate = today > bDate;
-  const daysUntilEvent =
+  const isPast = today > bDate; // [معدّل - كان isPastDate]
+  const daysLeft = // [معدّل - كان daysUntilEvent]
     (bDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
 
   const canRate =
-    booking.status === "confirmed" &&
-    isPastDate &&
-    !ratedBookings[booking.id];
+    item.status === "confirmed" && isPast && !item.is_rated;
 
-  const parsedServices = useMemo(
-    () => parseArray(booking.services),
-    [booking.services],
+  // [معدّل - كان parseArray دالة منفصلة، الآن inline زي المالك]
+  const svcs = useMemo(() => {
+    if (!item.services) return [];
+    if (Array.isArray(item.services)) return item.services;
+    try {
+      return JSON.parse(item.services);
+    } catch {
+      return [];
+    }
+  }, [item.services]);
+
+  const meals = useMemo(() => {
+    if (!item.meals) return [];
+    if (Array.isArray(item.meals)) return item.meals;
+    try {
+      return JSON.parse(item.meals);
+    } catch {
+      return [];
+    }
+  }, [item.meals]);
+
+  const guests = item.guest_count || item.guestCount || 0; // [معدّل - كان guestCount]
+  const mTotal = meals.reduce( // [معدّل - كان mealsCost]
+    (a: number, m: any) => a + (m.price_per_person || 0) * guests,
+    0,
   );
-
-  const parsedMeals = useMemo(() => parseArray(booking.meals), [booking.meals]);
-
-  const guestCount = booking.guest_count || booking.guestCount || 0;
-
-  const mealsCost = parsedMeals.reduce((sum: number, meal: any) => {
-    return sum + (meal.price_per_person || 0) * guestCount;
-  }, 0);
-
-  const totalCost = Number(booking.total_cost || booking.totalCost || 0);
-  const remainingBalance = (totalCost - mealsCost) * 0.8;
-  const paidAmount = totalCost - remainingBalance;
+  const total = Number(item.total_cost || item.totalCost || 0); // [معدّل - كان totalCost]
+  const remaining = (total - mTotal) * 0.8; // [معدّل - كان remainingBalance]
+  const paid = total - remaining; // [معدّل - كان paidAmount]
 
   return (
     <View style={styles.card}>
+      {/* اسم الصالة + الحالة */}
       <View style={styles.info}>
         <InfoRow
           icon="business-outline"
-          label={booking.hall_name || booking.hallName}
-          containerStyle={{ flex: 1, paddingVertical: 4 }}
+          label={item.hall_name || item.hallName}
+          containerStyle={{ width: "70%", paddingVertical: 4 }}
         />
-        <Text style={[styles.itemText, { color: statusCfg.color }]}>
-          {statusCfg.label}
+        <Text style={[styles.itemText, { color: cfg.color }]}>
+          {cfg.label}
         </Text>
       </View>
 
+      {/* الموقع */}
       <View style={styles.row}>
         <InfoRow
           icon="location-outline"
-          label={booking.hall_location || booking.hallCity || "غير محدد"}
+          label={item.hall_location || item.hallCity || "غير محدد"}
           containerStyle={{ paddingVertical: 4 }}
         />
       </View>
-
+      {/* التاريخ + عدد الضيوف */}
       <View style={styles.row}>
         <InfoRow
           icon="calendar-outline"
-          label={formatDate(booking.booking_date || booking.date)}
+          label={formatDate(item.booking_date || item.date)}
           containerStyle={{ width: "50%", paddingVertical: 4 }}
         />
-
         <InfoRow
           icon="people-outline"
-          label={`${guestCount} ضيف`}
+          label={`${guests} ضيف`}
           containerStyle={{ paddingVertical: 4 }}
         />
       </View>
 
-      {booking.status === "confirmed" && !isPastDate && daysUntilEvent < 4 && (
+      {/* تنبيه قبل الموعد */}
+      {item.status === "confirmed" && !isPast && daysLeft < 4 && (
         <NoticeBox
           icon="information-circle-outline"
           text="في حال يوجد أي تعديل تواصل مع صاحب الصالة"
@@ -184,12 +186,12 @@ const BookingCard = ({
           border="#FECACA"
         />
       )}
-
-      {booking.status === "owner_rescheduled" && booking.proposed_date && (
+      {/* موعد مقترح من المالك */}
+      {item.status === "owner_rescheduled" && item.proposed_date && (
         <NoticeBox
           icon="alert-circle-outline"
           text={`صاحب الصالة يقترح تغيير الموعد إلى: ${formatDate(
-            booking.proposed_date,
+            item.proposed_date,
           )}`}
           color="#FFA000"
           bg="#FFFBF0"
@@ -197,14 +199,14 @@ const BookingCard = ({
         />
       )}
 
-      {parsedServices.length > 0 && (
+      {/* الخدمات */}
+      {svcs.length > 0 && (
         <View style={{ marginBottom: 12 }}>
           <Text style={[styles.label, { fontSize: 14, marginBottom: 8 }]}>
             الخدمات المختارة:
           </Text>
-
           <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
-            {parsedServices.map((s: any, i: number) => (
+            {svcs.map((s: any, i: number) => (
               <ItemChip
                 key={i}
                 text={`${s.name}${s.price > 0 ? ` ${s.price}₪` : ""}`}
@@ -214,14 +216,14 @@ const BookingCard = ({
         </View>
       )}
 
-      {parsedMeals.length > 0 && (
+      {/* الوجبات */}
+      {meals.length > 0 && (
         <View style={{ marginBottom: 12 }}>
           <Text style={[styles.label, { fontSize: 14, marginBottom: 8 }]}>
             الوجبات المختارة:
           </Text>
-
           <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
-            {parsedMeals.map((m: any, i: number) => (
+            {meals.map((m: any, i: number) => (
               <ItemChip
                 key={i}
                 text={`${m.name} (${m.price_per_person}₪)`}
@@ -239,14 +241,13 @@ const BookingCard = ({
           <View style={[styles.info, { marginBottom: 5 }]}>
             <Text style={styles.profileValue}>الإجمالي</Text>
             <Text style={[styles.profileValue, { color: "#F97316" }]}>
-              ₪{totalCost.toLocaleString()}
             </Text>
           </View>
 
           <View style={[styles.info, { marginBottom: 5 }]}>
             <Text style={styles.profileValue}>المدفوع (عربون + وجبات)</Text>
             <Text style={[styles.profileValue, { color: "#6C4AB6" }]}>
-              ₪{paidAmount.toLocaleString()}
+              ₪{paid.toLocaleString()}
             </Text>
           </View>
 
@@ -262,54 +263,52 @@ const BookingCard = ({
           >
             <Text style={styles.label}>المتبقي للدفع</Text>
             <Text style={[styles.title, { fontSize: 20, color: "#22C55E" }]}>
-              ₪{remainingBalance.toLocaleString()}
+              ₪{remaining.toLocaleString()}
             </Text>
           </View>
         </View>
-
-        {actionLoading === booking.id ? (
+        {/* أزرار التحكم */}
+        {actionLoading === item.id ? (
           <ActivityIndicator color="#6C4AB6" style={{ paddingVertical: 10 }} />
         ) : (
           <View style={[styles.row, { gap: 8, marginTop: 10 }]}>
-            {booking.status === "confirmed" &&
-              !isPastDate &&
-              daysUntilEvent >= 4 && (
+            {item.status === "confirmed" &&
+              !isPast &&
+              daysLeft >= 4 && (
                 <ActionBtn
                   label="تعديل التاريخ"
                   color="#6C4AB6"
                   bg="#FFF"
                   border
-                  onPress={() => onOpenReschedule(booking)}
+                  onPress={() => onOpenReschedule(item)}
                 />
               )}
 
-            {booking.status === "owner_rescheduled" &&
-              booking.proposed_date && (
-                <>
+            {item.status === "owner_rescheduled" &&
+              item.proposed_date && (                <>
                   <ActionBtn
                     label="قبول"
                     color="#FFF"
-                    bg="#22C55E"
-                    onPress={() => onRescheduleResponse(booking.id, true)}
+                    bg="#63c988ff"
+                    onPress={() => onRescheduleResponse(item.id, true)}
                   />
-
                   <ActionBtn
                     label="رفض"
                     color="#FFF"
-                    bg="#EF4444"
-                    onPress={() => onRescheduleResponse(booking.id, false)}
+                    bg="#db6c6cff"
+                    onPress={() => onRescheduleResponse(item.id, false)}
                   />
                 </>
               )}
 
-            {(booking.status === "confirmed" ||
-              booking.status === "owner_rescheduled") &&
-              !isPastDate && (
+            {(item.status === "confirmed" ||
+              item.status === "owner_rescheduled") &&
+              !isPast && (
                 <ActionBtn
                   label="إلغاء الحجز"
                   color="#EF4444"
                   bg="#FEF2F2"
-                  onPress={() => onCancel(booking)}
+                  onPress={() => onCancel(item)}
                 />
               )}
 
@@ -321,10 +320,10 @@ const BookingCard = ({
                 border
                 onPress={() =>
                   NavigateTo("RateHall", {
-                    hallName: booking.hall_name || booking.hallName,
-                    hallCity: booking.hall_location || booking.hallCity,
-                    bookingId: booking.id,
-                    hallId: booking.hall_id,
+                    hallName: item.hall_name || item.hallName,
+                    hallCity: item.hall_location || item.hallCity,
+                    bookingId: item.id,
+                    hallId: item.hall_id,
                   })
                 }
               />
@@ -338,17 +337,11 @@ const BookingCard = ({
 
 export default function MyBookings() {
   const { triggerRefresh } = useRefresh();
-  const [ratedBookings, setRatedBookings] = useState<Record<string, boolean>>(
-    {},
-  );
-
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [rescheduleModal, setRescheduleModal] = useState(false);
-  const [selectedRescheduleId, setSelectedRescheduleId] = useState<
-    number | null
-  >(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null); // [معدّل - كان selectedRescheduleId]
   const [busyDates, setBusyDates] = useState<(string | Date)[]>([]);
-  const [fetchingBusyDates, setFetchingBusyDates] = useState(false);
+  const [fetchingBusy, setFetchingBusy] = useState(false); // [معدّل - كان fetchingBusyDates]
 
   useFocusEffect(
     useCallback(() => {
@@ -368,31 +361,12 @@ export default function MyBookings() {
     fetchFunction: getBookingsApi,
     limit: 10,
   });
-
-  const checkRatings = async (bookingsList: any[]) => {
-    const ratedMap: Record<string, boolean> = {};
-
-    for (const b of bookingsList) {
-      const isRated = await AsyncStorage.getItem(`rated_booking_${b.id}`);
-      if (isRated === "true") {
-        ratedMap[b.id] = true;
-      }
-    }
-
-    setRatedBookings((prev) => ({ ...prev, ...ratedMap }));
-  };
-
-  useEffect(() => {
-    if (bookings.length > 0) {
-      checkRatings(bookings);
-    }
-  }, [bookings]);
-
-  const handleCancel = (booking: any) => {
+  // [معدّل - كان handleCancel مع booking param]
+  const handleCancel = (item: any) => {
     Alert.alert(
       "إلغاء الحجز",
       `انت على وشك الغاء الحجز، يرجى التواصل مع صاحب الصاله (ممكن ان لا يتم استرداد العربون) "${
-        booking.hall_name || booking.hallName
+        item.hall_name || item.hallName
       }"؟`,
       [
         { text: "تراجع", style: "cancel" },
@@ -401,17 +375,17 @@ export default function MyBookings() {
           style: "destructive",
           onPress: async () => {
             try {
-              const res = await cancelBookingApi(booking.id);
+              const res = await cancelBookingApi(item.id);
               Toast.show({
                 type: "success",
                 text1: res?.data || "تم تحديث حالة الحجز",
               });
               triggerRefresh();
-            } catch (error: any) {
-              console.error(error);
+            } catch (err: any) {
+              console.error(err);
               Toast.show({
                 type: "error",
-                text1: error.response?.data || "فشل إلغاء الحجز",
+                text1: err.response?.data || "فشل إلغاء الحجز",
               });
             }
           },
@@ -425,7 +399,6 @@ export default function MyBookings() {
     accept: boolean,
   ) => {
     setActionLoading(bookingId);
-
     try {
       const res = await respondRescheduleApi(bookingId, accept);
       Toast.show({
@@ -435,11 +408,11 @@ export default function MyBookings() {
           (accept ? "تم قبول التعديل بنجاح" : "تم رفض التعديل"),
       });
       triggerRefresh();
-    } catch (error: any) {
-      console.error(error);
+    } catch (err: any) {
+      console.error(err);
       Toast.show({
         type: "error",
-        text1: error.response?.data || "فشل في الاستجابة للتعديل",
+        text1: err.response?.data || "فشل في الاستجابة للتعديل",
       });
     } finally {
       setActionLoading(null);
@@ -447,107 +420,78 @@ export default function MyBookings() {
   };
 
   const handleRescheduleSubmit = async (dateString: string) => {
-    if (!selectedRescheduleId) return;
-
-    setActionLoading(selectedRescheduleId);
+    if (!selectedId) return;
+    setActionLoading(selectedId);
     setRescheduleModal(false);
-
     try {
-      const res = await requestRescheduleApi(selectedRescheduleId, dateString);
+      const res = await requestRescheduleApi(selectedId, dateString);
       Toast.show({
         type: "success",
         text1: res?.data?.message || "تم تعديل الموعد بنجاح",
       });
       triggerRefresh();
-    } catch (error: any) {
-      console.error(error);
+    } catch (err: any) {
+      console.error(err);
       Toast.show({
         type: "error",
-        text1: error.response?.data || "فشل تعديل الموعد",
+        text1: err.response?.data || "فشل تعديل الموعد",
       });
     } finally {
       setActionLoading(null);
-      setSelectedRescheduleId(null);
+      setSelectedId(null);
     }
   };
 
-  const openRescheduleCustomer = async (booking: any) => {
-    if (fetchingBusyDates) return;
-
+  // [معدّل - كان openRescheduleCustomer]
+  const openReschedule = async (item: any) => {
+    if (fetchingBusy) return;
     try {
-      setFetchingBusyDates(true);
-      const res = await getBusyDatesApi(booking.hall_id);
+      setFetchingBusy(true);
+      const res = await getBusyDatesApi(item.hall_id);
       setBusyDates(res.data || []);
-
       Alert.alert(
         "تعديل الموعد",
         `هل تريد تعديل موعد حجز (${
-          booking.hall_name || booking.hallName
+          item.hall_name || item.hallName
         })؟\nسيتم تعديل الموعد فوراً وإرسال إشعار لصاحب الصالة.`,
         [
           { text: "تراجع", style: "cancel" },
           {
             text: "نعم",
             onPress: () => {
-              setSelectedRescheduleId(booking.id);
+              setSelectedId(item.id);
               setRescheduleModal(true);
             },
           },
         ],
       );
-    } catch (error) {
-      console.error("Error fetching busy dates:", error);
+    } catch (err) {
+      console.error("Error fetching busy dates:", err);
       Toast.show({
         type: "error",
         text1: "فشل تحميل المواعيد المحجوزة، يرجى المحاولة لاحقاً",
       });
     } finally {
-      setFetchingBusyDates(false);
+      setFetchingBusy(false);
     }
   };
 
-  if (loading && bookings.length === 0) {
+  if (loading && bookings.length === 0)
     return (
       <SafeAreaView style={styles.container}>
         <ActivityIndicator size="large" color="#6C4AB6" />
       </SafeAreaView>
     );
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <BackgroundDecoration />
-
-      <View
-        style={[
-          styles.info,
-          {
-            width: "90%",
-            alignSelf: "center",
-            marginTop: 30,
-            alignItems: "center",
-          },
-        ]}
-      >
-        <Text style={[styles.title, { fontSize: 28, lineHeight: 35 }]}>
-          حجوزاتي
-        </Text>
-
-        <View style={{ marginBottom: -5, transform: [{ scaleX: -1 }] }}>
-          <BackButton />
-        </View>
-      </View>
-
       <FlatList
         data={bookings as any[]}
         keyExtractor={(b) => b.id.toString()}
         style={{ width: "90%" }}
         showsVerticalScrollIndicator={false}
-        onEndReached={() => {
-          if (hasMore && !loadingMore) {
-            loadMore();
-          }
-        }}
+        onEndReached={loadMore} // [معدّل - كان ملفوف بدالة]
         onRefresh={onRefresh}
         refreshing={refreshing}
         ListEmptyComponent={
@@ -574,11 +518,11 @@ export default function MyBookings() {
         }
         renderItem={({ item }) => (
           <BookingCard
-            booking={item}
-            ratedBookings={ratedBookings}
+            item={item}
             actionLoading={actionLoading}
             onCancel={handleCancel}
-            onOpenReschedule={openRescheduleCustomer}
+            onOpenReschedule={openReschedule}
+
             onRescheduleResponse={handleRescheduleResponse}
           />
         )}
@@ -588,11 +532,11 @@ export default function MyBookings() {
         visible={rescheduleModal}
         onClose={() => {
           setRescheduleModal(false);
-          setSelectedRescheduleId(null);
+          setSelectedId(null);
         }}
         onConfirm={handleRescheduleSubmit}
         bookedDates={busyDates}
-        loading={actionLoading === selectedRescheduleId}
+        loading={actionLoading === selectedId}
         title="تعديل موعد الحجز"
         subtitle="اختر التاريخ الجديد لتعديل الموعد (الأحمر = محجوز)."
         confirmLabel="تعديل الموعد"
