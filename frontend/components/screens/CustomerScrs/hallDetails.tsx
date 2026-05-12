@@ -57,7 +57,8 @@ export default function HallDetails({ route }: any) {
       const favRes = await getFavoritesApi(1, 100);
       const userFavIds = new Set<number>(favRes.data.map((f: any) => f.id));
       setIsFav(userFavIds.has(hall.id));
-    } catch (err: any) { // [معدّل - كان error]
+    } catch (err: any) {
+      // [معدّل - كان error]
       console.error("Failed to fetch hall details:", err);
       Toast.show({
         type: "error",
@@ -81,7 +82,8 @@ export default function HallDetails({ route }: any) {
       setIsFav(!isFav);
       await toggleFavoriteApi(hall.id);
       triggerRefresh();
-    } catch (err) { // [معدّل]
+    } catch (err) {
+      // [معدّل]
       console.error("Failed to toggle favorite:", err);
       setIsFav(isFav);
     }
@@ -91,7 +93,8 @@ export default function HallDetails({ route }: any) {
       await Share.share({
         message: `تفقد هذه القاعة المميزة: ${hall.hall_name} في ${hall.city || hall.hall_location || ""}\nيمكنك حجزها الآن عبر تطبيق فيجا هول!`,
       });
-    } catch (err) { // [معدّل]
+    } catch (err) {
+      // [معدّل]
       console.error("Error sharing:", err);
     }
   };
@@ -305,7 +308,11 @@ export default function HallDetails({ route }: any) {
                   }}
                   onPress={handleShare}
                 >
-                  <Ionicons name="share-social-outline" size={20} color="#FFF" />
+                  <Ionicons
+                    name="share-social-outline"
+                    size={20}
+                    color="#FFF"
+                  />
                 </TouchableOpacity>
               </View>
             </>
@@ -526,7 +533,10 @@ export default function HallDetails({ route }: any) {
                   label={review.user_name || "مستخدم"}
                   value={review.comment || ""}
                   hideBorder={index === reviews.length - 1}
-                  containerStyle={{ alignItems: "flex-start", paddingVertical: 5 }}
+                  containerStyle={{
+                    alignItems: "flex-start",
+                    paddingVertical: 5,
+                  }}
                   iconStyle={{ marginTop: 5 }}
                 />
               ))

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import { getNotificationsApi } from "../../Services/notificationApi";
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
 import { formatDate } from "../../reusable func/formatDate";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../../Services/supabaseClient";
 
 interface Notification {
   id: number;
@@ -31,7 +33,11 @@ const NOTIFICATION_STYLES: Record<
   meal_approved: { icon: "checkmark-circle", color: "#22C55E", bg: "#F0FDF4" },
   meal_rejected: { icon: "close-circle", color: "#EF4444", bg: "#FEF2F2" },
 
-  service_approved: { icon: "checkmark-done", color: "#22C55E", bg: "#F0FDF4" },
+  service_approved: {
+    icon: "checkmark-circle",
+    color: "#22C55E",
+    bg: "#F0FDF4",
+  },
   service_rejected: { icon: "close-circle", color: "#EF4444", bg: "#FEF2F2" },
 
   reschedule_request: { icon: "time-outline", color: "#F59E0B", bg: "#FFFBEB" },
@@ -42,6 +48,7 @@ const NOTIFICATION_STYLES: Record<
 const NotificationCard = memo(({ item }: { item: Notification }) => {
   const style =
     NOTIFICATION_STYLES[item.notification_type] || NOTIFICATION_STYLES.default;
+
   return (
     <View style={styles.card}>
       <View style={[styles.row, { alignItems: "center" }]}>
@@ -110,6 +117,40 @@ export default function Notifications() {
     fetchFunction: getNotificationsApi,
     limit: 10,
   });
+
+  useEffect(() => {
+    let channel: any;
+
+    const setupRealtime = async () => {
+      const userId = await AsyncStorage.getItem("userId");
+
+      if (!userId) return;
+
+      channel = supabase
+        .channel("notifications-realtime")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`,
+          },
+          async () => {
+            onRefresh();
+          },
+        )
+        .subscribe();
+    };
+
+    setupRealtime();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, []);
 
   if (loading && items.length === 0) {
     return (

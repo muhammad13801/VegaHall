@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,8 @@ import {
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
 import { formatDate } from "../../reusable func/formatDate";
 import { InfoRow } from "../../reusable func/infoRow";
+import { supabase } from "../../Services/supabaseClient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Service {
   name: string;
@@ -49,8 +51,12 @@ interface Booking {
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   confirmed: { label: "مؤكد", color: "#22C55E" },
   owner_rescheduled: { label: "تعديل مقترح", color: "#6C4AB6" },
-  customer_cancelled: { label: "إلغاء من العميل", color: "#F97316" },
-  owner_cancelled: { label: "ملغي", color: "#EF4444" },
+  customer_cancelled: { label: "ملغي من قبل العميل", color: "#F97316" },
+  customer_cancelled_resolved: {
+    label: "تم الرد على إلغاء الحجز ",
+    color: "#6C4AB6",
+  },
+  owner_cancelled: { label: "ملغي من قبلك", color: "#EF4444" },
 };
 
 const NoticeBox = ({ icon, text, color, bg, border }: any) => (
@@ -175,11 +181,14 @@ const BookingCard = ({
           border="#FFD54F"
         />
       )}
-
-
       {svcs.length > 0 && (
         <View style={{ marginBottom: 12 }}>
-          <Text style={[styles.label, { fontSize: 14, marginBottom: 8 }]}>
+          <Text
+            style={[
+              styles.label,
+              { fontSize: 14, marginBottom: 8, marginTop: 8 },
+            ]}
+          >
             الخدمات المختارة:
           </Text>
           <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
@@ -296,6 +305,56 @@ export default function ManageBookings() {
     onRefresh,
     loadMore,
   } = usePaginatedFetch({ fetchFunction: getOwnerBookingsApi, limit: 10 });
+
+  const hallIdsRef = useRef<number[]>([]);
+
+  const loadHallIds = async () => {
+    const userId = await AsyncStorage.getItem("userId");
+    if (!userId) return;
+
+    const { data } = await supabase
+      .from("halls")
+      .select("id")
+      .eq("owner_id", Number(userId));
+
+    hallIdsRef.current = data?.map((h) => h.id) || [];
+  };
+
+  useEffect(() => {
+    let channel: any;
+
+    const setup = async () => {
+      await loadHallIds();
+
+      channel = supabase
+        .channel("bookings-realtime")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "bookings",
+          },
+          (payload: any) => {
+            const hallIds = hallIdsRef.current;
+
+            const hallId = payload.new?.hall_id;
+
+            if (hallIds.includes(hallId)) {
+              onRefresh();
+            }
+          },
+        )
+        .subscribe();
+    };
+
+    setup();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, []);
+
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [rescheduleModal, setRescheduleModal] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -337,16 +396,22 @@ export default function ManageBookings() {
         text: "لا، بدون إعادة",
         style: "destructive",
         onPress: () =>
-          handleAction(id, customerCancelResponseApi, "owner_cancelled", [
-            false,
-          ]),
+          handleAction(
+            id,
+            customerCancelResponseApi,
+            "customer_cancelled_resolved",
+            [false],
+          ),
       },
       {
         text: "نعم، أعد المبلغ",
         onPress: () =>
-          handleAction(id, customerCancelResponseApi, "owner_cancelled", [
-            true,
-          ]),
+          handleAction(
+            id,
+            customerCancelResponseApi,
+            "customer_cancelled_resolved",
+            [true],
+          ),
       },
       { text: "تراجع", style: "cancel" },
     ]);

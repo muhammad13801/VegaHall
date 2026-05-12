@@ -25,7 +25,6 @@ app.use("/user", userRoutes);
 app.use("/halls", hallRoutes);
 app.use("/upload", uploadRoutes);
 app.use("/notifications", notificationRoutes);
-
 app.use("/customer", customerRoutes);
 app.use("/admin", adminRoutes);
 

@@ -117,8 +117,8 @@ export default function MediaPicker({ form, setForm, errors }: HallFormProps) {
       </View>
 
       <View style={{ flexDirection: "row", gap: 10 }}>
-        <PickerBtn type="images" icon="camera" label="اضافة صور" />
-        <PickerBtn type="videos" icon="videocam" label="اضافة فيديو" />
+        <PickerBtn type="images" icon="camera" label=" اضافة صور" />
+        <PickerBtn type="videos" icon="videocam" label=" اضافة فيديو" />
       </View>
 
       {hasMedia && (

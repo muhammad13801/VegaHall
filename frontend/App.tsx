@@ -30,6 +30,18 @@ import SetNewPassword from "./components/screens/userScrs/signUpScrs/forgotPassw
 import SignUp from "./components/screens/userScrs/signUpScrs/signUp";
 import PasswordCode from "./components/screens/userScrs/signUpScrs/forgotPasswordScrs/passwordCode";
 import HallOwner from "./components/screens/hallOwnerscrs/hallOwner";
+import * as Notifications from "expo-notifications";
+
+// Configure how notifications are handled when the app is OPEN
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 const Stack = createNativeStackNavigator();
 

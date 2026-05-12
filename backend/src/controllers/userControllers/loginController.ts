@@ -38,6 +38,7 @@ export const login = async (req: Request, res: Response) => {
     `;
 
     res.json({
+      userId: userData.id,
       sessionId,
       role: userData.role,
       message: "✔️ تم تسجيل الدخول بنجاح",

@@ -104,11 +104,9 @@ const BookingCard = ({
   today.setHours(0, 0, 0, 0);
 
   const isPast = today > bDate; // [معدّل - كان isPastDate]
-  const daysLeft = // [معدّل - كان daysUntilEvent]
-    (bDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+  const daysLeft = (bDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24); // [معدّل - كان daysUntilEvent]
 
-  const canRate =
-    item.status === "confirmed" && isPast && !item.is_rated;
+  const canRate = item.status === "confirmed" && isPast && !item.is_rated;
 
   // [معدّل - كان parseArray دالة منفصلة، الآن inline زي المالك]
   const svcs = useMemo(() => {
@@ -132,7 +130,8 @@ const BookingCard = ({
   }, [item.meals]);
 
   const guests = item.guest_count || item.guestCount || 0; // [معدّل - كان guestCount]
-  const mTotal = meals.reduce( // [معدّل - كان mealsCost]
+  const mTotal = meals.reduce(
+    // [معدّل - كان mealsCost]
     (a: number, m: any) => a + (m.price_per_person || 0) * guests,
     0,
   );
@@ -149,9 +148,7 @@ const BookingCard = ({
           label={item.hall_name || item.hallName}
           containerStyle={{ width: "70%", paddingVertical: 4 }}
         />
-        <Text style={[styles.itemText, { color: cfg.color }]}>
-          {cfg.label}
-        </Text>
+        <Text style={[styles.itemText, { color: cfg.color }]}>{cfg.label}</Text>
       </View>
 
       {/* الموقع */}
@@ -240,8 +237,7 @@ const BookingCard = ({
         <View>
           <View style={[styles.info, { marginBottom: 5 }]}>
             <Text style={styles.profileValue}>الإجمالي</Text>
-            <Text style={[styles.profileValue, { color: "#F97316" }]}>
-            </Text>
+            <Text style={[styles.profileValue, { color: "#F97316" }]}></Text>
           </View>
 
           <View style={[styles.info, { marginBottom: 5 }]}>
@@ -272,34 +268,32 @@ const BookingCard = ({
           <ActivityIndicator color="#6C4AB6" style={{ paddingVertical: 10 }} />
         ) : (
           <View style={[styles.row, { gap: 8, marginTop: 10 }]}>
-            {item.status === "confirmed" &&
-              !isPast &&
-              daysLeft >= 4 && (
-                <ActionBtn
-                  label="تعديل التاريخ"
-                  color="#6C4AB6"
-                  bg="#FFF"
-                  border
-                  onPress={() => onOpenReschedule(item)}
-                />
-              )}
+            {item.status === "confirmed" && !isPast && daysLeft >= 4 && (
+              <ActionBtn
+                label="تعديل التاريخ"
+                color="#6C4AB6"
+                bg="#FFF"
+                border
+                onPress={() => onOpenReschedule(item)}
+              />
+            )}
 
-            {item.status === "owner_rescheduled" &&
-              item.proposed_date && (                <>
-                  <ActionBtn
-                    label="قبول"
-                    color="#FFF"
-                    bg="#63c988ff"
-                    onPress={() => onRescheduleResponse(item.id, true)}
-                  />
-                  <ActionBtn
-                    label="رفض"
-                    color="#FFF"
-                    bg="#db6c6cff"
-                    onPress={() => onRescheduleResponse(item.id, false)}
-                  />
-                </>
-              )}
+            {item.status === "owner_rescheduled" && item.proposed_date && (
+              <>
+                <ActionBtn
+                  label="قبول"
+                  color="#FFF"
+                  bg="#63c988ff"
+                  onPress={() => onRescheduleResponse(item.id, true)}
+                />
+                <ActionBtn
+                  label="رفض"
+                  color="#FFF"
+                  bg="#db6c6cff"
+                  onPress={() => onRescheduleResponse(item.id, false)}
+                />
+              </>
+            )}
 
             {(item.status === "confirmed" ||
               item.status === "owner_rescheduled") &&
@@ -522,7 +516,6 @@ export default function MyBookings() {
             actionLoading={actionLoading}
             onCancel={handleCancel}
             onOpenReschedule={openReschedule}
-
             onRescheduleResponse={handleRescheduleResponse}
           />
         )}

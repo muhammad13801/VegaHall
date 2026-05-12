@@ -74,7 +74,7 @@ export default function UpdatePassword() {
           size={40}
           style={styles.screenIcon}
         ></Ionicons>
-        <Text style={[styles.title, { fontSize: 33 }]}>تغيير كلمة المرور</Text>
+        <Text style={styles.title}>{"تغيير كلمة المرور "}</Text>
         <Text style={styles.subtitle}>أدخل كلمة المرور الحالية والجديدة</Text>
 
         <View style={styles.card}>

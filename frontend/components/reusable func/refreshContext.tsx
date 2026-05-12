@@ -1,9 +1,5 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-} from "react";
+import React, { createContext, useContext, useState } from "react";
+
 const RefreshContext = createContext({
   triggerRefresh: () => {},
   refreshKey: 0,
@@ -16,12 +12,9 @@ export const RefreshProvider = ({
 }) => {
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
-
-  useEffect(() => {
-    // Polling removed as per user request to avoid repetitive 500 errors
-  }, []);
-
+  const triggerRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   return (
     <RefreshContext.Provider value={{ triggerRefresh, refreshKey }}>

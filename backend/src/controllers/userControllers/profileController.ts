@@ -9,7 +9,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     if (!userId) return res.status(401).send("❌ مستخدم غير مصرح");
 
     const [user] = await sql<UserTable[]>`
-      SELECT first_name, last_name, email, phone_number, role
+      SELECT id, first_name, last_name, email, phone_number, role
       FROM users
       WHERE id = ${userId}
     `;

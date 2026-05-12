@@ -35,7 +35,10 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await login(form.email!, form.password!);
+
+      // Store sessionId as before
       await AsyncStorage.setItem("sessionId", data.sessionId);
+      await AsyncStorage.setItem("userId", data.userId.toString());
 
       //await registerPushToken();
 
@@ -50,7 +53,7 @@ export default function Login() {
     } catch (err: any) {
       Toast.show({
         type: "error",
-        text1: err.response?.data || "فشل الاتصال بالخادم",
+        text1: err.response?.data || err.message || "فشل الاتصال بالخادم",
       });
     } finally {
       setLoading(false);

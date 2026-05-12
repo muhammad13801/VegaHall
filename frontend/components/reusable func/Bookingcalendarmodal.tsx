@@ -42,10 +42,14 @@ export default function BookingCalendarModal({
     [bookedDates],
   );
 
-  const today = new Date();
-  const todayStr = toISODate(today);
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 1);
+  const minDateStr = toISODate(minDate);
 
-  const [pickedDate, setPickedDate] = useState<string>(toISODate(selectedDate));
+  const initialDate =
+    selectedDate && new Date(selectedDate) > minDate ? selectedDate : minDate;
+
+  const [pickedDate, setPickedDate] = useState<string>(toISODate(initialDate));
 
   const markedDates = useMemo(() => {
     const marks: Record<string, object> = {};
@@ -127,7 +131,7 @@ export default function BookingCalendarModal({
 
           {/* Calendar */}
           <Calendar
-            minDate={todayStr}
+            minDate={minDateStr}
             markingType="custom"
             markedDates={markedDates}
             onDayPress={handleDayPress}

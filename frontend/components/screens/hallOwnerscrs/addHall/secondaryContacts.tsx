@@ -105,7 +105,7 @@ export default function SecondaryContacts({
           <View style={[styles.row, { alignItems: "center", gap: 5 }]}>
             <Ionicons name="add-circle" size={20} color="#6C4AB6" />
             <Text style={{ color: "#6C4AB6", fontWeight: "bold" }}>
-              إضافة شخص آخر
+              {"إضافة شخص آخر "}
             </Text>
           </View>
         </TouchableOpacity>

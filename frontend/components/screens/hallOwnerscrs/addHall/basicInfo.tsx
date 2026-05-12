@@ -82,7 +82,7 @@ export default function BasicInfo({ form, setForm, errors }: HallFormProps) {
         <Text style={styles.label}>وصف الصالة</Text>
       </View>
       <Input
-        placeholder="اكتب وصفاً مفصلاً لصالتك (الخدمات، السعة، المميزات...)"
+        placeholder="اكتب وصفاً مختصراً عن الصالة..."
         value={form.description}
         onChangeText={(text) => change("description", text)}
         multiline

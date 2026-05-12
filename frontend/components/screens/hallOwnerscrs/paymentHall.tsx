@@ -85,7 +85,7 @@ export default function PaymentHall() {
           <Text
             style={[styles.label, { textAlign: "center", marginBottom: 20 }]}
           >
-            ليتم تفعيل واضافة صالتك يجب عليك دفع $50
+            ليتم تفعيل واضافة صالتك يجب عليك دفع 50$
           </Text>
 
           <TouchableOpacity

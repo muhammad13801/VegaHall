@@ -12,7 +12,6 @@ import { useEffect, useState } from "react";
 import BackgroundDecoration from "../../../reusable func/backgroundDecoration";
 import { getProfileApi, logoutApi } from "../../../Services/userApi";
 import { InfoRow } from "../../../reusable func/infoRow";
-
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
 
@@ -129,31 +128,17 @@ export default function Profile() {
         <View style={{ height: 20 }} />
 
         <TouchableOpacity
-          style={[
-            styles.actionButton,
-            {
-              backgroundColor: "#fff",
-              borderWidth: 1,
-              borderColor: "#6C4AB6",
-            },
-          ]}
+          style={[styles.actionButton, styles.profileSecondaryAction]}
           onPress={() => NavigateTo("UpdatePassword")}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <View style={{ flexDirection: "row" }}>
             <Ionicons
               name="lock-closed-outline"
               size={20}
-              color="#6C4AB6"
               style={styles.screenIcon}
             />
-            <Text style={[styles.actionText, { fontSize: 16, width: "30%" }]}>
-              تغيير كلمة المرور
+            <Text style={[styles.actionText, { fontSize: 16 }]}>
+              {"تغيير كلمة المرور "}
             </Text>
           </View>
         </TouchableOpacity>

@@ -1,0 +1,7 @@
+ALTER TABLE notifications
+ADD COLUMN is_read BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE bookings
+ADD COLUMN is_read BOOLEAN NOT NULL DEFAULT false;
+
+DROP TABLE app_state;
