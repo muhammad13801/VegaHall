@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -22,8 +22,6 @@ import {
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
 import { formatDate } from "../../reusable func/formatDate";
 import { InfoRow } from "../../reusable func/infoRow";
-import { supabase } from "../../Services/supabaseClient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Service {
   name: string;
@@ -63,7 +61,7 @@ const NoticeBox = ({ icon, text, color, bg, border }: any) => (
   <View
     style={[
       styles.mealOptionRow,
-      { gap: 8, marginBottom: 10, backgroundColor: bg, borderColor: border },
+      { gap: 8, marginTop: 10, backgroundColor: bg, borderColor: border },
     ]}
   >
     <Ionicons name={icon} size={16} color={color} />
@@ -305,55 +303,6 @@ export default function ManageBookings() {
     onRefresh,
     loadMore,
   } = usePaginatedFetch({ fetchFunction: getOwnerBookingsApi, limit: 10 });
-
-  const hallIdsRef = useRef<number[]>([]);
-
-  const loadHallIds = async () => {
-    const userId = await AsyncStorage.getItem("userId");
-    if (!userId) return;
-
-    const { data } = await supabase
-      .from("halls")
-      .select("id")
-      .eq("owner_id", Number(userId));
-
-    hallIdsRef.current = data?.map((h) => h.id) || [];
-  };
-
-  useEffect(() => {
-    let channel: any;
-
-    const setup = async () => {
-      await loadHallIds();
-
-      channel = supabase
-        .channel("bookings-realtime")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "bookings",
-          },
-          (payload: any) => {
-            const hallIds = hallIdsRef.current;
-
-            const hallId = payload.new?.hall_id;
-
-            if (hallIds.includes(hallId)) {
-              onRefresh();
-            }
-          },
-        )
-        .subscribe();
-    };
-
-    setup();
-
-    return () => {
-      if (channel) supabase.removeChannel(channel);
-    };
-  }, []);
 
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [rescheduleModal, setRescheduleModal] = useState(false);

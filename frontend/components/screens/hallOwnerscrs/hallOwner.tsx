@@ -98,20 +98,20 @@ export default function HallOwner() {
           listeners={
             tab.name === "Notifications"
               ? {
-                focus: async () => {
-                  const userId = await AsyncStorage.getItem("userId");
-                  if (!userId) return;
+                  focus: async () => {
+                    const userId = await AsyncStorage.getItem("userId");
+                    if (!userId) return;
 
-                  await supabase
-                    .from("notifications")
-                    .update({ is_read: true })
-                    .eq("user_id", Number(userId))
-                    .eq("is_read", false);
+                    await supabase
+                      .from("notifications")
+                      .update({ is_read: true })
+                      .eq("user_id", Number(userId))
+                      .eq("is_read", false);
 
-                  // optional: instantly clear badge
-                  setNotificationBadge(0);
-                },
-              }
+                    // optional: instantly clear badge
+                    setNotificationBadge(0);
+                  },
+                }
               : undefined
           }
         />

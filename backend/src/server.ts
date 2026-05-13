@@ -9,7 +9,6 @@ dotenv.config();
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/userRoutes.js";
 import hallRoutes from "./routes/hallRoutes.js";
-import uploadRoutes from "./routes/uploadRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -23,7 +22,6 @@ app.use("/auth", authRoutes);
 // protected routes
 app.use("/user", userRoutes);
 app.use("/halls", hallRoutes);
-app.use("/upload", uploadRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/customer", customerRoutes);
 app.use("/admin", adminRoutes);

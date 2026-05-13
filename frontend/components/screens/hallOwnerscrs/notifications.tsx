@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo } from "react";
 import {
   View,
   Text,
@@ -13,8 +13,6 @@ import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import { getNotificationsApi } from "../../Services/notificationApi";
 import { usePaginatedFetch } from "../../reusable func/usePaginatedFetch";
 import { formatDate } from "../../reusable func/formatDate";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { supabase } from "../../Services/supabaseClient";
 
 interface Notification {
   id: number;
@@ -117,40 +115,6 @@ export default function Notifications() {
     fetchFunction: getNotificationsApi,
     limit: 10,
   });
-
-  useEffect(() => {
-    let channel: any;
-
-    const setupRealtime = async () => {
-      const userId = await AsyncStorage.getItem("userId");
-
-      if (!userId) return;
-
-      channel = supabase
-        .channel("notifications-realtime")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "notifications",
-            filter: `user_id=eq.${userId}`,
-          },
-          async () => {
-            onRefresh();
-          },
-        )
-        .subscribe();
-    };
-
-    setupRealtime();
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, []);
 
   if (loading && items.length === 0) {
     return (

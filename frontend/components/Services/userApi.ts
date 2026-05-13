@@ -3,7 +3,7 @@ import api from "./sessionApi";
 const USER_BASE_URL = process.env.EXPO_PUBLIC_USER_API_URL;
 
 export const changePasswordApi = (data: any) =>
-  api.post(`${USER_BASE_URL}/change-password`, data);
+  api.post(`${USER_BASE_URL}/update-password`, data);
 
 export const logoutApi = () => api.post(`${USER_BASE_URL}/logout`);
 

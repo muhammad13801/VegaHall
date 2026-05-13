@@ -9,6 +9,8 @@ interface Booking {
   hall_id: number;
   hall_name: string;
   customer_id: number;
+  customer_first_name: string;
+  customer_last_name: string;
   booking_date: string;
   guests_number: number;
   status: string;
@@ -127,16 +129,19 @@ export const proposeReschedule = async (req: AuthRequest, res: Response) => {
       WHERE id = ${id}
     `;
 
-    const formattedDate = new Date(proposed_date).toLocaleDateString("ar-EG", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    const formattedDate = new Date(proposed_date).toLocaleDateString(
+      "ar-IL-u-nu-latn",
+      {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      },
+    );
 
     await insertNotification(
       booking.customer_id,
       "طلب تغيير موعد الحجز",
-      `اقترح صاحب صالة ${booking.hall_name} تغيير موعد حجزك إلى ${formattedDate}. يرجى القبول أو الرفض.`,
+      `اقترح صاحب صالة (${booking.hall_name}) تغيير موعد حجزك إلى ${formattedDate}. يرجى القبول أو الرفض من "حجوزاتي".`,
       "reschedule",
     );
 
@@ -156,8 +161,9 @@ export const respondReschedule = async (req: AuthRequest, res: Response) => {
     if (!id) return res.status(400).send("❌ معرف غير صالح");
 
     const [booking] = await sql<Booking[]>`
-      SELECT b.id, b.customer_id, b.hall_id, h.hall_name, b.status, b.proposed_date, h.owner_id
+      SELECT b.id, b.customer_id, b.hall_id, h.hall_name, b.status, b.proposed_date, h.owner_id, u.first_name, u.last_name
       FROM bookings b
+      JOIN users u ON u.id = b.customer_id
       JOIN halls h ON h.id = b.hall_id
       LEFT JOIN customer_payments p ON p.booking_id = b.id
       WHERE b.id = ${id} AND b.customer_id = ${req.userId!}
@@ -177,7 +183,7 @@ export const respondReschedule = async (req: AuthRequest, res: Response) => {
       await insertNotification(
         booking.owner_id!,
         "تم قبول تعديل الموعد",
-        `وافق العميل على تعديل موعد الحجز في صالة ${booking.hall_name}.`,
+        `وافق ${booking.customer_first_name} ${booking.customer_last_name} على الموعد المقترح من قبلك للحجز في صالتك (${booking.hall_name}).`,
         "reschedule_accept",
       );
     } else {
@@ -189,7 +195,7 @@ export const respondReschedule = async (req: AuthRequest, res: Response) => {
       await insertNotification(
         booking.owner_id!,
         "تم رفض تعديل الموعد",
-        `رفض العميل تعديل موعد الحجز في صالة ${booking.hall_name}. سيبقى الموعد الأصلي.`,
+        `رفض ${booking.customer_first_name} ${booking.customer_last_name} تعديل الموعد المقترح من قبلك للحجز في صالتك (${booking.hall_name}). سيبقى الحجز في موعده الاصلي.`,
         "reschedule_reject",
       );
     }
@@ -266,7 +272,7 @@ export const ownerCancelBooking = async (req: AuthRequest, res: Response) => {
     await insertNotification(
       booking.customer_id,
       "قام صاحب الصالة بإلغاء حجزك",
-      `نأسف، قام صاحب صالة ${booking.hall_name} بإلغاء حجزك. سيتم استرجاع المبلغ تلقائياً.`,
+      `نأسف، قام صاحب صالة (${booking.hall_name}) بإلغاء حجزك. سيتم استرجاع المبلغ تلقائياً.`,
       "cancel",
     );
 
@@ -306,7 +312,7 @@ export const customerCancelBooking = async (
     await insertNotification(
       booking.owner_id!,
       "طلب إلغاء حجز من العميل",
-      `قام العميل بإلغاء حجزه في صالة ${booking.hall_name}. يرجى اتخاذ قرار بشأن استرجاع المبلغ.`,
+      `قام العميل بإلغاء حجزه في صالة (${booking.hall_name}). يرجى اتخاذ قرار بشأن استرجاع المبلغ.`,
       "customer_cancel",
     );
 
@@ -380,8 +386,8 @@ export const customerCancelResponse = async (
       booking.customer_id,
       refund ? "تم استرجاع مبلغ حجزك" : "تم رفض استرجاع المبلغ",
       refund
-        ? `قرر صاحب صالة ${booking.hall_name} استرجاع المبلغ المدفوع كاملاً.`
-        : `قرر صاحب صالة ${booking.hall_name} عدم استرجاع المبلغ المدفوع.`,
+        ? `قرر صاحب صالة (${booking.hall_name}) استرجاع المبلغ المدفوع كاملاً.`
+        : `قرر صاحب صالة (${booking.hall_name}) عدم استرجاع المبلغ المدفوع.`,
       refund ? "refund_approved" : "refund_rejected",
     );
 

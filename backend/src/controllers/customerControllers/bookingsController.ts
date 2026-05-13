@@ -123,7 +123,7 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
       return res.status(400).send("❌ الحجز ملغي بالفعل");
 
     await sql`
-      UPDATE bookings SET status = 'customer_cancelled', is_read = false WHERE id = ${id}
+      UPDATE bookings SET status = 'customer_cancelled' WHERE id = ${id}
     `;
 
     // Notify the hall owner
@@ -171,7 +171,7 @@ export const requestReschedule = async (req: AuthRequest, res: Response) => {
     const newDateFormatted = formatDate(proposed_date);
 
     await sql`
-      UPDATE bookings SET booking_date = ${proposed_date}, is_read = false WHERE id = ${id}
+      UPDATE bookings SET booking_date = ${proposed_date} WHERE id = ${id}
     `;
 
     await insertNotification(
