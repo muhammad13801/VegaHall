@@ -22,6 +22,10 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.muhammad_abujheihsa.vegaHall"
     },
+    "notification": {
+      "icon": "./assets/vega-icon-96.png",
+      "color": "#6C4AB6"
+    },
     "web": {
       "favicon": "./assets/vega-icon-1024.png"
     },

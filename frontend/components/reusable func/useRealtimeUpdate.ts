@@ -73,6 +73,9 @@ export const useRealtimeUpdates = ({
 
           channelRef.current = channel;
 
+          // Subscribe to the channel
+          channel.subscribe();
+
           // initial fetch
           await fetchNotificationCount();
         } catch (err) {

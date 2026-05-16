@@ -9,6 +9,8 @@ import {
   TextInput,
   RefreshControl,
   Modal,
+  TouchableWithoutFeedback,
+  StyleSheet,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Toast from "react-native-toast-message";
@@ -42,14 +44,12 @@ export default function ManageServices() {
   const [loadingServices, setLoadingServices] = useState(true);
   const [serviceName, setServiceName] = useState("");
   const [submittingService, setSubmittingService] = useState(false);
-  const [showServices, setShowServices] = useState(false);
 
   // بيانات الوجبات
   const [meals, setMeals] = useState<any[]>([]);
   const [loadingMeals, setLoadingMeals] = useState(true);
   const [mealName, setMealName] = useState("");
   const [submittingMeal, setSubmittingMeal] = useState(false);
-  const [showMeals, setShowMeals] = useState(false);
 
   // الطلبات المعلقة
   const [serviceRequests, setServiceRequests] = useState<any[]>([]);
@@ -60,7 +60,11 @@ export default function ManageServices() {
 
   // مودال التحرير
   const [editModal, setEditModal] = useState(false);
-  const [editItem, setEditItem] = useState<{ id: number; type: "service" | "meal"; name: string } | null>(null);
+  const [editItem, setEditItem] = useState<{
+    id: number;
+    type: "service" | "meal";
+    name: string;
+  } | null>(null);
   const [editedName, setEditedName] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -81,7 +85,10 @@ export default function ManageServices() {
       const { data } = await getGlobalServices();
       setServices(data);
     } catch (err: any) {
-      Toast.show({ type: "error", text1: err.response?.data || "فشل في جلب الخدمات" });
+      Toast.show({
+        type: "error",
+        text1: err.response?.data || "فشل في جلب الخدمات",
+      });
     } finally {
       setLoadingServices(false);
     }
@@ -93,7 +100,10 @@ export default function ManageServices() {
       const { data } = await getGlobalMealTypes();
       setMeals(data);
     } catch (err: any) {
-      Toast.show({ type: "error", text1: err.response?.data || "فشل في جلب الوجبات" });
+      Toast.show({
+        type: "error",
+        text1: err.response?.data || "فشل في جلب الوجبات",
+      });
     } finally {
       setLoadingMeals(false);
     }
@@ -109,7 +119,10 @@ export default function ManageServices() {
       setServiceRequests(sRes.data);
       setMealRequests(mRes.data);
     } catch (err: any) {
-      Toast.show({ type: "error", text1: err.response?.data || "فشل في جلب الطلبات" });
+      Toast.show({
+        type: "error",
+        text1: err.response?.data || "فشل في جلب الطلبات",
+      });
     } finally {
       setLoadingRequests(false);
       setRefreshingRequests(false);
@@ -124,11 +137,17 @@ export default function ManageServices() {
     try {
       setSubmittingService(true);
       await addGlobalService(serviceName.trim());
-      Toast.show({ type: "success", text1: `تمت إضافة خدمة "${serviceName}" للنظام` });
+      Toast.show({
+        type: "success",
+        text1: `تمت إضافة خدمة "${serviceName}" للنظام`,
+      });
       setServiceName("");
       fetchServices();
     } catch (err: any) {
-      Toast.show({ type: "error", text1: err.response?.data || "فشل في إضافة الخدمة" });
+      Toast.show({
+        type: "error",
+        text1: err.response?.data || "فشل في إضافة الخدمة",
+      });
     } finally {
       setSubmittingService(false);
     }
@@ -142,70 +161,81 @@ export default function ManageServices() {
     try {
       setSubmittingMeal(true);
       await addGlobalMealType(mealName.trim());
-      Toast.show({ type: "success", text1: `تمت إضافة وجبة "${mealName}" للنظام` });
+      Toast.show({
+        type: "success",
+        text1: `تمت إضافة وجبة "${mealName}" للنظام`,
+      });
       setMealName("");
       fetchMeals();
     } catch (err: any) {
-      Toast.show({ type: "error", text1: err.response?.data || "فشل في إضافة الوجبة" });
+      Toast.show({
+        type: "error",
+        text1: err.response?.data || "فشل في إضافة الوجبة",
+      });
     } finally {
       setSubmittingMeal(false);
     }
   };
 
-  const handleApprove = (type: "service" | "meal", id: number, name: string) => {
+  const handleApprove = (
+    type: "service" | "meal",
+    id: number,
+    name: string,
+  ) => {
     const label = type === "service" ? "الخدمة" : "الوجبة";
-    Alert.alert(
-      "تأكيد القبول",
-      `هل تريد قبول طلب ${label}: "${name}"؟`,
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "قبول",
-          onPress: async () => {
-            try {
-              setProcessingId(id);
-              let res;
-              if (type === "service") res = await approveServiceRequest(id);
-              else res = await approveMealRequest(id);
-              Toast.show({ type: "success", text1: res.data || "تمت الموافقة على الطلب وتم إشعار صاحبه" });
-              fetchRequests();
-            } catch (err: any) {
-              Toast.show({ type: "error", text1: err.response?.data || "فشل في قبول الطلب" });
-            } finally {
-              setProcessingId(null);
-            }
-          },
+    Alert.alert("تأكيد القبول", `هل تريد قبول طلب ${label}: "${name}"؟`, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "قبول",
+        onPress: async () => {
+          try {
+            setProcessingId(id);
+            let res;
+            if (type === "service") res = await approveServiceRequest(id);
+            else res = await approveMealRequest(id);
+            Toast.show({
+              type: "success",
+              text1: res.data || "تمت الموافقة على الطلب وتم إشعار صاحبه",
+            });
+            fetchRequests();
+          } catch (err: any) {
+            Toast.show({
+              type: "error",
+              text1: err.response?.data || "فشل في قبول الطلب",
+            });
+          } finally {
+            setProcessingId(null);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleReject = (type: "service" | "meal", id: number, name: string) => {
     const label = type === "service" ? "الخدمة" : "الوجبة";
-    Alert.alert(
-      "تأكيد الرفض",
-      `هل تريد رفض طلب ${label}: "${name}"؟`,
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "رفض",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setProcessingId(id);
-              if (type === "service") await rejectServiceRequest(id);
-              else await rejectMealRequest(id);
-              Toast.show({ type: "success", text1: "تم رفض الطلب وإشعار صاحبه" });
-              fetchRequests();
-            } catch (err: any) {
-              Toast.show({ type: "error", text1: err.response?.data || "فشل في رفض الطلب" });
-            } finally {
-              setProcessingId(null);
-            }
-          },
+    Alert.alert("تأكيد الرفض", `هل تريد رفض طلب ${label}: "${name}"؟`, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "رفض",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setProcessingId(id);
+            if (type === "service") await rejectServiceRequest(id);
+            else await rejectMealRequest(id);
+            Toast.show({ type: "success", text1: "تم رفض الطلب وإشعار صاحبه" });
+            fetchRequests();
+          } catch (err: any) {
+            Toast.show({
+              type: "error",
+              text1: err.response?.data || "فشل في رفض الطلب",
+            });
+          } finally {
+            setProcessingId(null);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   // فتح مودال التحرير
@@ -224,13 +254,17 @@ export default function ManageServices() {
     }
     try {
       setSavingEdit(true);
-      if (editItem.type === "service") await renameServiceRequest(editItem.id, editedName.trim());
+      if (editItem.type === "service")
+        await renameServiceRequest(editItem.id, editedName.trim());
       else await renameMealRequest(editItem.id, editedName.trim());
       Toast.show({ type: "success", text1: "تم تعديل الاسم بنجاح" });
       setEditModal(false);
       fetchRequests();
     } catch (err: any) {
-      Toast.show({ type: "error", text1: err.response?.data || "فشل في تعديل الاسم" });
+      Toast.show({
+        type: "error",
+        text1: err.response?.data || "فشل في تعديل الاسم",
+      });
     } finally {
       setSavingEdit(false);
     }
@@ -242,7 +276,11 @@ export default function ManageServices() {
     const typeLabel = type === "service" ? "خدمة" : "وجبة";
     const color = "#6C4AB6";
     const bgColor = "#F5F0FF";
-    const borderSide = { borderLeftWidth: 4, borderLeftColor: color, borderRightWidth: 0 };
+    const borderSide = {
+      borderLeftWidth: 4,
+      borderLeftColor: color,
+      borderRightWidth: 0,
+    };
 
     return (
       <View
@@ -256,7 +294,13 @@ export default function ManageServices() {
         }}
       >
         {/* نوع الطلب */}
-        <View style={{ flexDirection: "row", justifyContent: "flex-start", marginBottom: 8 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            marginBottom: 8,
+          }}
+        >
           <View
             style={{
               backgroundColor: color,
@@ -272,12 +316,27 @@ export default function ManageServices() {
         </View>
 
         {/* الاسم */}
-        <Text style={{ textAlign: "left", fontSize: 16, fontWeight: "700", color: "#1a1a2e", marginBottom: 4 }}>
+        <Text
+          style={{
+            textAlign: "left",
+            fontSize: 16,
+            fontWeight: "700",
+            color: "#1a1a2e",
+            marginBottom: 4,
+          }}
+        >
           {item.name}
         </Text>
 
         {/* صاحب الطلب */}
-        <Text style={{ textAlign: "left", fontSize: 13, color: "#666", marginBottom: 14 }}>
+        <Text
+          style={{
+            textAlign: "left",
+            fontSize: 13,
+            color: "#666",
+            marginBottom: 14,
+          }}
+        >
           الطالب: {item.owner_name} {item.owner_last_name}
         </Text>
 
@@ -301,7 +360,11 @@ export default function ManageServices() {
               }}
             >
               <MaterialIcons name="close" size={16} color="#C62828" />
-              <Text style={{ color: "#C62828", fontWeight: "700", fontSize: 13 }}>رفض</Text>
+              <Text
+                style={{ color: "#C62828", fontWeight: "700", fontSize: 13 }}
+              >
+                رفض
+              </Text>
             </TouchableOpacity>
 
             {/* تحرير */}
@@ -319,7 +382,11 @@ export default function ManageServices() {
               }}
             >
               <MaterialIcons name="edit" size={16} color="#E65100" />
-              <Text style={{ color: "#E65100", fontWeight: "700", fontSize: 13 }}>تحرير</Text>
+              <Text
+                style={{ color: "#E65100", fontWeight: "700", fontSize: 13 }}
+              >
+                تحرير
+              </Text>
             </TouchableOpacity>
 
             {/* قبول */}
@@ -337,7 +404,11 @@ export default function ManageServices() {
               }}
             >
               <MaterialIcons name="check" size={16} color="#6C4AB6" />
-              <Text style={{ color: "#6C4AB6", fontWeight: "700", fontSize: 13 }}>قبول</Text>
+              <Text
+                style={{ color: "#6C4AB6", fontWeight: "700", fontSize: 13 }}
+              >
+                قبول
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -367,7 +438,11 @@ export default function ManageServices() {
         {(["services", "meals", "requests"] as Tab[]).map((tab) => {
           const isActive = activeTab === tab;
           const label =
-            tab === "services" ? "الخدمات" : tab === "meals" ? "الوجبات" : "الطلبات";
+            tab === "services"
+              ? "الخدمات"
+              : tab === "meals"
+                ? "الوجبات"
+                : "الطلبات";
 
           return (
             <TouchableOpacity
@@ -407,7 +482,9 @@ export default function ManageServices() {
                     paddingHorizontal: 4,
                   }}
                 >
-                  <Text style={{ color: "#FFF", fontSize: 10, fontWeight: "700" }}>
+                  <Text
+                    style={{ color: "#FFF", fontSize: 10, fontWeight: "700" }}
+                  >
                     {totalPending}
                   </Text>
                 </View>
@@ -430,16 +507,22 @@ export default function ManageServices() {
           ) : undefined
         }
       >
-
         {/* ══ تاب الخدمات ══ */}
         {activeTab === "services" && (
           <View>
             {/* فورم الإضافة */}
             <View style={[styles.card, { padding: 20, marginBottom: 16 }]}>
-              <Text style={[styles.cardText, { textAlign: "left", marginBottom: 12, width: "100%" }]}>
+              <Text
+                style={[
+                  styles.cardText,
+                  { textAlign: "left", marginBottom: 12, width: "100%" },
+                ]}
+              >
                 إضافة خدمة جديدة للنظام
               </Text>
-              <Text style={{ textAlign: "left", color: "#666", marginBottom: 6 }}>
+              <Text
+                style={{ textAlign: "left", color: "#666", marginBottom: 6 }}
+              >
                 اسم الخدمة:
               </Text>
               <TextInput
@@ -467,45 +550,68 @@ export default function ManageServices() {
 
             {/* قائمة الخدمات قابلة للطي */}
             <View style={[styles.card, { padding: 20 }]}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <Text style={styles.cardText}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text style={[styles.cardText, { width: "90%" }]}>
                   الخدمات الموجودة ({services.length})
                 </Text>
-                <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); fetchServices(); }}>
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    fetchServices();
+                  }}
+                >
                   <MaterialIcons name="refresh" size={20} color="#6C4AB6" />
                 </TouchableOpacity>
               </View>
 
-              {showServices && (
-                <View style={{ marginTop: 12 }}>
-                  {loadingServices ? (
-                    <ActivityIndicator color="#6C4AB6" style={{ marginVertical: 20 }} />
-                  ) : services.length === 0 ? (
-                    <Text style={{ textAlign: "center", color: "#999", marginVertical: 20 }}>
-                      لا توجد خدمات حالياً
-                    </Text>
-                  ) : (
-                    services.map((item) => (
-                      <View
-                        key={item.id}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          backgroundColor: "#F5F0FF",
-                          borderRadius: 10,
-                          padding: 12,
-                          marginBottom: 8,
-                        }}
-                      >
-                        <Text style={{ flex: 1, color: "#333", fontSize: 14 }}>
-                          {item.name}
-                        </Text>
-                        <MaterialIcons name="star" size={18} color="#6C4AB6" style={{ marginLeft: 8 }} />
-                      </View>
-                    ))
-                  )}
-                </View>
-              )}
+              <View style={{ marginTop: 12 }}>
+                {loadingServices ? (
+                  <ActivityIndicator
+                    color="#6C4AB6"
+                    style={{ marginVertical: 20 }}
+                  />
+                ) : services.length === 0 ? (
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      color: "#999",
+                      marginVertical: 20,
+                    }}
+                  >
+                    لا توجد خدمات حالياً
+                  </Text>
+                ) : (
+                  services.map((item) => (
+                    <View
+                      key={item.id}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: "#F5F0FF",
+                        borderRadius: 10,
+                        padding: 12,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text style={{ flex: 1, color: "#333", fontSize: 14 }}>
+                        {item.name}
+                      </Text>
+                      <MaterialIcons
+                        name="star"
+                        size={18}
+                        color="#6C4AB6"
+                        style={{ marginLeft: 8 }}
+                      />
+                    </View>
+                  ))
+                )}
+              </View>
             </View>
           </View>
         )}
@@ -515,10 +621,17 @@ export default function ManageServices() {
           <View>
             {/* فورم الإضافة */}
             <View style={[styles.card, { padding: 20, marginBottom: 16 }]}>
-              <Text style={[styles.cardText, { textAlign: "left", marginBottom: 12, width: "100%" }]}>
+              <Text
+                style={[
+                  styles.cardText,
+                  { textAlign: "left", marginBottom: 12, width: "100%" },
+                ]}
+              >
                 إضافة وجبة جديدة للنظام
               </Text>
-              <Text style={{ textAlign: "left", color: "#666", marginBottom: 6 }}>
+              <Text
+                style={{ textAlign: "left", color: "#666", marginBottom: 6 }}
+              >
                 اسم الوجبة:
               </Text>
               <TextInput
@@ -546,45 +659,68 @@ export default function ManageServices() {
 
             {/* قائمة الوجبات قابلة للطي */}
             <View style={[styles.card, { padding: 20 }]}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <Text style={[styles.cardText, { textAlign: "right" }]}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text style={[styles.cardText, { width: "90%" }]}>
                   الوجبات الموجودة ({meals.length})
                 </Text>
-                <TouchableOpacity onPress={(e) => { e.stopPropagation?.(); fetchMeals(); }}>
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    fetchMeals();
+                  }}
+                >
                   <MaterialIcons name="refresh" size={20} color="#6C4AB6" />
                 </TouchableOpacity>
               </View>
 
-              {showMeals && (
-                <View style={{ marginTop: 12 }}>
-                  {loadingMeals ? (
-                    <ActivityIndicator color="#6C4AB6" style={{ marginVertical: 20 }} />
-                  ) : meals.length === 0 ? (
-                    <Text style={{ textAlign: "center", color: "#999", marginVertical: 20 }}>
-                      لا توجد وجبات حالياً
-                    </Text>
-                  ) : (
-                    meals.map((item) => (
-                      <View
-                        key={item.id}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          backgroundColor: "#F5F0FF",
-                          borderRadius: 10,
-                          padding: 12,
-                          marginBottom: 8,
-                        }}
-                      >
-                        <Text style={{ flex: 1, color: "#333", fontSize: 14 }}>
-                          {item.name}
-                        </Text>
-                        <MaterialIcons name="restaurant" size={18} color="#6C4AB6" style={{ marginLeft: 8 }} />
-                      </View>
-                    ))
-                  )}
-                </View>
-              )}
+              <View style={{ marginTop: 12 }}>
+                {loadingMeals ? (
+                  <ActivityIndicator
+                    color="#6C4AB6"
+                    style={{ marginVertical: 20 }}
+                  />
+                ) : meals.length === 0 ? (
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      color: "#999",
+                      marginVertical: 20,
+                    }}
+                  >
+                    لا توجد وجبات حالياً
+                  </Text>
+                ) : (
+                  meals.map((item) => (
+                    <View
+                      key={item.id}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: "#F5F0FF",
+                        borderRadius: 10,
+                        padding: 12,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text style={{ flex: 1, color: "#333", fontSize: 14 }}>
+                        {item.name}
+                      </Text>
+                      <MaterialIcons
+                        name="restaurant"
+                        size={18}
+                        color="#6C4AB6"
+                        style={{ marginLeft: 8 }}
+                      />
+                    </View>
+                  ))
+                )}
+              </View>
             </View>
           </View>
         )}
@@ -593,11 +729,22 @@ export default function ManageServices() {
         {activeTab === "requests" && (
           <View>
             {loadingRequests ? (
-              <ActivityIndicator color="#6C4AB6" size="large" style={{ marginTop: 40 }} />
-            ) : (serviceRequests.length === 0 && mealRequests.length === 0) ? (
+              <ActivityIndicator
+                color="#6C4AB6"
+                size="large"
+                style={{ marginTop: 40 }}
+              />
+            ) : serviceRequests.length === 0 && mealRequests.length === 0 ? (
               <View style={{ alignItems: "center", marginTop: 60 }}>
                 <MaterialIcons name="inbox" size={64} color="#D0C4FF" />
-                <Text style={{ color: "#999", fontSize: 16, marginTop: 14, textAlign: "center" }}>
+                <Text
+                  style={{
+                    color: "#999",
+                    fontSize: 16,
+                    marginTop: 14,
+                    textAlign: "center",
+                  }}
+                >
                   لا توجد طلبات معلقة حالياً
                 </Text>
                 <Text style={{ color: "#bbb", fontSize: 13, marginTop: 6 }}>
@@ -608,159 +755,372 @@ export default function ManageServices() {
               <>
                 {serviceRequests.length > 0 && (
                   <View style={{ marginBottom: 8 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 12 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        marginBottom: 12,
+                      }}
+                    >
                       <MaterialIcons name="build" size={18} color="#6C4AB6" />
-                      <Text style={{ fontSize: 15, fontWeight: "700", color: "#6C4AB6", marginLeft: 6 }}>
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          fontWeight: "700",
+                          color: "#6C4AB6",
+                          marginLeft: 6,
+                        }}
+                      >
                         طلبات الخدمات ({serviceRequests.length})
                       </Text>
                     </View>
-                    {serviceRequests.map((item) => renderRequestCard(item, "service"))}
+                    {serviceRequests.map((item) =>
+                      renderRequestCard(item, "service"),
+                    )}
                   </View>
                 )}
                 {mealRequests.length > 0 && (
                   <View>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 12, marginTop: 8 }}>
-                      <MaterialIcons name="restaurant" size={18} color="#6C4AB6" />
-                      <Text style={{ fontSize: 15, fontWeight: "700", color: "#6C4AB6", marginLeft: 6 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        marginBottom: 12,
+                        marginTop: 8,
+                      }}
+                    >
+                      <MaterialIcons
+                        name="restaurant"
+                        size={18}
+                        color="#6C4AB6"
+                      />
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          fontWeight: "700",
+                          color: "#6C4AB6",
+                          marginLeft: 6,
+                        }}
+                      >
                         طلبات الوجبات ({mealRequests.length})
                       </Text>
                     </View>
-                    {mealRequests.map((item) => renderRequestCard(item, "meal"))}
+                    {mealRequests.map((item) =>
+                      renderRequestCard(item, "meal"),
+                    )}
                   </View>
                 )}
               </>
             )}
           </View>
         )}
-
       </ScrollView>
-      <Modal visible={editModal} transparent animationType="slide">
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" }}>
-          <KeyboardAwareScrollView
-            style={{ flexShrink: 1 }}
-            contentContainerStyle={{
+      <Modal
+        visible={editModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "flex-end",
+          }}
+        >
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setEditModal(false)}
+          />
+
+          <View
+            style={{
               backgroundColor: "#FFF",
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 24,
-              paddingBottom: 40,
+              borderTopLeftRadius: 30,
+              borderTopRightRadius: 30,
+              maxHeight: "90%",
+              width: "100%",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 20,
             }}
-            enableOnAndroid={true}
-            extraScrollHeight={20}
-            keyboardOpeningTime={0}
-            showsVerticalScrollIndicator={false}
           >
-
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <TouchableOpacity onPress={() => setEditModal(false)}>
-                <MaterialIcons name="close" size={24} color="#999" />
-              </TouchableOpacity>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#1a1a2e" }}>
-                تعديل اسم الطلب
-              </Text>
-            </View>
-            <Text style={{ textAlign: "right", color: "#555", marginBottom: 6, fontSize: 13 }}>
-              اكتب الاسم بالشكل الصحيح:
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { textAlign: "right", fontSize: 15, marginBottom: 16 },
-              ]}
-              value={editedName}
-              onChangeText={setEditedName}
-              placeholder="ادخل الاسم الصحيح..."
-              autoFocus
+            {/* Handle Bar */}
+            <View
+              style={{
+                width: 40,
+                height: 5,
+                backgroundColor: "#E0E0E0",
+                borderRadius: 2.5,
+                alignSelf: "center",
+                marginTop: 12,
+                marginBottom: 8,
+              }}
             />
-            {editedName.trim().length > 1 && (() => {
-              const q = editedName.trim().toLowerCase();
-              const matchedServices = services.filter(s => s.name.toLowerCase().includes(q));
-              const matchedMeals = meals.filter(m => m.name.toLowerCase().includes(q));
-              const hasMatch = matchedServices.length > 0 || matchedMeals.length > 0;
 
-              return (
-                <View style={{ marginBottom: 16 }}>
-                  <Text style={{ textAlign: "right", color: "#777", fontSize: 12, marginBottom: 8 }}>
-                    نتائج الفلترة:
+            <TouchableWithoutFeedback>
+              <KeyboardAwareScrollView
+                style={{ flexShrink: 1 }}
+                contentContainerStyle={{
+                  padding: 24,
+                  paddingBottom: 40,
+                }}
+                enableOnAndroid={true}
+                extraScrollHeight={100}
+                keyboardOpeningTime={0}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 20,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => setEditModal(false)}
+                    style={{
+                      padding: 4,
+                      backgroundColor: "#F5F5F5",
+                      borderRadius: 20,
+                    }}
+                  >
+                    <MaterialIcons name="close" size={20} color="#666" />
+                  </TouchableOpacity>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "800",
+                      color: "#1a1a2e",
+                    }}
+                  >
+                    تعديل اسم الطلب
                   </Text>
-
-                  {!hasMatch && (
-                    <View style={{ backgroundColor: "#F5F5F5", borderRadius: 10, padding: 12, alignItems: "center" }}>
-                      <Text style={{ color: "#999", fontSize: 13 }}>اسم جديد — سيُضاف كـ {editItem?.type === "service" ? "خدمة" : "وجبة"} جديدة</Text>
-                    </View>
-                  )}
-
-                  {matchedServices.length > 0 && (
-                    <View style={{ marginBottom: 8 }}>
-                      <Text style={{ textAlign: "right", fontSize: 12, color: "#6C4AB6", fontWeight: "600", marginBottom: 4 }}>
-                        موجود في جدول الخدمات:
-                      </Text>
-                      {matchedServices.slice(0, 3).map(s => (
-                        <TouchableOpacity
-                          key={s.id}
-                          onPress={() => setEditedName(s.name)}
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            backgroundColor: "#F5F0FF",
-                            borderRadius: 8,
-                            padding: 10,
-                            marginBottom: 4,
-                          }}
-                        >
-                          <MaterialIcons name="check-circle" size={16} color="#6C4AB6" style={{ marginLeft: 8 }} />
-                          <Text style={{ flex: 1, textAlign: "right", color: "#333", fontSize: 13 }}>{s.name}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-
-                  {matchedMeals.length > 0 && (
-                    <View>
-                      <Text style={{ textAlign: "right", fontSize: 12, color: "#E65100", fontWeight: "600", marginBottom: 4 }}>
-                        موجود في جدول الوجبات:
-                      </Text>
-                      {matchedMeals.slice(0, 3).map(m => (
-                        <TouchableOpacity
-                          key={m.id}
-                          onPress={() => setEditedName(m.name)}
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            backgroundColor: "#FFF3E0",
-                            borderRadius: 8,
-                            padding: 10,
-                            marginBottom: 4,
-                          }}
-                        >
-                          <MaterialIcons name="restaurant" size={16} color="#E65100" style={{ marginLeft: 8 }} />
-                          <Text style={{ flex: 1, textAlign: "right", color: "#333", fontSize: 13 }}>{m.name}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
+                  <View style={{ width: 28 }} />
                 </View>
-              );
-            })()}
-            <TouchableOpacity
-              onPress={handleSaveEdit}
-              disabled={savingEdit}
-              style={[
-                styles.actionButton,
-                { backgroundColor: "#6C4AB6" },
-                savingEdit && { opacity: 0.7 },
-              ]}
-            >
-              {savingEdit ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.actionButtonText}>حفظ التعديل</Text>
-              )}
-            </TouchableOpacity>
-          </KeyboardAwareScrollView>
+
+                <Text
+                  style={{
+                    color: "#666",
+                    marginBottom: 8,
+                    fontSize: 14,
+                    fontWeight: "600",
+                  }}
+                >
+                  الاسم المقترح / الصحيح:
+                </Text>
+
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      textAlign: "right",
+                      fontSize: 16,
+                      marginBottom: 20,
+                      backgroundColor: "#F9F9F9",
+                      borderWidth: 1,
+                      borderColor: "#EEE",
+                      borderRadius: 12,
+                      paddingHorizontal: 16,
+                      height: 50,
+                    },
+                  ]}
+                  value={editedName}
+                  onChangeText={setEditedName}
+                  placeholder="ادخل الاسم الصحيح..."
+                  autoFocus
+                  placeholderTextColor="#BBB"
+                />
+
+                {editedName.trim().length > 1 &&
+                  (() => {
+                    const q = editedName.trim().toLowerCase();
+                    const matchedServices = services.filter((s) =>
+                      s.name.toLowerCase().includes(q),
+                    );
+                    const matchedMeals = meals.filter((m) =>
+                      m.name.toLowerCase().includes(q),
+                    );
+                    const hasMatch =
+                      matchedServices.length > 0 || matchedMeals.length > 0;
+
+                    return (
+                      <View style={{ marginBottom: 20 }}>
+                        {!hasMatch && (
+                          <View
+                            style={{
+                              backgroundColor: "#F0F0F0",
+                              borderRadius: 12,
+                              padding: 14,
+                              alignItems: "center",
+                              borderStyle: "dashed",
+                              borderWidth: 1,
+                              borderColor: "#DDD",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: "#777",
+                                fontSize: 13,
+                                textAlign: "center",
+                              }}
+                            >
+                              اسم جديد — سيُضاف كـ{" "}
+                              {editItem?.type === "service" ? "خدمة" : "وجبة"}{" "}
+                              جديدة عند الموافقة
+                            </Text>
+                          </View>
+                        )}
+
+                        {matchedServices.length > 0 && (
+                          <View style={{ marginBottom: 12 }}>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: "#6C4AB6",
+                                fontWeight: "700",
+                                marginBottom: 6,
+                              }}
+                            >
+                              من جدول الخدمات:
+                            </Text>
+                            {matchedServices.slice(0, 3).map((s) => (
+                              <TouchableOpacity
+                                key={s.id}
+                                onPress={() => setEditedName(s.name)}
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  backgroundColor: "#F5F0FF",
+                                  borderRadius: 10,
+                                  padding: 12,
+                                  marginBottom: 6,
+                                  borderWidth: 1,
+                                  borderColor: "#E6D9FF",
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    flex: 1,
+                                    color: "#333",
+                                    fontSize: 14,
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  {s.name}
+                                </Text>
+                                <MaterialIcons
+                                  name="check-circle"
+                                  size={18}
+                                  color="#6C4AB6"
+                                  style={{ marginLeft: 10 }}
+                                />
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        )}
+
+                        {matchedMeals.length > 0 && (
+                          <View>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: "#E65100",
+                                fontWeight: "700",
+                                marginBottom: 6,
+                              }}
+                            >
+                              من جدول الوجبات:
+                            </Text>
+                            {matchedMeals.slice(0, 3).map((m) => (
+                              <TouchableOpacity
+                                key={m.id}
+                                onPress={() => setEditedName(m.name)}
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  backgroundColor: "#FFF3E0",
+                                  borderRadius: 10,
+                                  padding: 12,
+                                  marginBottom: 6,
+                                  borderWidth: 1,
+                                  borderColor: "#FFE0B2",
+                                }}
+                              >
+                                <MaterialIcons
+                                  name="restaurant"
+                                  size={18}
+                                  color="#E65100"
+                                  style={{ marginLeft: 10 }}
+                                />
+                                <Text
+                                  style={{
+                                    flex: 1,
+                                    textAlign: "right",
+                                    color: "#333",
+                                    fontSize: 14,
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  {m.name}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })()}
+
+                <TouchableOpacity
+                  onPress={handleSaveEdit}
+                  disabled={savingEdit}
+                  style={[
+                    styles.actionButton,
+                    {
+                      backgroundColor: "#6C4AB6",
+                      borderRadius: 14,
+                      height: 52,
+                      shadowColor: "#6C4AB6",
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 6,
+                      elevation: 8,
+                    },
+                    savingEdit && { opacity: 0.7 },
+                  ]}
+                >
+                  {savingEdit ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <MaterialIcons name="save" size={20} color="#FFF" />
+                      <Text
+                        style={[styles.actionButtonText, { fontWeight: "700" }]}
+                      >
+                        حفظ التعديلات
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </KeyboardAwareScrollView>
+            </TouchableWithoutFeedback>
+          </View>
         </View>
       </Modal>
-
     </SafeAreaView>
   );
 }

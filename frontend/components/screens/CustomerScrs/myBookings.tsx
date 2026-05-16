@@ -205,7 +205,7 @@ const BookingCard = ({
           <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
             {svcs.map((s: any, i: number) => (
               <ItemChip
-                key={i}
+                key={`svc-${i}`}
                 text={`${s.name}${s.price > 0 ? ` ${s.price}₪` : ""}`}
               />
             ))}
@@ -222,7 +222,7 @@ const BookingCard = ({
           <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
             {meals.map((m: any, i: number) => (
               <ItemChip
-                key={i}
+                key={`meal-${i}`}
                 text={`${m.name} (${m.price_per_person}₪)`}
                 color="#C2410C"
                 bg="#FFF7ED"
@@ -482,7 +482,7 @@ export default function MyBookings() {
       <BackgroundDecoration />
       <FlatList
         data={bookings as any[]}
-        keyExtractor={(b) => b.id.toString()}
+        keyExtractor={(item, index) => item.id?.toString() + "-" + index}
         style={{ width: "90%" }}
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore} // [معدّل - كان ملفوف بدالة]

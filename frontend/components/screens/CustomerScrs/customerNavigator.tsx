@@ -38,12 +38,10 @@ export default function CustomerNavigator() {
 
   // Setup realtime listeners once userId is available
   useRealtimeUpdates({
-    userRole: "customer",
     userId,
     onNotificationsChange: (count) =>{ setNotificationBadge(count);
       triggerRefresh();
     },
-    onBookingsChange: setBookingBadge,
   });
 
   

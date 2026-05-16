@@ -6,7 +6,6 @@ import HallsResult from "./components/screens/CustomerScrs/hallsResult";
 import HallDetails from "./components/screens/CustomerScrs/hallDetails";
 import BookingRequest from "./components/screens/CustomerScrs/bookingRequest";
 import RateHall from "./components/screens/CustomerScrs/rateHall";
-import Payment from "./components/screens/CustomerScrs/payment";
 import Admin from "./components/screens/AdminScrs/admin";
 import PaymentHall from "./components/screens/hallOwnerscrs/paymentHall";
 import { navigationRef } from "./components/reusable func/navigateTo";
@@ -31,6 +30,7 @@ import SignUp from "./components/screens/userScrs/signUpScrs/signUp";
 import PasswordCode from "./components/screens/userScrs/signUpScrs/forgotPasswordScrs/passwordCode";
 import HallOwner from "./components/screens/hallOwnerscrs/hallOwner";
 import * as Notifications from "expo-notifications";
+import { useNotifications } from "./components/reusable func/useNotifications";
 
 // Configure how notifications are handled when the app is OPEN
 Notifications.setNotificationHandler({
@@ -49,6 +49,8 @@ I18nManager.forceRTL(true);
 I18nManager.allowRTL(true);
 
 export default function App() {
+  useNotifications();
+
   return (
     <RefreshProvider>
       <StripeProvider
@@ -68,7 +70,6 @@ export default function App() {
             <Stack.Screen name="HallDetails" component={HallDetails} />
             <Stack.Screen name="BookingRequest" component={BookingRequest} />
             <Stack.Screen name="RateHall" component={RateHall} />
-            <Stack.Screen name="Payment" component={Payment} />
             <Stack.Screen name="Admin" component={Admin} />
             <Stack.Screen name="AddHall" component={AddHall} />
             <Stack.Screen name="ManageHall" component={ManageHall} />

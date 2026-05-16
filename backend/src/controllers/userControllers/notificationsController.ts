@@ -11,6 +11,7 @@ export interface Notification {
   notification_type: string;
   channel: string;
   sent: boolean;
+  is_read: boolean;
   created_at: string;
 }
 
@@ -39,7 +40,7 @@ export const getNotifications = async (req: AuthRequest, res: Response) => {
     const offset = (page - 1) * limit;
 
     const notifications = await sql<Notification[]>`
-      SELECT id, title, content, notification_type, channel, sent, created_at
+      SELECT id, title, content, notification_type, channel, sent, is_read, created_at
       FROM notifications
       WHERE user_id = ${req.userId!}
       ORDER BY created_at DESC, id DESC
@@ -61,41 +62,40 @@ export const insertNotification = async (
   content: string,
   notificationType: string,
 ) => {
-  // 1. Save to DB
-  await sql`
-    INSERT INTO notifications (user_id, title, content, notification_type, channel, sent)
-    VALUES (${userId}, ${title}, ${content}, ${notificationType}, 'app', true)
-  `;
-
-  // 2. Get user's push token
-  const [user] = await sql<{ expo_push_token: string | null }[]>`
-    SELECT expo_push_token FROM users WHERE id = ${userId}
-  `;
-
-  if (!user?.expo_push_token || !Expo.isExpoPushToken(user.expo_push_token))
-    return; // No token saved, skip push silently
-
-  // 3. Send push notification
-  const message: ExpoPushMessage = {
-    to: user.expo_push_token,
-    sound: "default",
-    title,
-    body: content,
-    data: { notification_type: notificationType },
-  };
-
   try {
+    // 1. Save to DB
+    await sql`
+      INSERT INTO notifications (user_id, title, content, notification_type, channel, sent, is_read)
+      VALUES (${userId}, ${title}, ${content}, ${notificationType}, 'app', true, false)
+    `;
+
+    // 2. Get user's push token
+    const [user] = await sql<{ expo_push_token: string | null }[]>`
+      SELECT expo_push_token FROM users WHERE id = ${userId}
+    `;
+
+    if (!user?.expo_push_token || !Expo.isExpoPushToken(user.expo_push_token)) return;
+
+    // 3. Send push notification
+    const message: ExpoPushMessage = {
+      to: user.expo_push_token,
+      sound: "default",
+      title,
+      body: content,
+      data: { notification_type: notificationType },
+      channelId: "default",
+      priority: "high",
+    };
+
     const [ticket] = await expo.sendPushNotificationsAsync([message]);
 
-    if (!ticket) return;
-    if (ticket.status === "error") {
-      console.error("Push failed:", ticket.message);
-
+    if (ticket && ticket.status === "error") {
+      console.error(`[PushNotify] Error for user ${userId}:`, ticket.message);
       if (ticket.details?.error === "DeviceNotRegistered") {
         await sql`UPDATE users SET expo_push_token = NULL WHERE id = ${userId}`;
       }
     }
   } catch (err) {
-    console.error("Expo push error:", err);
+    console.error("[PushNotify] Fatal error:", err);
   }
 };

@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
-import { Text, TouchableOpacity, View, ScrollView} from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Text, TouchableOpacity, View, ScrollView, StatusBar} from "react-native";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { usePaymentSheet } from "@stripe/stripe-react-native";
+import Toast from "react-native-toast-message";
 import { NavigateTo } from "../../reusable func/navigateTo";
 import { styles as s, styles } from "./ibrahimStyles";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
 import BackButton from "../../reusable func/backButton";
 import BookingCalendarModal from "../../reusable func/Bookingcalendarmodal";
-import { getBusyDatesApi } from "../../Services/customerApi";
+import { getBusyDatesApi, chargeBookingApi, confirmBookingPaymentApi } from "../../Services/customerApi";
 import { formatDate } from "../../reusable func/formatDate";
 import { Input } from "../../reusable func/input";
 
@@ -39,6 +42,10 @@ export default function BookingRequest({ route }: any) {
   const [guestCount, setGuestCount] = useState(100);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedMeals, setSelectedMeals] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [paid, setPaid] = useState(false);
+
+  const { initPaymentSheet, presentPaymentSheet } = usePaymentSheet();
 
   const btnStyle = {
     width: 36,
@@ -110,22 +117,95 @@ export default function BookingRequest({ route }: any) {
 
   const isValid = hasDate && guestCount > 0;
 
-  const handleConfirm = () => {
-    NavigateTo("Payment", {
-      hallName: hall.hall_name || hall.name,
-      totalCost,
-      amountToPayNow,
-      remainingBalance,
-      bookingForm: {
+  const handleConfirm = async () => {
+    setLoading(true);
+
+    try {
+      const { data } = await chargeBookingApi({ amount: amountToPayNow });
+
+      const { error: initError } = await initPaymentSheet({
+        paymentIntentClientSecret: data.paymentIntent,
+        customerEphemeralKeySecret: data.ephemeralKey,
+        customerId: data.customer,
+        merchantDisplayName: "VegaHall",
+        allowsDelayedPaymentMethods: false,
+      });
+
+      if (initError) throw new Error(initError.message);
+
+      const { error: presentError } = await presentPaymentSheet();
+
+      if (presentError) {
+        Toast.show({ type: "error", text1: presentError.message });
+        return;
+      }
+
+      const intentId = data.paymentIntent.split("_secret_")[0];
+
+      await confirmBookingPaymentApi({
+        paymentIntentId: intentId,
         hallId: hall.id,
         bookingDate: date.toISOString(),
         guestCount,
         services: selectedServices,
         meals: selectedMeals,
         totalCost,
-      },
-    });
+      });
+
+      setPaid(true);
+    } catch (err: any) {
+      console.error(err);
+
+      const errMsg =
+        err.message ||
+        err.response?.data ||
+        "لا يمكن الاتصال بالخادم، حاول مرة أخرى لاحقاً";
+
+      Toast.show({
+        type: "error",
+        text1: typeof errMsg === "string" ? errMsg : "لا يمكن الاتصال بالخادم",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (paid) {
+    return (
+      <View style={s.successOverlay}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F7F8FC" />
+
+        <LinearGradient colors={["#E8F5E9", "#C8E6C9"]} style={s.successIconBox}>
+          <Feather name="check" size={48} color="#4CAF50" />
+        </LinearGradient>
+
+        <Text style={s.successTitle}>تمت عملية الدفع بنجاح!</Text>
+
+        <Text style={s.successAmount}>
+          {amountToPayNow.toLocaleString()}{" "}
+          <Text style={s.successCurrency}>₪</Text>
+        </Text>
+
+        <Text style={s.successSubtitle}>
+          تم تأكيد حجزك في "{hall.hall_name || hall.name}" بدفعة مبدئية.{"\n"}
+          المتبقي للدفع لاحقاً: {remainingBalance.toLocaleString()} ₪{"\n"}
+          ستصلك رسالة تأكيد قريباً عبر التطبيق.
+        </Text>
+
+        <TouchableOpacity style={s.successBtn} onPress={() => NavigateTo("Customer")}>
+          <LinearGradient
+            colors={["#7B5EC6", "#5B3A9E"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.successBtnGradient}
+          >
+            <Feather name="home" size={20} color="#FFF" />
+            <Text style={s.successBtnText}>العودة للرئيسية</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -330,14 +410,16 @@ export default function BookingRequest({ route }: any) {
 
         <View style={{ width: "98%" }}>
           <TouchableOpacity
-            style={[styles.actionButton, !isValid && { backgroundColor: "#DDD" }]}
+            style={[styles.actionButton, (!isValid || loading) && { backgroundColor: "#DDD" }]}
             onPress={handleConfirm}
-            disabled={!isValid}
+            disabled={!isValid || loading}
             activeOpacity={0.8}
           >
             <View style={styles.row}>
-              <Feather name="check-circle" size={20} style={[styles.screenIcon, {color:"#FFF"}]}/>
-              <Text style={styles.actionButtonText}>{"تأكيد الحجز "}</Text>
+              <Feather name={loading ? "loader" : "check-circle"} size={20} style={[styles.screenIcon, {color:"#FFF"}]}/>
+              <Text style={styles.actionButtonText}>
+                {loading ? "جاري المعالجة..." : "تأكيد الحجز والدفع"}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
