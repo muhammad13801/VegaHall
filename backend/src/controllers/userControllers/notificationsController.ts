@@ -15,7 +15,9 @@ export interface Notification {
   created_at: string;
 }
 
-const expo = new Expo();
+const expo = new Expo({
+  accessToken: process.env.EXPO_ACCESS_TOKEN,
+});
 
 // PATCH /notifications/token — save push token for current user
 export const savePushToken = async (req: AuthRequest, res: Response) => {
@@ -74,7 +76,8 @@ export const insertNotification = async (
       SELECT expo_push_token FROM users WHERE id = ${userId}
     `;
 
-    if (!user?.expo_push_token || !Expo.isExpoPushToken(user.expo_push_token)) return;
+    if (!user?.expo_push_token || !Expo.isExpoPushToken(user.expo_push_token))
+      return;
 
     // 3. Send push notification
     const message: ExpoPushMessage = {

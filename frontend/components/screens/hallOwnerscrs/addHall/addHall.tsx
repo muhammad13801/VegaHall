@@ -24,6 +24,7 @@ export default function AddHall() {
     capacity: 0,
     price: 0,
     description: "",
+    license: undefined,
     services: [],
     images: [],
     videos: [],

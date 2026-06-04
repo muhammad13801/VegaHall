@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import { usePaymentSheet } from "@stripe/stripe-react-native";
 import { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import Toast from "react-native-toast-message";
 import BackButton from "../../reusable func/backButton";
 import BackgroundDecoration from "../../reusable func/backgroundDecoration";
@@ -39,13 +39,19 @@ export default function PaymentHall() {
       const { error: presentError } = await presentPaymentSheet();
       if (presentError) throw new Error(presentError.message);
 
-      const uploadMedia = (uris: string[] = [], type: "images" | "videos") =>
-        Promise.all(uris.map((u) => uploadToSupabase(u, type)));
+      const uploadMedia = (
+        uris: string[] = [],
+        type: "images" | "videos" | "licenses",
+      ) => Promise.all(uris.map((u) => uploadToSupabase(u, type)));
 
-      const [uploadImagesUrls, uploadVideosUrls] = await Promise.all([
-        uploadMedia(hallForm.images, "images"),
-        uploadMedia(hallForm.videos, "videos"),
-      ]);
+      const [uploadImagesUrls, uploadVideosUrls, uploadLicenseUrl] =
+        await Promise.all([
+          uploadMedia(hallForm.images, "images"),
+          uploadMedia(hallForm.videos, "videos"),
+          hallForm.license
+            ? uploadToSupabase(hallForm.license, "licenses")
+            : Promise.resolve(null),
+        ]);
 
       const intentId = data.paymentIntent.split("_secret_")[0];
       const response = await confirmPaymentApi({
@@ -53,6 +59,7 @@ export default function PaymentHall() {
         ...hallForm,
         images: uploadImagesUrls,
         videos: uploadVideosUrls,
+        license: uploadLicenseUrl,
       });
 
       Toast.show({ type: "success", text1: response.data });
@@ -78,7 +85,7 @@ export default function PaymentHall() {
       <BackButton />
       <KeyboardAwareScreen>
         <Ionicons name="card" size={40} style={styles.screenIcon} />
-        <Text style={styles.title}>تفعيل الصالة</Text>
+        <Text style={styles.title}>تفعيل وإرسال طلب إضافة صالة</Text>
         <Text style={styles.subtitle}>يتم الدفع بشكل آمن عبر Stripe</Text>
 
         <View style={styles.card}>
@@ -94,9 +101,21 @@ export default function PaymentHall() {
             disabled={loading}
           >
             <Text style={[styles.actionButtonText, { fontSize: 18 }]}>
-              {loading ? "جاري المعالجة..." : "ابدأ الدفع (50$)"}
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                "ابدأ الدفع (50$)"
+              )}
             </Text>
           </TouchableOpacity>
+
+          {loading && (
+            <Text
+              style={[styles.label, { textAlign: "center", marginTop: 10 }]}
+            >
+              قد تستغرق عملية الدفع واضافة الصالة بعض الوقت
+            </Text>
+          )}
         </View>
       </KeyboardAwareScreen>
     </SafeAreaView>

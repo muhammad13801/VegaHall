@@ -30,6 +30,7 @@ export interface HallData {
   description: string;
   images: string[];
   videos?: string[];
+  license?: string;
   services?: ServiceData[];
   mealOptions?: MealOption[];
   secondaryContacts?: Contact[];
@@ -73,6 +74,8 @@ export const ValidateHall = (data: HallData): { [key: string]: string } => {
 
   if (data.latitude === undefined || data.longitude === undefined)
     errors.location = "موقع الصالة مطلوب (GPS)";
+
+  if (!data.license) errors.license = "رخصة الصالة مطلوبة";
 
   if (!data.description) errors.description = "وصف الصالة مطلوب";
 

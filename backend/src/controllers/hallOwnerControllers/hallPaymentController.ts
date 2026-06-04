@@ -2,6 +2,7 @@ import type { Response } from "express";
 import type { AuthRequest } from "../../middleware/sessionMiddleware.js";
 import Stripe from "stripe";
 import sql from "../../db.js";
+import { insertNotification } from "../userControllers/notificationsController.js";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-02-25.clover",
@@ -87,7 +88,7 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
         VALUES
           (${name}, ${userId}, ${capacity}, ${city}, ${address},
            ${latitude ?? null}, ${longitude ?? null}, ${description},
-           ${price}, 'active')
+           ${price}, 'pending')
         RETURNING id
       `;
       const hallId = newHall.id;
@@ -161,7 +162,24 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
       `;
     });
 
-    return res.status(200).send("✔️ تم تفعيل وإضافة الصالة بنجاح");
+    const result = await sql`
+      SELECT id FROM users WHERE role = 'admin'`;
+
+    await Promise.all(
+      result.map(
+        async (admin: any) =>
+          await insertNotification(
+            admin.id,
+            "طلب إضافة صالة جديد",
+            `تم تسجيل صالة جديدة باسم "${name}" الرجاء مراجعتها واتخاذ الإجراء المناسب.`,
+            "hall_review",
+          ),
+      ),
+    );
+
+    return res
+      .status(200)
+      .send("✔️ تم إرسال طلب اضافة الصالة لمدير النظام بنجاح");
   } catch (err: any) {
     console.error(err);
     if (err.message === "ALREADY_CONFIRMED")

@@ -2,16 +2,17 @@ import type { Response } from "express";
 import sql from "../../db.js";
 import type { AuthRequest } from "../../middleware/sessionMiddleware.js";
 import { insertNotification } from "../userControllers/notificationsController.js";
+import { resetExpiredProposedDates } from "../../utils/resetExpiredProposedDates.js";
 
 export const getBookings = async (req: AuthRequest, res: Response) => {
   const userId = req.userId;
   if (!userId) return res.status(401).send("❌ مستخدم غير مصرح");
 
   const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 5;
+  const limit = parseInt(req.query.limit as string) || 10;
   const offset = (page - 1) * limit;
-
   try {
+    await resetExpiredProposedDates();
     const bookings = await sql`
       SELECT 
         b.id,
@@ -144,6 +145,9 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
 export const requestReschedule = async (req: AuthRequest, res: Response) => {
   const userId = req.userId;
   if (!userId) return res.status(401).send("❌ مستخدم غير مصرح");
+
+  // Reset any expired proposed dates first
+  await resetExpiredProposedDates();
 
   const id = Number(req.params.id);
   const { proposed_date } = req.body;

@@ -23,6 +23,7 @@ export const getAllHalls = async (req: AuthRequest, res: Response) => {
         ROUND(COALESCE((SELECT AVG(rating) FROM ratings WHERE hall_id = h.id), 0), 1) as average_rating,
         (SELECT COUNT(*) FROM ratings WHERE hall_id = h.id) as reviews_count
       FROM halls h
+      WHERE status = 'active'
       ORDER BY h.id DESC
     `;
     res.json(halls);
@@ -103,7 +104,12 @@ export const searchHalls = async (req: AuthRequest, res: Response) => {
     }
 
     // Support both cities (array) and city (string) for backward compatibility
-    const cityList = cities && Array.isArray(cities) && cities.length > 0 ? cities : city ? [city] : [];
+    const cityList =
+      cities && Array.isArray(cities) && cities.length > 0
+        ? cities
+        : city
+          ? [city]
+          : [];
     if (cityList.length > 0) {
       conditions.push(sql`h.city IN ${sql(cityList)}`);
     }

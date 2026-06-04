@@ -19,8 +19,32 @@ const CARD_WIDTH = SCREEN_WIDTH * 0.9;
 
 export const HallCard = memo(
   ({ item, onPress, isCustomer, isFav, onToggleFavorite }: any) => {
-    const isActive = item.status === "active";
+    const status = item.status || "suspended";
     const [activeIndex, setActiveIndex] = useState(0);
+
+    const getStatusInfo = () => {
+      switch (status) {
+        case "active":
+          return { label: "نشط", color: "#2E7D32", bgColor: "#E8F5E9" };
+        case "pending":
+          return {
+            label: "قيد المراجعة",
+            color: "#1976D2",
+            bgColor: "#E3F2FD",
+          };
+        case "rejected":
+          return { label: "مرفوض", color: "#D32F2F", bgColor: "#FFEBEE" };
+        case "suspended":
+        default:
+          return {
+            label: "غير نشط ✦ تفعيل",
+            color: "#EF6C00",
+            bgColor: "#FFF3E0",
+          };
+      }
+    };
+
+    const statusInfo = getStatusInfo();
 
     const media = useMemo(
       () => [
@@ -181,12 +205,12 @@ export const HallCard = memo(
                 style={[
                   styles.items,
                   {
-                    backgroundColor: isActive ? "#E8F5E9" : "#FFF3E0",
+                    backgroundColor: statusInfo.bgColor,
                     marginLeft: 10,
                   },
                 ]}
                 onPress={() =>
-                  !isActive &&
+                  status === "suspended" &&
                   NavigateTo("PaymentHall", {
                     form: item,
                     hallId: item.id,
@@ -197,10 +221,10 @@ export const HallCard = memo(
                 <Text
                   style={[
                     styles.itemText,
-                    { color: isActive ? "#2E7D32" : "#EF6C00", fontSize: 11 },
+                    { color: statusInfo.color, fontSize: 11 },
                   ]}
                 >
-                  {isActive ? "نشط" : "غير نشط ✦ تفعيل"}
+                  {statusInfo.label}
                 </Text>
               </TouchableOpacity>
             )}

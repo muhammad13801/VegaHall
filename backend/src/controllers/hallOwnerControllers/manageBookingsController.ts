@@ -3,6 +3,7 @@ import type { AuthRequest } from "../../middleware/sessionMiddleware.js";
 import sql from "../../db.js";
 import { insertNotification } from "../userControllers/notificationsController.js";
 import refundPayment from "../../utils/refundPayment.js";
+import { resetExpiredProposedDates } from "../../utils/resetExpiredProposedDates.js";
 
 interface Booking {
   id: number;
@@ -23,6 +24,9 @@ interface Booking {
 // GET /halls/bookings — owner sees all bookings for their halls
 export const getOwnerBookings = async (req: AuthRequest, res: Response) => {
   try {
+    // Reset any expired proposed dates first
+    await resetExpiredProposedDates();
+
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
@@ -108,6 +112,9 @@ export const getOwnerBookings = async (req: AuthRequest, res: Response) => {
 // Owner proposes a new date → status becomes owner_rescheduled
 export const proposeReschedule = async (req: AuthRequest, res: Response) => {
   try {
+    // Reset any expired proposed dates first
+    await resetExpiredProposedDates();
+
     const { id } = req.params;
     const { proposed_date } = req.body;
     if (!id || !proposed_date)
@@ -125,7 +132,7 @@ export const proposeReschedule = async (req: AuthRequest, res: Response) => {
 
     await sql`
       UPDATE bookings
-      SET status = 'owner_rescheduled', proposed_date = ${proposed_date}
+      SET status = 'owner_rescheduled', proposed_date = ${proposed_date}, proposed_date_set_at = NOW()
       WHERE id = ${id}
     `;
 
@@ -156,6 +163,9 @@ export const proposeReschedule = async (req: AuthRequest, res: Response) => {
 // Customer accepts or rejects the owner's proposed date
 export const respondReschedule = async (req: AuthRequest, res: Response) => {
   try {
+    // Reset any expired proposed dates first
+    await resetExpiredProposedDates();
+
     const { id } = req.params;
     const { accept } = req.body;
     if (!id) return res.status(400).send("❌ معرف غير صالح");
@@ -177,6 +187,7 @@ export const respondReschedule = async (req: AuthRequest, res: Response) => {
         UPDATE bookings
         SET booking_date = ${booking.proposed_date},
             proposed_date = NULL,
+            proposed_date_set_at = NULL,
             status = 'confirmed'
         WHERE id = ${id}
       `;
@@ -189,7 +200,7 @@ export const respondReschedule = async (req: AuthRequest, res: Response) => {
     } else {
       await sql`
         UPDATE bookings
-        SET status = 'confirmed', proposed_date = NULL
+        SET status = 'confirmed', proposed_date = NULL, proposed_date_set_at = NULL
         WHERE id = ${id}
       `;
       await insertNotification(

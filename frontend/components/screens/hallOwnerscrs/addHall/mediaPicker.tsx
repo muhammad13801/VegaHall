@@ -43,8 +43,8 @@ const MediaItem = memo(
 
 export default function MediaPicker({ form, setForm, errors }: HallFormProps) {
   const handleMedia = useCallback(
-    async (type: "images" | "videos") => {
-      const isImg = type === "images";
+    async (type: "images" | "videos" | "license") => {
+      const isImg = type === "images" || type === "license";
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted")
@@ -52,6 +52,23 @@ export default function MediaPicker({ form, setForm, errors }: HallFormProps) {
           "تنبيه",
           `يرجى السماح بالوصول إلى ${isImg ? "الصور" : "الفيديوهات"}`,
         );
+
+      if (type === "license") {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ["images"],
+          allowsMultipleSelection: false,
+          allowsEditing: true,
+          quality: 0.7,
+        });
+
+        if (!result.canceled) {
+          setForm((prev) => ({
+            ...prev,
+            license: result.assets[0].uri,
+          }));
+        }
+        return;
+      }
 
       const current = form[type]?.length || 0;
       const limit = isImg ? 8 : 1;
@@ -78,13 +95,19 @@ export default function MediaPicker({ form, setForm, errors }: HallFormProps) {
         }));
       }
     },
-    [form.images, form.videos, setForm],
+    [form.images, form.videos, form.license, setForm],
   );
 
-  const remove = (type: "images" | "videos", i: number) =>
-    setForm((p) => ({ ...p, [type]: p[type]?.filter((_, idx) => idx !== i) }));
-
-  const hasMedia = form.images.length > 0 || (form.videos?.length || 0) > 0;
+  const remove = (type: "images" | "videos" | "license", i?: number) => {
+    if (type === "license") {
+      setForm((p) => ({ ...p, license: undefined }));
+    } else {
+      setForm((p) => ({
+        ...p,
+        [type]: p[type]?.filter((_, idx) => idx !== i),
+      }));
+    }
+  };
 
   const PickerBtn = ({
     type,
@@ -106,52 +129,92 @@ export default function MediaPicker({ form, setForm, errors }: HallFormProps) {
 
   return (
     <View style={styles.mb20}>
-      <View style={[styles.row, { marginBottom: 10 }]}>
-        <Ionicons
-          name="images-outline"
-          size={18}
-          color="#6C4AB6"
-          style={styles.screenIcon}
-        />
-        <Text style={styles.label}>صور وفيديوهات الصالة</Text>
+      {/* License Section */}
+      <View style={styles.mb20}>
+        <View style={[styles.row, { marginBottom: 10 }]}>
+          <Ionicons
+            name="document-text-outline"
+            size={18}
+            color="#6C4AB6"
+            style={styles.screenIcon}
+          />
+          <Text style={styles.label}>رخصة الصالة</Text>
+        </View>
+
+        {form.license ? (
+          <View style={styles.mediaPreviewItem}>
+            <Image source={{ uri: form.license }} style={styles.mediaImage} />
+            <TouchableOpacity
+              onPress={() => remove("license")}
+              style={styles.mediaDeleteButton}
+            >
+              <Ionicons name="close" size={16} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            onPress={() => handleMedia("license")}
+            style={styles.mediaPickerButton}
+          >
+            <Ionicons name="document-attach" size={24} color="#6C4AB6" />
+            <Text style={{ fontSize: 12, color: "#6C4AB6" }}>
+              أضف رخصة الصالة
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        <Err error={errors.license} />
       </View>
 
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <PickerBtn type="images" icon="camera" label=" اضافة صور" />
-        <PickerBtn type="videos" icon="videocam" label=" اضافة فيديو" />
+      {/* Images and Videos Section */}
+      <View style={styles.mb20}>
+        <View style={[styles.row, { marginBottom: 10 }]}>
+          <Ionicons
+            name="images-outline"
+            size={18}
+            color="#6C4AB6"
+            style={styles.screenIcon}
+          />
+          <Text style={styles.label}>صور وفيديوهات الصالة</Text>
+        </View>
+
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <PickerBtn type="images" icon="camera" label=" اضافة صور" />
+          <PickerBtn type="videos" icon="videocam" label=" اضافة فيديو" />
+        </View>
+
+        {(form.images.length > 0 || (form.videos?.length || 0) > 0) && (
+          <ScrollView
+            horizontal
+            style={styles.mediaPreviewContainer}
+            contentContainerStyle={[styles.row, { gap: 10, paddingRight: 10 }]}
+            showsHorizontalScrollIndicator={false}
+          >
+            {form.images.map((uri, i) => (
+              <MediaItem
+                key={`i-${i}`}
+                uri={uri}
+                onRemove={() => remove("images", i)}
+              />
+            ))}
+            {form.videos?.map((_, i) => (
+              <MediaItem
+                key={`v-${i}`}
+                isVideo
+                onRemove={() => remove("videos", i)}
+              />
+            ))}
+          </ScrollView>
+        )}
+
+        {(form.images.length > 0 || (form.videos?.length || 0) > 0) && (
+          <Text style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
+            الصور: {form.images.length} | الفيديوهات: {form.videos?.length || 0}
+          </Text>
+        )}
+
+        <Err error={errors.images} />
       </View>
-
-      {hasMedia && (
-        <ScrollView
-          horizontal
-          style={styles.mediaPreviewContainer}
-          contentContainerStyle={[styles.row, { gap: 10, paddingRight: 10 }]}
-          showsHorizontalScrollIndicator={false}
-        >
-          {form.images.map((uri, i) => (
-            <MediaItem
-              key={`i-${i}`}
-              uri={uri}
-              onRemove={() => remove("images", i)}
-            />
-          ))}
-          {form.videos?.map((_, i) => (
-            <MediaItem
-              key={`v-${i}`}
-              isVideo
-              onRemove={() => remove("videos", i)}
-            />
-          ))}
-        </ScrollView>
-      )}
-
-      {hasMedia && (
-        <Text style={{ fontSize: 12, color: "#666", marginTop: 10 }}>
-          الصور: {form.images.length} | الفيديوهات: {form.videos?.length || 0}
-        </Text>
-      )}
-
-      <Err error={errors.images} />
     </View>
   );
 }

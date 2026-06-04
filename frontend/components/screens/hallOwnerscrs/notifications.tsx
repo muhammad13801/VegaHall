@@ -41,6 +41,10 @@ const NOTIFICATION_STYLES: Record<
   reschedule_request: { icon: "time-outline", color: "#F59E0B", bg: "#FFFBEB" },
   reschedule_reject: { icon: "close-circle", color: "#EF4444", bg: "#FEF2F2" },
 
+  hall_review: { icon: "building", color: "#3B82F6", bg: "#EFF6FF" },
+  hall_approved: { icon: "checkmark-circle", color: "#22C55E", bg: "#F0FDF4" },
+  hall_rejected: { icon: "close-circle", color: "#EF4444", bg: "#FEF2F2" },
+
   default: { icon: "notifications-outline", color: "#6C4AB6", bg: "#F3EAFF" },
 };
 const NotificationCard = memo(({ item }: { item: Notification }) => {
