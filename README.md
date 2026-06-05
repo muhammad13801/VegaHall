@@ -1,6 +1,6 @@
 # VegaHall 🎪
 
-[![VegaHall Thumbnail](./frontend/assets/thumbnail.png)](https://www.youtube.com/watch?v=uNUfg0uG8ug)
+[![VegaHall Thumbnail](./frontend/assets/thumbnail.png)](https://youtu.be/sz_7GSPGLrc)
 
 **▶️ Click above to watch the demo video on YouTube**
 
