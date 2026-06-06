@@ -24,6 +24,7 @@ import {
   requestMeal,
   requestService,
 } from "../controllers/hallOwnerControllers/serviceRequestsController.js";
+import { hallReapply } from "../controllers/hallOwnerControllers/hallReApply.js";
 
 const router = Router();
 
@@ -93,4 +94,8 @@ router.post("/request-meal", sessionAuthenticate, requestMeal);
 // post hall request service
 router.post("/request-service", sessionAuthenticate, requestService);
 
+// post hall reapply
+router.post("/:id/reapply-hall", sessionAuthenticate, hallReapply);
+// post hall reapply
+router.post("/:id/reapply-hall", sessionAuthenticate, hallReapply);
 export default router;

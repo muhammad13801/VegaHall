@@ -9,19 +9,32 @@ const uploadToSupabase = async (uri: string, folder: string) => {
 
     if (!userId) throw new Error("User ID not found");
 
-    // Use arrayBuffer for better stability in React Native/Expo
-    const response = await fetch(uri);
-    const arrayBuffer = await response.arrayBuffer();
+    const getContentType = (
+      folder: string,
+      fileExt: string | undefined,
+    ): string => {
+      switch (folder) {
+        case "images":
+          return `image/${fileExt === "jpg" ? "jpeg" : fileExt}`;
+        case "videos":
+          return `video/${fileExt}`;
+        case "licenses":
+          return `licenses/${fileExt === "jpg" ? "jpeg" : fileExt}`;
+        default:
+          return `application/${fileExt}`;
+      }
+    };
 
+    const contentType = getContentType(folder, fileExt);
     const path = `${userId}/${folder}/${fileName}`;
-    const contentType =
-      folder === "images"
-        ? `image/${fileExt === "jpg" ? "jpeg" : fileExt}`
-        : `video/${fileExt}`;
+
+    // Use FormData + Blob for memory-efficient uploads (especially for videos)
+    const formData = new FormData();
+    formData.append("file", { uri, name: fileName, type: contentType } as any);
 
     const { error } = await supabase.storage
       .from("Media")
-      .upload(path, arrayBuffer, {
+      .upload(path, formData, {
         contentType: contentType,
         cacheControl: "3600",
         upsert: false,

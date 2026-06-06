@@ -25,8 +25,10 @@ export default function PaymentHall() {
 
     setLoading(true);
     try {
+      // Step 1: Get payment intent
       const { data } = await payHallApi();
 
+      // Step 2: Init sheet
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: data.paymentIntent,
         customerEphemeralKeySecret: data.ephemeralKey,
@@ -36,9 +38,11 @@ export default function PaymentHall() {
       });
       if (initError) throw new Error(initError.message);
 
+      // Step 3: Present sheet (user pays)
       const { error: presentError } = await presentPaymentSheet();
       if (presentError) throw new Error(presentError.message);
 
+      // Step 4: Upload all media — if any single upload fails, throw and stop
       const uploadMedia = (
         uris: string[] = [],
         type: "images" | "videos" | "licenses",
@@ -53,6 +57,7 @@ export default function PaymentHall() {
             : Promise.resolve(null),
         ]);
 
+      // Step 5: Confirm with backend — if this fails, throw and stop
       const intentId = data.paymentIntent.split("_secret_")[0];
       const response = await confirmPaymentApi({
         paymentIntentId: intentId,

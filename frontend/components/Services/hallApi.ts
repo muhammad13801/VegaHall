@@ -53,3 +53,6 @@ export const requestMealApi = (name: string) =>
 export const getServicesApi = () => api.get(`/halls/services`);
 
 export const getMealTypesApi = () => api.get(`/halls/meal-types`);
+
+export const reapplyHall = (id: number) =>
+  api.post(`/halls/${id}/reapply-hall`);

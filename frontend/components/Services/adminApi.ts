@@ -24,8 +24,16 @@ export const getAllHallsSimple = async () => {
   return api.get("/admin/halls/all-simple");
 };
 
+export const getRequestedHalls = async () => {
+  return api.get(`/admin/halls/requested/`);
+};
+
 export const approveHall = async (id: number) => {
   return api.post(`/admin/halls/${id}/approve`);
+};
+
+export const rejectHall = async (id: number, reason: string) => {
+  return api.post(`/admin/halls/${id}/reject`, { reason });
 };
 
 export const addHallService = async (

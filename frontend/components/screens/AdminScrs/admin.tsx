@@ -10,10 +10,17 @@ import { useRefresh } from "../../reusable func/refreshContext";
 import { useRealtimeUpdates } from "../../reusable func/useRealtimeUpdate";
 import { supabase } from "../../Services/supabaseClient";
 import Notifications from "../hallOwnerscrs/notifications";
+import ManageRequestedHalls from "./ManageRequestedHalls";
 
 // تعريف التابات هنا بره الكمبوننت عشان ما تتعاد كل رندر
 const ADMIN_TABS = [
   { name: "Home", component: Home, title: "الرئيسية", icon: "home-outline" },
+  {
+    name: "ManageRequestedHalls",
+    component: ManageRequestedHalls,
+    title: "طلبات القاعات",
+    icon: "document-text-outline",
+  },
   {
     name: "Notifications",
     component: Notifications,
@@ -99,20 +106,20 @@ export default function Admin() {
           listeners={
             tab.name === "Notifications"
               ? {
-                focus: async () => {
-                  const userId = await AsyncStorage.getItem("userId");
-                  if (!userId) return;
+                  focus: async () => {
+                    const userId = await AsyncStorage.getItem("userId");
+                    if (!userId) return;
 
-                  await supabase
-                    .from("notifications")
-                    .update({ is_read: true })
-                    .eq("user_id", Number(userId))
-                    .eq("is_read", false);
+                    await supabase
+                      .from("notifications")
+                      .update({ is_read: true })
+                      .eq("user_id", Number(userId))
+                      .eq("is_read", false);
 
-                  // optional: instantly clear badge
-                  setNotificationBadge(0);
-                },
-              }
+                    // optional: instantly clear badge
+                    setNotificationBadge(0);
+                  },
+                }
               : undefined
           }
         />

@@ -55,6 +55,7 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
       latitude,
       longitude,
       description,
+      license,
       images,
       videos,
       services,
@@ -107,6 +108,13 @@ export const confirmPayment = async (req: AuthRequest, res: Response) => {
             `;
           }),
         );
+      }
+
+      if (license) {
+        await tx`
+          INSERT INTO media (hall_id, type, url)
+          VALUES (${hallId}, 'license', ${license})
+        `;
       }
 
       if (images?.length) {

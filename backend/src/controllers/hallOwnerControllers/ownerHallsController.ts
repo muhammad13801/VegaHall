@@ -34,6 +34,7 @@ export const ownerHalls = async (req: AuthRequest, res: Response) => {
         h.capacity, 
         h.base_price, 
         h.status,
+        h.rejection_reason,
         -- Get up to 3 images
         COALESCE(
           (SELECT json_agg(url) FROM (SELECT url FROM media WHERE hall_id = h.id AND type = 'image' LIMIT 3) t),

@@ -21,6 +21,14 @@ import {
   addGlobalMealType,
 } from "../controllers/adminControllers/adminController.js";
 import { sessionAuthenticate } from "../middleware/sessionMiddleware.js";
+import {
+  getRequestedHalls,
+  rejectHall,
+} from "../controllers/adminControllers/manageRequestedHalls.js";
+import {
+  renameRequestedMeal,
+  renameRequestedService,
+} from "../controllers/adminControllers/servicesController.js";
 
 const router = Router();
 
@@ -37,6 +45,16 @@ router.post("/halls/:id/approve", approveHall as any);
 router.post("/halls/add-service", addServiceToHall as any);
 router.post("/halls/add-service-all", addServiceToAllHalls as any);
 
+// Halls Reuested for Approval
+router.get("/halls/requested", getRequestedHalls as any);
+router.post("/halls/:id/approve", approveHall as any);
+router.post("/halls/:id/reject", rejectHall as any);
+
+// Halls Reuested for Approval
+router.get("/halls/requested", getRequestedHalls as any);
+router.post("/halls/:id/approve", approveHall as any);
+router.post("/halls/:id/reject", rejectHall as any);
+
 // Service Requests
 router.get("/services", getGlobalServices as any);
 router.get("/services/requests", getServiceRequests as any);
@@ -50,5 +68,11 @@ router.get("/meals/requests", getMealRequests as any);
 router.post("/meals/requests/:id/approve", approveMealRequest as any);
 router.post("/meals/requests/:id/reject", rejectMealRequest as any);
 router.post("/meals/add", addGlobalMealType as any);
+
+router.patch(`/meals/requests/:id/rename`, renameRequestedMeal as any);
+router.patch(`/services/requests/:id/rename`, renameRequestedService as any);
+
+router.patch(`/meals/requests/:id/rename`, renameRequestedMeal as any);
+router.patch(`/services/requests/:id/rename`, renameRequestedService as any);
 
 export default router;

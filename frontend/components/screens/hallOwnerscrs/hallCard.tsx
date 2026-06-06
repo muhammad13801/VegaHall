@@ -7,12 +7,15 @@ import {
   FlatList,
   Dimensions,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "../../styles";
 import { NavigateTo } from "../../reusable func/navigateTo";
 import { VideoCard } from "../../reusable func/videoCard";
 import { InfoRow } from "../../reusable func/infoRow";
+import Toast from "react-native-toast-message";
+import { reapplyHall } from "../../Services/hallApi";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH * 0.9;
@@ -21,6 +24,8 @@ export const HallCard = memo(
   ({ item, onPress, isCustomer, isFav, onToggleFavorite }: any) => {
     const status = item.status || "suspended";
     const [activeIndex, setActiveIndex] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const getStatusInfo = () => {
       switch (status) {
@@ -44,6 +49,26 @@ export const HallCard = memo(
       }
     };
 
+    const handleReapply = async () => {
+      try {
+        setLoading(true);
+        const response = await reapplyHall(item.id);
+        Toast.show({
+          type: "success",
+          text1: response?.data || "تم إعادة تقديم الطلب بنجاح",
+        });
+        item.status = "pending";
+      } catch (error: any) {
+        Toast.show({
+          type: "error",
+          text1: error.response.data || "فشل في إعادة تقديم الطلب",
+        });
+        console.error("Hall reapply error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    const mediaKey = `${refreshKey}-${item.images?.length}-${item.videos?.length}`;
     const statusInfo = getStatusInfo();
 
     const media = useMemo(
@@ -91,6 +116,7 @@ export const HallCard = memo(
           {media.length > 0 ? (
             <View>
               <FlatList
+                key={mediaKey}
                 data={media}
                 horizontal
                 inverted
@@ -196,7 +222,7 @@ export const HallCard = memo(
           onPress={() => isCustomer && onPress?.(item.id)}
           style={{ padding: 15 }}
         >
-          <View style={[styles.info, { marginBottom: 10 }]}>
+          <View style={styles.info}>
             <Text style={[styles.title, { fontSize: 20, flex: 1 }]}>
               {item.hall_name || item.name}
             </Text>
@@ -229,6 +255,26 @@ export const HallCard = memo(
               </TouchableOpacity>
             )}
           </View>
+
+          {status === "rejected" && item.rejection_reason && (
+            <View
+              style={{
+                backgroundColor: "#FFEBEE",
+                borderRadius: 8,
+                justifyContent: "center",
+                padding: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: "#D32F2F",
+                }}
+              >
+                سبب الرفض: {item.rejection_reason}
+              </Text>
+            </View>
+          )}
 
           <InfoRow
             icon="location-outline"
@@ -288,6 +334,19 @@ export const HallCard = memo(
               onPress={() => onPress?.(item.id)}
             >
               <Text style={styles.actionText}>إدارة الصالة</Text>
+            </TouchableOpacity>
+          )}
+          {status === "rejected" && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleReapply}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.actionButtonText}>اعادة تقديم الطلب</Text>
+              )}
             </TouchableOpacity>
           )}
         </TouchableOpacity>

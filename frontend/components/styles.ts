@@ -361,16 +361,11 @@ export const styles = StyleSheet.create({
   },
   mediaDeleteButton: {
     position: "absolute",
-    top: -5,
-    right: -5,
+    left: -5,
     backgroundColor: "#FF5A5A",
     borderRadius: 10,
     padding: 2,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
+    elevation: 2,
   },
   serviceChip: {
     paddingHorizontal: 15,
